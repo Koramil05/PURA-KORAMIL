@@ -412,7 +412,7 @@
 
     <div class="content" id="content">
         <div class="text-center" style="padding: 60px 20px;">
-            <div class="loading-spinner" style="border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+            <div style="border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
             <div class="mt-2" style="color: var(--text-dim);">Memuat aplikasi...</div>
         </div>
     </div>
@@ -494,9 +494,10 @@
     </div>
 
     <script>
-    // ==================== KONFIGURASI ====================
-const API_URL = 'https://script.google.com/macros/s/AKfycbytsI_OZavWyoy08FvvZT_1jIR7HrAUGW1jwd54HnBjma6oE_4ppfthFLv1A9VwoNVr/exec';
-const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
+        // ==================== KONFIGURASI ====================
+        const API_URL = 'https://script.google.com/macros/s/AKfycbytsI_OZavWyoy08FvvZT_1jIR7HrAUGW1jwd54HnBjma6oE_4ppfthFLv1A9VwoNVr/exec';
+        const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
+        
         // ==================== STATE ====================
         let state = {
             tab: 'dashboard',
@@ -512,61 +513,103 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
             globalBalance: 0
         };
 
-        let anggotaList = []; // Untuk dropdown
+        let anggotaList = [];
 
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', () => {
-            loadData();
+            testKoneksi();
         });
+
+        // ==================== TEST KONEKSI ====================
+        async function testKoneksi() {
+            try {
+                showLoading('Menguji koneksi ke server...');
+                
+                const response = await fetch(API_URL + '?action=getStatus');
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log('✅ Koneksi berhasil:', data);
+                    loadData();
+                } else {
+                    showToast('Server merespon tapi error: ' + (data.message || 'Unknown'), true);
+                    // Fallback ke data dummy untuk testing
+                    state.anggota = [
+                        { id: 'AG001', nama: 'Kapten Inf I Nyoman Arya Kepakisan', pangkat: 'Kapten Inf', status: 'AKTIF' },
+                        { id: 'AG002', nama: 'Peltu I Nyoman Wilmana', pangkat: 'Peltu', status: 'AKTIF' }
+                    ];
+                    anggotaList = state.anggota;
+                    renderTab();
+                }
+            } catch (error) {
+                console.error('❌ Gagal koneksi:', error);
+                showToast('Gagal terhubung ke server. Cek URL API.', true);
+                // Fallback
+                document.getElementById('content').innerHTML = `
+                    <div class="card">
+                        <h3 style="color: var(--danger);">Gagal Terhubung</h3>
+                        <p class="mt-2">Tidak dapat terhubung ke server. Pastikan URL API benar dan sudah di-deploy.</p>
+                        <p class="mt-2">URL: ${API_URL}</p>
+                        <button class="btn" onclick="testKoneksi()">COBA LAGI</button>
+                    </div>
+                `;
+            }
+        }
 
         // ==================== LOAD DATA ====================
         async function loadData() {
             try {
-                showLoading();
+                showLoading('Memuat data dari spreadsheet...');
                 
                 // Load anggota
                 const anggotaRes = await fetch(API_URL + '?action=getAnggota');
                 const anggotaData = await anggotaRes.json();
+                console.log('📥 Data anggota:', anggotaData);
+                
                 if (anggotaData.success) {
                     state.anggota = anggotaData.data || [];
                     anggotaList = state.anggota;
+                } else {
+                    console.warn('⚠️ Gagal load anggota:', anggotaData.message);
                 }
                 
                 // Load transaksi
                 const transaksiRes = await fetch(API_URL + '?action=getTransaksi&limit=1000');
                 const transaksiData = await transaksiRes.json();
+                console.log('📥 Data transaksi:', transaksiData);
+                
                 if (transaksiData.success) {
                     state.transaksi = transaksiData.data || [];
+                } else {
+                    console.warn('⚠️ Gagal load transaksi:', transaksiData.message);
                 }
                 
                 // Load donasi
                 const donasiRes = await fetch(API_URL + '?action=getDonasi&limit=1000');
                 const donasiData = await donasiRes.json();
+                console.log('📥 Data donasi:', donasiData);
+                
                 if (donasiData.success) {
                     state.donasi = donasiData.data || [];
+                } else {
+                    console.warn('⚠️ Gagal load donasi:', donasiData.message);
                 }
                 
                 hitungStatistik();
                 renderTab();
+                showToast('Data berhasil dimuat');
                 
             } catch (error) {
-                console.error('Error:', error);
+                console.error('❌ Error load data:', error);
                 showToast('Gagal memuat data: ' + error.message, true);
-                // Fallback ke data dummy
-                state.anggota = [
-                    { id: 'AG001', nama: 'Kapten Inf I Nyoman Arya Kepakisan', pangkat: 'Kapten Inf', status: 'AKTIF' },
-                    { id: 'AG002', nama: 'Peltu I Nyoman Wilmana', pangkat: 'Peltu', status: 'AKTIF' }
-                ];
-                anggotaList = state.anggota;
-                renderTab();
             }
         }
 
-        function showLoading() {
+        function showLoading(pesan = 'Memuat data...') {
             document.getElementById('content').innerHTML = `
                 <div class="text-center" style="padding: 60px 20px;">
                     <div style="border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-                    <div class="mt-2" style="color: var(--text-dim);">Memuat data...</div>
+                    <div class="mt-2" style="color: var(--text-dim);">${pesan}</div>
                 </div>
             `;
         }
@@ -645,7 +688,7 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
             state.tab = tab;
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(btn => {
-                if (btn.textContent.includes(tab)) btn.classList.add('active');
+                if (btn.textContent.toLowerCase().includes(tab)) btn.classList.add('active');
             });
             renderTab();
         }
@@ -662,13 +705,12 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
             const totalPemasukan = state.stats.totalSetor + state.stats.totalDonasiUang;
             const totalPengeluaran = state.stats.totalPengeluaran;
             
-            // Gabungkan transaksi dan donasi
             const semuaTransaksi = [];
             
             (state.transaksi || []).forEach(t => {
                 semuaTransaksi.push({
-                    ...t,
-                    tipe: 'transaksi',
+                    timestamp: t.timestamp,
+                    jenis: t.jenis,
                     namaTampil: t.nama,
                     nilaiTampil: formatRupiah(t.nominal),
                     kelasWarna: t.jenis === 'PENGELUARAN' ? 'text-negative' : 'text-positive',
@@ -687,12 +729,7 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
                 });
             });
             
-            semuaTransaksi.sort((a, b) => {
-                const da = new Date(a.timestamp || 0);
-                const db = new Date(b.timestamp || 0);
-                return db - da;
-            });
-            
+            semuaTransaksi.sort((a, b) => new Date(b.timestamp||0) - new Date(a.timestamp||0));
             const recent = semuaTransaksi.slice(0, 10);
 
             let html = `
@@ -835,7 +872,7 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
             if (!state.transaksi || state.transaksi.length === 0) {
                 html += '<tr><td colspan="5" class="text-center">Belum ada transaksi</td></tr>';
             } else {
-                [...state.transaksi].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(t => {
+                [...state.transaksi].sort((a,b) => new Date(b.timestamp||0) - new Date(a.timestamp||0)).forEach(t => {
                     html += `
                         <tr>
                             <td>${formatTanggal(t.timestamp)}</td>
@@ -950,7 +987,7 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
             if (!state.donasi || state.donasi.length === 0) {
                 html += '<tr><td colspan="4" class="text-center">Belum ada donasi</td></tr>';
             } else {
-                [...state.donasi].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(d => {
+                [...state.donasi].sort((a,b) => new Date(b.timestamp||0) - new Date(a.timestamp||0)).forEach(d => {
                     html += `
                         <tr>
                             <td>${formatTanggal(d.timestamp)}</td>
@@ -975,7 +1012,7 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
         }
 
         // ==================== FUNGSI FORM ====================
-        window.toggleFormTransaksi = function() {
+        function toggleFormTransaksi() {
             const jenis = document.getElementById('jenisTransaksi').value;
             document.getElementById('formSetor').classList.add('hidden');
             document.getElementById('formPengeluaran').classList.add('hidden');
@@ -985,9 +1022,9 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
             } else if (jenis === 'PENGELUARAN') {
                 document.getElementById('formPengeluaran').classList.remove('hidden');
             }
-        };
+        }
 
-        window.toggleJenisDonasi = function() {
+        function toggleJenisDonasi() {
             const jenis = document.getElementById('jenisDonasi').value;
             const uangField = document.getElementById('fieldDonasiUang');
             const barangField = document.getElementById('fieldDonasiBarang');
@@ -1001,18 +1038,18 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
                     barangField.classList.remove('hidden');
                 }
             }
-        };
+        }
 
-        window.filterAnggota = function() {
+        function filterAnggota() {
             const keyword = document.getElementById('searchAnggota').value.toLowerCase();
             document.querySelectorAll('.anggota-row').forEach(row => {
                 const nama = row.dataset.nama || '';
                 row.style.display = nama.includes(keyword) ? '' : 'none';
             });
-        };
+        }
 
         // ==================== SIMPAN DATA ====================
-        window.simpanTransaksi = async function() {
+        async function simpanTransaksi() {
             const anggotaVal = document.getElementById('pilihAnggotaTransaksi').value;
             const jenis = document.getElementById('jenisTransaksi').value;
             const keterangan = document.getElementById('keteranganTransaksi')?.value || '';
@@ -1048,11 +1085,12 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
             };
             
             try {
-                showToast('Menyimpan...');
+                showToast('Menyimpan transaksi...');
                 
-                const params = new URLSearchParams({
-                    action: 'saveTransaksi',
-                    ...transaksiBaru
+                const params = new URLSearchParams();
+                params.append('action', 'saveTransaksi');
+                Object.keys(transaksiBaru).forEach(key => {
+                    params.append(key, transaksiBaru[key]);
                 });
                 
                 const response = await fetch(API_URL, {
@@ -1063,6 +1101,8 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
                 });
                 
                 const result = await response.json();
+                console.log('📤 Response simpan transaksi:', result);
+                
                 if (result.success) {
                     showToast('Transaksi disimpan');
                     await loadData();
@@ -1070,12 +1110,12 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
                     showToast('Gagal: ' + (result.message || 'Unknown error'), true);
                 }
             } catch (error) {
-                console.error(error);
-                showToast('Gagal menyimpan', true);
+                console.error('❌ Error simpan transaksi:', error);
+                showToast('Gagal menyimpan: ' + error.message, true);
             }
-        };
+        }
 
-        window.simpanAnggota = async function() {
+        async function simpanAnggota() {
             const nama = document.getElementById('namaAnggota')?.value.trim();
             if (!nama) { showToast('Nama harus diisi', true); return; }
             
@@ -1092,11 +1132,12 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
             };
             
             try {
-                showToast('Menyimpan...');
+                showToast('Menyimpan anggota...');
                 
-                const params = new URLSearchParams({
-                    action: 'saveAnggota',
-                    ...anggotaBaru
+                const params = new URLSearchParams();
+                params.append('action', 'saveAnggota');
+                Object.keys(anggotaBaru).forEach(key => {
+                    params.append(key, anggotaBaru[key]);
                 });
                 
                 const response = await fetch(API_URL, {
@@ -1107,6 +1148,8 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
                 });
                 
                 const result = await response.json();
+                console.log('📤 Response simpan anggota:', result);
+                
                 if (result.success) {
                     showToast('Anggota ditambahkan');
                     tutupModal('modalAnggota');
@@ -1115,12 +1158,12 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
                     showToast('Gagal: ' + (result.message || 'Unknown error'), true);
                 }
             } catch (error) {
-                console.error(error);
-                showToast('Gagal menyimpan', true);
+                console.error('❌ Error simpan anggota:', error);
+                showToast('Gagal menyimpan: ' + error.message, true);
             }
-        };
+        }
 
-        window.simpanDonasi = async function() {
+        async function simpanDonasi() {
             const jenis = document.getElementById('jenisDonasi')?.value;
             const namaDonatur = document.getElementById('namaDonatur')?.value.trim();
             
@@ -1150,11 +1193,12 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
             }
             
             try {
-                showToast('Menyimpan...');
+                showToast('Menyimpan donasi...');
                 
-                const params = new URLSearchParams({
-                    action: 'saveDonasi',
-                    ...donasiBaru
+                const params = new URLSearchParams();
+                params.append('action', 'saveDonasi');
+                Object.keys(donasiBaru).forEach(key => {
+                    params.append(key, donasiBaru[key]);
                 });
                 
                 const response = await fetch(API_URL, {
@@ -1165,6 +1209,8 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
                 });
                 
                 const result = await response.json();
+                console.log('📤 Response simpan donasi:', result);
+                
                 if (result.success) {
                     showToast('Donasi disimpan');
                     tutupModal('modalDonasi');
@@ -1173,18 +1219,18 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
                     showToast('Gagal: ' + (result.message || 'Unknown error'), true);
                 }
             } catch (error) {
-                console.error(error);
-                showToast('Gagal menyimpan', true);
+                console.error('❌ Error simpan donasi:', error);
+                showToast('Gagal menyimpan: ' + error.message, true);
             }
-        };
+        }
 
         // ==================== REFRESH ====================
-        window.refreshData = function() {
-            loadData();
-        };
+        function refreshData() {
+            testKoneksi();
+        }
 
         // ==================== CETAK LAPORAN ====================
-        window.cetakLaporan = function() {
+        function cetakLaporan() {
             const printWindow = window.open('', '_blank');
             
             const totalPemasukan = state.stats.totalSetor + state.stats.totalDonasiUang;
@@ -1193,11 +1239,12 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
             const allData = [];
             (state.transaksi || []).forEach(t => {
                 allData.push({
-                    ...t,
+                    timestamp: t.timestamp,
                     jenisTampil: t.jenis,
                     namaTampil: t.nama,
                     nilaiTampil: t.jenis === 'SETOR' ? formatRupiah(t.nominal) : '(' + formatRupiah(t.nominal) + ')',
-                    kelas: t.jenis === 'SETOR' ? 'positive' : 'negative'
+                    kelas: t.jenis === 'SETOR' ? 'positive' : 'negative',
+                    keterangan: t.keterangan
                 });
             });
             
@@ -1212,7 +1259,7 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
                 });
             });
             
-            allData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            allData.sort((a, b) => new Date(b.timestamp||0) - new Date(a.timestamp||0));
 
             const html = `<!DOCTYPE html>
 <html>
@@ -1378,7 +1425,21 @@ const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
             printWindow.document.write(html);
             printWindow.document.close();
             printWindow.print();
-        };
+        }
+
+        // Export functions ke global
+        window.ubahTab = ubahTab;
+        window.toggleFormTransaksi = toggleFormTransaksi;
+        window.toggleJenisDonasi = toggleJenisDonasi;
+        window.formatUang = formatUang;
+        window.filterAnggota = filterAnggota;
+        window.simpanTransaksi = simpanTransaksi;
+        window.simpanAnggota = simpanAnggota;
+        window.simpanDonasi = simpanDonasi;
+        window.bukaModal = bukaModal;
+        window.tutupModal = tutupModal;
+        window.refreshData = refreshData;
+        window.cetakLaporan = cetakLaporan;
     </script>
 </body>
 </html>
