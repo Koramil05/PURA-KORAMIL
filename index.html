@@ -3,796 +3,1317 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kas Pura - Buku Kas</title>
+    <title>Kas Pura - Koramil Sukasada</title>
     
-    <!-- PWA Assets -->
-    <link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/Koramil05/PURA05/main/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="https://raw.githubusercontent.com/Koramil05/PURA05/main/favicon-32x32.png">
-    <link rel="manifest" href="https://raw.githubusercontent.com/Koramil05/PURA05/main/site.webmanifest">
-    <meta name="theme-color" content="#1a237e">
+    <!-- PWA CONFIG -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="favicon.ico">
     
+    <!-- FONT AWESOME -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        :root {
-            --primary: #1a237e;
-            --primary-dark: #0d1560;
-            --accent: #f5b342;
-            --success: #2e7d32;
-            --danger: #c62828;
-            --warning: #f57c00;
-            --purple: #7b1fa2;
-            --bg: #0a192f;
-            --text: #ffffff;
-            --text-dim: #90a4ae;
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; 
+            background: linear-gradient(135deg, #1a237e 0%, #0a192f 100%); 
+            min-height: 100vh; 
+            padding: 20px;
+            color: #333;
+            -webkit-tap-highlight-color: transparent;
         }
-        
-        html, body {
-            width: 100%;
-            height: 100%;
+        .container { 
+            max-width: 500px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 20px; 
+            padding: 25px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            position: relative;
             overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg);
-            color: var(--text);
         }
-        
-        /* ===== HEADER ===== */
-        .header {
-            position: fixed;
+        .container::before {
+            content: '';
+            position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            height: 60px;
-            background: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            border-bottom: 2px solid var(--accent);
-            z-index: 100;
+            height: 4px;
+            background: linear-gradient(90deg, #f5b342, #1a237e);
+        }
+        .logo { 
+            text-align: center; 
+            margin-bottom: 25px; 
+            padding-bottom: 20px; 
+            border-bottom: 1px solid #f0f0f0; 
+        }
+        .logo span { 
+            font-size: 48px; 
+            display: block; 
+            margin-bottom: 10px; 
+            background: linear-gradient(135deg, #1a237e, #f5b342);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        h1 { 
+            color: #1a237e; 
+            font-size: 24px; 
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .subtitle { 
+            font-size: 13px; 
+            color: #666; 
+            font-weight: 400; 
         }
         
-        .header h1 {
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        /* TABS STYLING */
+        .tabs { 
+            display: flex; 
+            margin-bottom: 25px; 
+            background: #f8f9fa; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            padding: 5px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
         }
-        
-        .header h1 i { color: var(--accent); }
-        
-        .header-actions { display: flex; gap: 10px; }
-        
-        .header-btn {
-            background: rgba(255,255,255,0.1);
-            border: none;
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.2rem;
-        }
-        
-        /* ===== BOTTOM NAV ===== */
-        .nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            background: var(--primary);
-            display: flex;
-            border-top: 2px solid var(--accent);
-            z-index: 100;
-        }
-        
-        .nav-btn {
-            flex: 1;
+        .tab { 
+            flex: 1; 
+            padding: 14px 10px; 
+            text-align: center; 
+            cursor: pointer; 
+            font-weight: 600; 
+            color: #666; 
+            transition: all 0.3s ease; 
+            border-radius: 8px;
+            font-size: 13px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            background: transparent;
+            gap: 5px;
+        }
+        .tab i { font-size: 18px; margin-bottom: 2px; }
+        .tab:hover { 
+            color: #1a237e; 
+            background: rgba(255,255,255,0.5);
+        }
+        .tab.active { 
+            color: white; 
+            background: linear-gradient(135deg, #1a237e 0%, #f5b342 100%);
+            box-shadow: 0 4px 10px rgba(26, 35, 126, 0.3);
+        }
+        
+        /* CONTENT AREA */
+        #contentArea { 
+            min-height: 400px;
+            transition: all 0.3s ease;
+        }
+        
+        /* STATUS BAR */
+        .status-bar { 
+            position: fixed; 
+            top: 15px; 
+            right: 15px; 
+            z-index: 1000; 
+            padding: 8px 15px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .online { 
+            background: rgba(46, 125, 80, 0.95); 
+            color: white; 
+        }
+        .offline { 
+            background: rgba(198, 40, 40, 0.95); 
+            color: white; 
+        }
+        
+        /* LOADING ANIMATION */
+        .loading {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(26, 35, 126, 0.2);
+            border-radius: 50%;
+            border-top-color: #1a237e;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* ALERT STYLES */
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            animation: slideDown 0.3s ease;
+            font-size: 14px;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        /* BUTTON STYLES */
+        .btn {
+            background: linear-gradient(135deg, #1a237e 0%, #f5b342 100%);
+            color: white;
             border: none;
-            color: var(--text-dim);
-            font-size: 0.7rem;
-            gap: 4px;
+            padding: 16px;
+            border-radius: 12px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-        }
-        
-        .nav-btn i { font-size: 1.2rem; }
-        
-        .nav-btn.active {
-            color: var(--accent);
-            background: rgba(245,180,65,0.1);
-        }
-        
-        /* ===== CONTENT ===== */
-        .content {
-            position: fixed;
-            top: 60px;
-            bottom: 60px;
-            left: 0;
-            right: 0;
-            overflow-y: auto;
-            padding: 16px;
-        }
-        
-        /* ===== CARD ===== */
-        .card {
-            background: rgba(26,35,70,0.95);
-            border: 1px solid rgba(255,215,140,0.25);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-        
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid rgba(255,215,140,0.25);
-        }
-        
-        .card-header h3 {
-            font-size: 1.1rem;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(26, 35, 126, 0.3);
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(245, 180, 65, 0.4);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .btn-setor {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+        }
+        .btn-tarik {
+            background: linear-gradient(135deg, #c62828 0%, #f44336 100%);
+        }
+        .btn-add {
+            background: linear-gradient(135deg, #0288d1 0%, #29b6f6 100%);
+        }
+        .btn-print {
+            background: linear-gradient(135deg, #7b1fa2 0%, #9c27b0 100%);
         }
         
-        .card-header h3 i { color: var(--accent); }
-        
-        /* ===== INFO CARD ===== */
-        .info-card {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border: 2px solid var(--accent);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 16px;
-        }
-        
-        .info-label {
-            color: var(--text-dim);
-            font-size: 0.8rem;
-            text-transform: uppercase;
-        }
-        
-        .info-value {
-            color: var(--accent);
-            font-size: 1.8rem;
-            font-weight: bold;
-        }
-        
-        /* ===== BUTTONS ===== */
-        .aksi-buttons {
-            display: flex;
-            gap: 8px;
+        /* FORM STYLES */
+        .form-group {
             margin-bottom: 20px;
         }
-        
-        .aksi-btn {
-            flex: 1;
-            padding: 14px 0;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 1rem;
-            cursor: pointer;
-            color: white;
-        }
-        
-        .aksi-btn.setor { background: var(--success); }
-        .aksi-btn.pengeluaran { background: var(--warning); }
-        .aksi-btn.donasi { background: var(--purple); }
-        .aksi-btn.active { border: 2px solid var(--accent); }
-        
-        .btn-simpan {
-            width: 100%;
-            padding: 14px;
-            background: var(--accent);
-            color: var(--primary-dark);
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-top: 8px;
-        }
-        
-        .btn-batal {
-            width: 100%;
-            padding: 14px;
-            background: transparent;
-            color: white;
-            border: 2px solid var(--accent);
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-top: 8px;
-        }
-        
-        /* ===== FORM ===== */
-        .form-group {
-            margin-bottom: 16px;
-        }
-        
-        .form-group label {
+        .form-label {
             display: block;
-            margin-bottom: 6px;
-            color: var(--text-dim);
-            font-size: 0.9rem;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1a237e;
+            font-size: 14px;
         }
-        
+        .form-label.required::after {
+            content: " *";
+            color: #c62828;
+        }
         .form-control {
             width: 100%;
-            padding: 12px;
-            background: rgba(0,0,0,0.3);
-            border: 2px solid rgba(255,215,140,0.25);
-            border-radius: 8px;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: #fafafa;
+            font-family: inherit;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #f5b342;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(245, 180, 65, 0.1);
+        }
+        
+        /* STATS CARDS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #1a237e 0%, #f5b342 100%);
             color: white;
-            font-size: 1rem;
+            padding: 20px 15px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(26, 35, 126, 0.3);
+        }
+        .stat-card:nth-child(2) {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+        }
+        .stat-card:nth-child(3) {
+            background: linear-gradient(135deg, #0288d1 0%, #29b6f6 100%);
+        }
+        .stat-card:nth-child(4) {
+            background: linear-gradient(135deg, #7b1fa2 0%, #9c27b0 100%);
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
         }
         
-        select.form-control {
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-        }
-        
-        /* ===== TABLE ===== */
-        .table-container {
-            overflow-x: auto;
-            max-height: calc(100vh - 250px);
+        /* NASABAH LIST */
+        .nasabah-list {
+            max-height: 400px;
             overflow-y: auto;
-            border-radius: 8px;
-            background: rgba(0,0,0,0.2);
+            padding-right: 5px;
         }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 800px;
-        }
-        
-        th {
-            background: var(--primary);
-            color: white;
-            padding: 10px;
-            position: sticky;
-            top: 0;
-            font-size: 0.8rem;
-        }
-        
-        td {
-            padding: 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            font-size: 0.85rem;
-        }
-        
-        /* ===== BADGE ===== */
-        .badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            display: inline-block;
-        }
-        
-        .badge.setor { background: rgba(46,125,80,0.2); color: #81c784; }
-        .badge.pengeluaran { background: rgba(245,124,0,0.2); color: #ffb74d; }
-        .badge.donasi-uang { background: rgba(46,125,80,0.2); color: #81c784; }
-        .badge.donasi-barang { background: rgba(2,136,209,0.2); color: #90caf9; }
-        
-        /* ===== SEARCH ===== */
-        .search-box {
-            position: relative;
-            margin-bottom: 16px;
-        }
-        
-        .search-box i {
-            position: absolute;
-            left: 12px;
-            top: 12px;
-            color: var(--text-dim);
-        }
-        
-        .search-box input {
-            width: 100%;
-            padding: 12px 12px 12px 40px;
-            background: rgba(255,255,255,0.05);
-            border: 2px solid rgba(255,215,140,0.25);
-            border-radius: 8px;
-            color: white;
-        }
-        
-        /* ===== MODAL ===== */
-        .modal {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-        
-        .modal-content {
-            background: rgba(26,35,70,0.95);
-            border-radius: 12px;
-            max-width: 400px;
-            width: 100%;
-            padding: 20px;
-            border: 2px solid var(--accent);
-        }
-        
-        .modal-header {
+        .nasabah-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+            border-left: 4px solid #1a237e;
+        }
+        .nasabah-item:hover {
+            background: #eef2ff;
+            transform: translateX(5px);
+        }
+        .nasabah-info h4 {
+            color: #1a237e;
+            font-size: 15px;
+            margin-bottom: 5px;
+        }
+        .nasabah-meta {
+            font-size: 12px;
+            color: #666;
+        }
+        .nasabah-id {
+            font-size: 11px;
+            color: #f5b342;
+            background: rgba(245, 180, 65, 0.1);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        
+        /* SALDO DISPLAY */
+        .saldo-card {
+            background: linear-gradient(135deg, #1a237e 0%, #f5b342 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
             margin-bottom: 20px;
+            box-shadow: 0 10px 25px rgba(26, 35, 126, 0.3);
         }
-        
-        .modal-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
+        .saldo-amount {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 15px 0;
         }
-        
-        .modal-btn {
-            width: 100%;
+        .saldo-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .saldo-item {
+            background: rgba(255,255,255,0.1);
             padding: 12px;
-            background: var(--accent);
-            color: var(--primary-dark);
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        .saldo-item-label {
+            font-size: 11px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        .saldo-item-value {
+            font-size: 16px;
+            font-weight: 600;
         }
         
-        /* ===== TOAST ===== */
-        .toast {
-            position: fixed;
-            top: 70px;
-            right: 16px;
-            background: var(--success);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            z-index: 2000;
-            animation: slideIn 0.3s;
+        /* RESPONSIVE */
+        @media (max-width: 480px) { 
+            .container { padding: 20px 15px; } 
+            .tabs { flex-direction: row; flex-wrap: nowrap; }
+            .tab { padding: 12px 8px; font-size: 12px; }
+            .tab i { font-size: 16px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .saldo-details { grid-template-columns: 1fr; gap: 8px; }
         }
         
-        .toast.error { background: var(--danger); }
-        
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        /* CUSTOM SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #1a237e, #f5b342);
+            border-radius: 10px;
         }
         
-        /* ===== UTILITY ===== */
-        .hidden { display: none !important; }
-        .flex-between { display: flex; justify-content: space-between; align-items: center; }
-        .text-positive { color: #81c784; }
-        .text-negative { color: #ff8a80; }
-        .text-purple { color: #ce93d8; }
-        .text-dim { color: var(--text-dim); }
+        /* UTILITY CLASSES */
         .text-center { text-align: center; }
-        .mt-2 { margin-top: 8px; }
+        .mt-10 { margin-top: 10px; }
+        .mt-20 { margin-top: 20px; }
+        .mb-10 { margin-bottom: 10px; }
+        .mb-20 { margin-bottom: 20px; }
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .gap-10 { gap: 10px; }
+        
+        /* MODAL STYLES */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1><i class="fas fa-temple"></i> Kas Pura</h1>
-        <div class="header-actions">
-            <button class="header-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i></button>
-            <button class="header-btn" id="printBtn"><i class="fas fa-print"></i></button>
+    <!-- STATUS BAR -->
+    <div id="statusBar" class="status-bar online">
+        <i class="fas fa-wifi"></i>
+        <span id="statusText">ONLINE</span>
+    </div>
+    
+    <div class="container">
+        <div class="logo">
+            <span>💰</span>
+            <h1>Kas Pura Koramil Sukasada</h1>
+            <div class="subtitle">Sistem Manajemen Keuangan</div>
+        </div>
+        
+        <!-- TABS -->
+        <div class="tabs">
+            <div class="tab active" onclick="loadTab('dashboard')">
+                <i class="fas fa-chart-pie"></i>
+                <span>Dashboard</span>
+            </div>
+            <div class="tab" onclick="loadTab('transaksi')">
+                <i class="fas fa-exchange-alt"></i>
+                <span>Transaksi</span>
+            </div>
+            <div class="tab" onclick="loadTab('anggota')">
+                <i class="fas fa-users"></i>
+                <span>Anggota</span>
+            </div>
+            <div class="tab" onclick="loadTab('laporan')">
+                <i class="fas fa-print"></i>
+                <span>Laporan</span>
+            </div>
+        </div>
+        
+        <!-- CONTENT AREA -->
+        <div id="contentArea">
+            <!-- Loading state -->
+            <div class="text-center fade-in" style="padding: 60px 20px;">
+                <div class="loading"></div>
+                <div class="mt-20" style="color: #666; font-size: 14px;">Menyiapkan aplikasi...</div>
+            </div>
+        </div>
+        
+        <!-- FOOTER -->
+        <div class="mt-20 text-center" style="border-top: 1px solid #f0f0f0; padding-top: 15px;">
+            <div style="font-size: 11px; color: #999;">
+                <i class="fas fa-shield-alt"></i> Koramil Sukasada
+                <br>
+                <span id="lastSync">Terakhir sinkron: -</span>
+            </div>
         </div>
     </div>
 
-    <div class="content" id="content"></div>
-
-    <div class="nav">
-        <button class="nav-btn" data-tab="buku"><i class="fas fa-book"></i><span>Buku</span></button>
-        <button class="nav-btn" data-tab="input"><i class="fas fa-pen"></i><span>Input</span></button>
-        <button class="nav-btn active" data-tab="anggota"><i class="fas fa-users"></i><span>Anggota</span></button>
+    <!-- MODAL TAMBAH ANGGOTA -->
+    <div id="addAnggotaModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: #1a237e; margin-bottom: 20px; text-align: center;">
+                <i class="fas fa-user-plus"></i> Tambah Anggota Baru
+            </h2>
+            <div class="form-group">
+                <label class="form-label required">Nama Lengkap</label>
+                <input type="text" id="newNama" class="form-control" placeholder="Nama lengkap anggota" autofocus>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Pangkat</label>
+                <input type="text" id="newPangkat" class="form-control" placeholder="Contoh: Kapten Inf">
+            </div>
+            <div class="form-group">
+                <label class="form-label">No. Telepon</label>
+                <input type="tel" id="newPhone" class="form-control" placeholder="0812xxxxxxx">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Alamat</label>
+                <textarea id="newAlamat" class="form-control" placeholder="Alamat lengkap" rows="2"></textarea>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 25px;">
+                <button type="button" class="btn" onclick="closeModal()" style="flex: 1; background: #95a5a6;">
+                    <i class="fas fa-times"></i> Batal
+                </button>
+                <button type="button" class="btn btn-add" id="btnSaveAnggota" onclick="addNewAnggota()" style="flex: 1;">
+                    <i class="fas fa-save"></i> Simpan
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
+        // ==================== DATA ANGGOTA KORAMIL ====================
+        const DATA_ANGGOTA_KORAMIL = [
+            { id: 'AG001', nama: 'Kapten Inf I Nyoman Arya Kepakisan', pangkat: 'Kapten Inf', alamat: '-', no_hp: '-' },
+            { id: 'AG002', nama: 'Peltu I Nyoman Wilmana', pangkat: 'Peltu', alamat: '-', no_hp: '-' },
+            { id: 'AG003', nama: 'Peltu Made Edi Sutrawan', pangkat: 'Peltu', alamat: '-', no_hp: '-' },
+            { id: 'AG004', nama: 'Peltu Ketut Serangan', pangkat: 'Peltu', alamat: '-', no_hp: '-' },
+            { id: 'AG005', nama: 'Pelda I Komang Karia', pangkat: 'Pelda', alamat: '-', no_hp: '-' },
+            { id: 'AG006', nama: 'Pelda I Made Suradnya', pangkat: 'Pelda', alamat: '-', no_hp: '-' },
+            { id: 'AG007', nama: 'Serma I Kadek Teges Suardana', pangkat: 'Serma', alamat: '-', no_hp: '-' },
+            { id: 'AG008', nama: 'Serka I Made Widiasa', pangkat: 'Serka', alamat: '-', no_hp: '-' },
+            { id: 'AG009', nama: 'Serka I Nyoman Arta', pangkat: 'Serka', alamat: '-', no_hp: '-' },
+            { id: 'AG010', nama: 'Serka I Nyoman Sudita', pangkat: 'Serka', alamat: '-', no_hp: '-' },
+            { id: 'AG011', nama: 'Sertu Nyoman Join Amitaba', pangkat: 'Sertu', alamat: '-', no_hp: '-' },
+            { id: 'AG012', nama: 'Sertu Nyoman Warsa', pangkat: 'Sertu', alamat: '-', no_hp: '-' },
+            { id: 'AG013', nama: 'Sertu I Made Ariasa', pangkat: 'Sertu', alamat: '-', no_hp: '-' },
+            { id: 'AG014', nama: 'Serda I Putu Suwidana Yasa', pangkat: 'Serda', alamat: '-', no_hp: '-' }
+        ];
+
         // ==================== STATE ====================
         let state = {
-            tab: 'anggota',
+            tab: 'dashboard',
             transaksi: [],
-            anggota: []
+            anggota: DATA_ANGGOTA_KORAMIL, // Data tetap dari Koramil
+            donatur: [],
+            stats: {
+                totalSetor: 0,
+                totalPengeluaran: 0,
+                totalDonasi: 0,
+                totalPinjam: 0
+            },
+            globalBalance: 0
         };
 
-        // ==================== INIT ====================
-        document.addEventListener('DOMContentLoaded', () => {
-            loadData();
+        // ==================== INITIALIZE ====================
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Kas Pura Initializing...');
             
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const tab = e.currentTarget.dataset.tab;
-                    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                    e.currentTarget.classList.add('active');
-                    state.tab = tab;
-                    renderTab();
-                });
-            });
-
-            document.getElementById('refreshBtn').addEventListener('click', () => {
-                loadData();
-                showToast('Data dimuat ulang');
-            });
-
-            document.getElementById('printBtn').addEventListener('click', () => {
-                cetakLaporan();
-            });
+            // Update status koneksi
+            updateConnectionStatus();
+            window.addEventListener('online', updateConnectionStatus);
+            window.addEventListener('offline', updateConnectionStatus);
             
-            renderTab();
+            // Load data dari localStorage
+            loadFromLocalStorage();
+            
+            // Update last sync
+            updateLastSync();
+            
+            // Load tab pertama
+            await loadTab('dashboard');
+            
+            console.log('✅ Aplikasi siap digunakan');
         });
 
-        // ==================== LOAD DATA ====================
-        function loadData() {
-            try {
-                const saved = localStorage.getItem('kasPuraData');
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    state.transaksi = data.transaksi || [];
-                    state.anggota = data.anggota || [];
-                }
-            } catch (e) {
-                state.transaksi = [];
-                state.anggota = [];
+        // ==================== UTILITY FUNCTIONS ====================
+        
+        function updateConnectionStatus() {
+            const isOnline = navigator.onLine;
+            const statusBar = document.getElementById('statusBar');
+            
+            if (isOnline) {
+                statusBar.className = 'status-bar online';
+                statusBar.innerHTML = '<i class="fas fa-wifi"></i> ONLINE';
+            } else {
+                statusBar.className = 'status-bar offline';
+                statusBar.innerHTML = '<i class="fas fa-wifi-slash"></i> OFFLINE';
             }
         }
-
-        function saveData() {
-            localStorage.setItem('kasPuraData', JSON.stringify({
-                transaksi: state.transaksi,
-                anggota: state.anggota
-            }));
+        
+        function updateLastSync() {
+            document.getElementById('lastSync').textContent = 
+                `Terakhir sinkron: ${new Date().toLocaleTimeString('id-ID')}`;
         }
-
-        function getGlobalBalance() {
-            let balance = 0;
-            state.transaksi.forEach(t => {
-                if (t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG') balance += t.nominal || 0;
-                if (t.jenis === 'PENGELUARAN') balance -= t.nominal || 0;
-            });
-            return balance;
-        }
-
+        
         function formatRupiah(angka) {
-            return 'Rp ' + (angka || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            if (!angka && angka !== 0) return 'Rp 0';
+            return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         }
-
+        
         function formatTanggal(tgl) {
             if (!tgl) return '-';
             try {
                 const d = new Date(tgl);
-                return d.toLocaleDateString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+                return d.toLocaleDateString('id-ID', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
             } catch { return '-'; }
         }
 
-        function formatRupiahInput(angka) {
-            return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        function formatTanggalLengkap(tgl) {
+            if (!tgl) return '-';
+            try {
+                const d = new Date(tgl);
+                const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+                const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+                return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+            } catch { return '-'; }
         }
-
-        function parseRupiah(rupiah) {
-            return parseInt(rupiah.replace(/[^0-9]/g, '')) || 0;
-        }
-
-        function generateIdAnggota() {
-            const lastId = state.anggota
-                .map(a => parseInt(a.id?.replace('AG', '')) || 0)
-                .reduce((max, curr) => Math.max(max, curr), 0);
-            return 'AG' + (lastId + 1).toString().padStart(3, '0');
-        }
-
-        function showToast(msg, isError = false) {
-            const toast = document.createElement('div');
-            toast.className = 'toast' + (isError ? ' error' : '');
-            toast.innerText = msg;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 2000);
-        }
-
-        // ==================== RENDER ====================
-        function renderTab() {
-            if (state.tab === 'anggota') renderAnggota();
-            else if (state.tab === 'buku') renderBuku();
-            else if (state.tab === 'input') renderInput();
-        }
-
-        function renderAnggota() {
-            let html = `
-                <div class="card">
-                    <div class="card-header">
-                        <h3><i class="fas fa-users"></i> Daftar Anggota</h3>
-                    </div>
-                    
-                    <button class="btn-simpan" onclick="tambahAnggota()" style="margin-bottom:16px">
-                        <i class="fas fa-plus"></i> TAMBAH ANGGOTA
-                    </button>
-                    
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr><th>ID</th><th>Nama</th><th>Alamat</th><th>No HP</th></tr>
-                            </thead>
-                            <tbody>
-            `;
+        
+        function showAlert(message, type = 'success', duration = 5000) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = message;
             
-            if (state.anggota.length === 0) {
-                html += '<tr><td colspan="4" class="text-center" style="padding:30px;">Belum ada anggota</td></tr>';
-            } else {
-                state.anggota.forEach(a => {
-                    html += `<tr><td>${a.id}</td><td>${a.nama}</td><td>${a.alamat || '-'}</td><td>${a.no_hp || '-'}</td></tr>`;
-                });
+            const contentArea = document.getElementById('contentArea');
+            contentArea.insertBefore(alertDiv, contentArea.firstChild);
+            
+            if (duration > 0) {
+                setTimeout(() => alertDiv.remove(), duration);
             }
-            
-            html += `</tbody></table></div></div>`;
-            document.getElementById('content').innerHTML = html;
         }
-
-        function renderBuku() {
-            let html = `
-                <div class="info-card">
-                    <div class="flex-between">
-                        <div><div class="info-label">Saldo</div><div class="info-value">${formatRupiah(getGlobalBalance())}</div></div>
-                        <div><div class="info-label">Transaksi</div><div class="info-value">${state.transaksi.length}</div></div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header"><h3><i class="fas fa-book"></i> Buku Kas</h3></div>
-                    <div class="table-container">
-                        <table>
-                            <thead><tr><th>No</th><th>Waktu</th><th>ID</th><th>Nama</th><th>Jenis</th><th>Nominal</th><th>Keterangan</th></tr></thead>
-                            <tbody>
-            `;
-            
-            if (state.transaksi.length === 0) {
-                html += '<tr><td colspan="7" class="text-center" style="padding:30px;">Belum ada transaksi</td></tr>';
-            } else {
-                [...state.transaksi].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach((t, i) => {
-                    let badge = t.jenis === 'SETOR' ? 'setor' : 
-                                t.jenis === 'PENGELUARAN' ? 'pengeluaran' :
-                                t.jenis === 'DONASI_UANG' ? 'donasi-uang' : 'donasi-barang';
-                    let textClass = t.jenis === 'PENGELUARAN' ? 'text-negative' : 'text-positive';
-                    let display = t.jenis === 'DONASI_BARANG' ? t.barang : formatRupiah(t.nominal);
-                    
-                    html += `<tr>
-                        <td>${i+1}</td>
-                        <td>${formatTanggal(t.timestamp)}</td>
-                        <td>${t.id_nasabah || '-'}</td>
-                        <td>${t.nama}</td>
-                        <td><span class="badge ${badge}">${t.jenis.replace('_',' ')}</span></td>
-                        <td class="${textClass}">${display}</td>
-                        <td>${t.keterangan || '-'}</td>
-                    </tr>`;
-                });
+        
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+        
+        function closeModal() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.style.display = 'none';
+            });
+        }
+        
+        function loadFromLocalStorage() {
+            try {
+                const saved = localStorage.getItem('kasPuraTransaksi');
+                if (saved) {
+                    state.transaksi = JSON.parse(saved);
+                }
+                hitungStatistik();
+            } catch (e) {
+                console.error('Error loading from localStorage:', e);
             }
+        }
+        
+        function saveToLocalStorage() {
+            localStorage.setItem('kasPuraTransaksi', JSON.stringify(state.transaksi));
+            hitungStatistik();
+        }
+        
+        function hitungStatistik() {
+            let totalSetor = 0, totalPengeluaran = 0, totalDonasi = 0, totalPinjam = 0;
             
-            html += `</tbody></table></div></div>`;
-            document.getElementById('content').innerHTML = html;
+            state.transaksi.forEach(t => {
+                if (t.jenis === 'SETOR') totalSetor += t.nominal || 0;
+                if (t.jenis === 'PENGELUARAN') totalPengeluaran += t.nominal || 0;
+                if (t.jenis === 'DONASI_UANG') totalDonasi += t.nominal || 0;
+                if (t.jenis === 'PINJAM') totalPinjam += t.nominal || 0;
+            });
+            
+            state.stats = { totalSetor, totalPengeluaran, totalDonasi, totalPinjam };
+            state.globalBalance = totalSetor + totalDonasi - totalPengeluaran - totalPinjam;
         }
 
-        function renderInput() {
-            let html = `
-                <div class="card">
-                    <h3 style="margin-bottom:16px">Input Transaksi</h3>
-                    <div class="aksi-buttons">
-                        <button class="aksi-btn setor" onclick="pilihAksi('SETOR', this)">SETOR</button>
-                        <button class="aksi-btn pengeluaran" onclick="pilihAksi('PENGELUARAN', this)">PENGELUARAN</button>
-                        <button class="aksi-btn donasi" onclick="pilihAksi('DONASI', this)">DONASI</button>
-                    </div>
-                    <div id="formContainer"></div>
+        // ==================== TAB LOADING FUNCTIONS ====================
+        
+        async function loadTab(tabName) {
+            state.tab = tabName;
+            
+            // Update active tab
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`.tab[onclick="loadTab('${tabName}')"]`).classList.add('active');
+            
+            // Show loading
+            document.getElementById('contentArea').innerHTML = `
+                <div class="text-center fade-in" style="padding: 60px 20px;">
+                    <div class="loading"></div>
+                    <div class="mt-20" style="color: #666; font-size: 14px;">Memuat...</div>
                 </div>
             `;
-            document.getElementById('content').innerHTML = html;
-            pilihAksi('SETOR', document.querySelector('.aksi-btn.setor'));
+            
+            try {
+                switch(tabName) {
+                    case 'dashboard':
+                        await loadDashboardTab();
+                        break;
+                    case 'transaksi':
+                        await loadTransaksiTab();
+                        break;
+                    case 'anggota':
+                        await loadAnggotaTab();
+                        break;
+                    case 'laporan':
+                        await loadLaporanTab();
+                        break;
+                }
+                updateLastSync();
+            } catch (error) {
+                console.error('Error loading tab:', error);
+            }
         }
 
-        window.pilihAksi = function(aksi, el) {
-            document.querySelectorAll('.aksi-btn').forEach(b => b.classList.remove('active'));
-            if (el) el.classList.add('active');
+        // ==================== DASHBOARD TAB ====================
+        async function loadDashboardTab() {
+            const totalPemasukan = state.stats.totalSetor + state.stats.totalDonasi;
+            const totalPengeluaran = state.stats.totalPengeluaran + state.stats.totalPinjam;
             
-            let formHtml = '';
-            
-            if (aksi === 'SETOR') {
-                let options = '<option value="">-- Pilih Anggota --</option>';
-                state.anggota.forEach(a => options += `<option value="${a.id}|${a.nama}">${a.id} - ${a.nama}</option>`);
+            const recentTransaksi = [...state.transaksi]
+                .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))
+                .slice(0, 5);
+
+            let html = `
+                <div class="saldo-card">
+                    <div style="font-size: 14px;">SALDO GLOBAL</div>
+                    <div class="saldo-amount">${formatRupiah(state.globalBalance)}</div>
+                    <div class="saldo-details">
+                        <div class="saldo-item">
+                            <div class="saldo-item-label">Anggota</div>
+                            <div class="saldo-item-value">${state.anggota.length}</div>
+                        </div>
+                        <div class="saldo-item">
+                            <div class="saldo-item-label">Transaksi</div>
+                            <div class="saldo-item-value">${state.transaksi.length}</div>
+                        </div>
+                        <div class="saldo-item">
+                            <div class="saldo-item-label">Donatur</div>
+                            <div class="saldo-item-value">${state.donatur.length}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${formatRupiah(state.stats.totalSetor)}</div>
+                        <div class="stat-label">Total Setor</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${formatRupiah(state.stats.totalPengeluaran)}</div>
+                        <div class="stat-label">Pengeluaran</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${formatRupiah(state.stats.totalDonasi)}</div>
+                        <div class="stat-label">Donasi</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${state.stats.totalPinjam}</div>
+                        <div class="stat-label">Pinjaman</div>
+                    </div>
+                </div>
+
+                <div style="background: #f8f9fa; border-radius: 10px; padding: 15px; margin-top: 20px;">
+                    <h3 style="color: #1a237e; margin-bottom: 15px;">Transaksi Terbaru</h3>
+            `;
+
+            if (recentTransaksi.length === 0) {
+                html += '<p class="text-center" style="color: #999;">Belum ada transaksi</p>';
+            } else {
+                recentTransaksi.forEach(t => {
+                    html += `
+                        <div style="border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between;">
+                            <div>
+                                <strong>${t.nama}</strong><br>
+                                <small style="color: #666;">${t.jenis.replace('_',' ')} · ${formatTanggal(t.timestamp)}</small>
+                            </div>
+                            <span style="color: ${t.jenis === 'PENGELUARAN' ? '#c62828' : '#2e7d32'}; font-weight: bold;">
+                                ${t.jenis === 'PENGELUARAN' ? '-' : '+'} ${formatRupiah(t.nominal)}
+                            </span>
+                        </div>
+                    `;
+                });
+            }
+
+            html += `</div>`;
+            document.getElementById('contentArea').innerHTML = html;
+        }
+
+        // ==================== TRANSAKSI TAB ====================
+        async function loadTransaksiTab() {
+            let html = `
+                <h2 style="color: #1a237e; margin-bottom: 20px; text-align: center;">
+                    <i class="fas fa-exchange-alt"></i> Transaksi Baru
+                </h2>
                 
-                formHtml = `
-                    <div class="form-group"><label>Pilih Anggota</label><select class="form-control" id="pilihAnggota">${options}</select></div>
-                    <div class="form-group"><label>Jumlah (Rp)</label><input type="text" class="form-control" id="jumlahSetor" onkeyup="formatUang(this)"></div>
-                    <div class="form-group"><label>Keterangan</label><textarea class="form-control" id="keterangan" rows="2"></textarea></div>
-                `;
-            } else if (aksi === 'PENGELUARAN') {
-                formHtml = `
-                    <div class="form-group"><label>Nama Pengeluaran</label><input type="text" class="form-control" id="namaPengeluaran"></div>
-                    <div class="form-group"><label>Jumlah (Rp)</label><input type="text" class="form-control" id="jumlahPengeluaran" onkeyup="formatUang(this)"></div>
-                    <div class="form-group"><label>Keterangan</label><textarea class="form-control" id="keterangan" rows="2"></textarea></div>
-                `;
-            } else if (aksi === 'DONASI') {
-                formHtml = `
-                    <div class="form-group"><label>Nama Donatur</label><input type="text" class="form-control" id="namaDonatur"></div>
-                    <div class="form-group"><label>Jenis</label>
-                        <select class="form-control" id="jenisDonasi" onchange="toggleDonasi()">
-                            <option value="UANG">Donasi Uang</option>
-                            <option value="BARANG">Donasi Barang</option>
-                        </select>
+                <div class="form-group">
+                    <label class="form-label required">Pilih Anggota</label>
+                    <select id="pilihAnggota" class="form-control">
+                        <option value="">-- Pilih Anggota --</option>
+                        ${state.anggota.map(a => `
+                            <option value="${a.id}|${a.nama}">${a.nama} (${a.pangkat})</option>
+                        `).join('')}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label required">Jenis Transaksi</label>
+                    <select id="jenisTransaksi" class="form-control" onchange="toggleFormTransaksi()">
+                        <option value="">-- Pilih Jenis --</option>
+                        <option value="SETOR">💰 SETOR (Uang Masuk)</option>
+                        <option value="PENGELUARAN">📤 PENGELUARAN (Biaya)</option>
+                        <option value="DONASI_UANG">🎁 DONASI UANG</option>
+                        <option value="DONASI_BARANG">📦 DONASI BARANG</option>
+                        <option value="PINJAM">💸 PINJAM</option>
+                    </select>
+                </div>
+                
+                <div id="formSetor" class="hidden">
+                    <div class="form-group">
+                        <label class="form-label required">Jumlah Setor (Rp)</label>
+                        <input type="text" id="jumlahSetor" class="form-control" placeholder="0" onkeyup="formatUang(this)">
                     </div>
-                    <div class="form-group" id="donasiUangField"><label>Jumlah (Rp)</label><input type="text" class="form-control" id="jumlahDonasi" onkeyup="formatUang(this)"></div>
-                    <div class="form-group hidden" id="donasiBarangField"><label>Nama Barang</label><input type="text" class="form-control" id="namaBarang"></div>
-                    <div class="form-group"><label>Keterangan</label><textarea class="form-control" id="keterangan" rows="2"></textarea></div>
-                `;
+                </div>
+                
+                <div id="formPengeluaran" class="hidden">
+                    <div class="form-group">
+                        <label class="form-label required">Nama Pengeluaran</label>
+                        <input type="text" id="namaPengeluaran" class="form-control" placeholder="Contoh: Beli ATK">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Jumlah (Rp)</label>
+                        <input type="text" id="jumlahPengeluaran" class="form-control" placeholder="0" onkeyup="formatUang(this)">
+                    </div>
+                </div>
+                
+                <div id="formDonasiUang" class="hidden">
+                    <div class="form-group">
+                        <label class="form-label required">Nama Donatur</label>
+                        <input type="text" id="namaDonatur" class="form-control" placeholder="Nama donatur">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Jumlah Donasi (Rp)</label>
+                        <input type="text" id="jumlahDonasi" class="form-control" placeholder="0" onkeyup="formatUang(this)">
+                    </div>
+                </div>
+                
+                <div id="formDonasiBarang" class="hidden">
+                    <div class="form-group">
+                        <label class="form-label required">Nama Donatur</label>
+                        <input type="text" id="namaDonaturBarang" class="form-control" placeholder="Nama donatur">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Nama Barang</label>
+                        <input type="text" id="namaBarang" class="form-control" placeholder="Contoh: Beras 5kg, Kopi 1kg">
+                    </div>
+                </div>
+                
+                <div id="formPinjam" class="hidden">
+                    <div class="form-group">
+                        <label class="form-label required">Jumlah Pinjaman (Rp)</label>
+                        <input type="text" id="jumlahPinjam" class="form-control" placeholder="0" onkeyup="formatUang(this)">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Keterangan</label>
+                    <textarea id="keterangan" class="form-control" rows="2" placeholder="Opsional"></textarea>
+                </div>
+                
+                <button class="btn" onclick="simpanTransaksi()">
+                    <i class="fas fa-save"></i> SIMPAN TRANSAKSI
+                </button>
+                
+                <div class="mt-20">
+                    <h3 style="color: #1a237e; margin-bottom: 15px;">Riwayat Transaksi</h3>
+                    <div style="max-height: 300px; overflow-y: auto;">
+            `;
+
+            if (state.transaksi.length === 0) {
+                html += '<p class="text-center" style="color: #999;">Belum ada transaksi</p>';
+            } else {
+                [...state.transaksi].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(t => {
+                    let display = t.jenis === 'DONASI_BARANG' ? t.barang : formatRupiah(t.nominal);
+                    html += `
+                        <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span><strong>${t.nama}</strong> · ${t.jenis.replace('_',' ')}</span>
+                                <span style="color: ${t.jenis === 'PENGELUARAN' || t.jenis === 'PINJAM' ? '#c62828' : '#2e7d32'};">
+                                    ${t.jenis === 'PENGELUARAN' || t.jenis === 'PINJAM' ? '-' : '+'} ${display}
+                                </span>
+                            </div>
+                            <div style="font-size: 11px; color: #666;">
+                                ${formatTanggal(t.timestamp)} · ${t.keterangan || '-'}
+                            </div>
+                        </div>
+                    `;
+                });
             }
+
+            html += `</div></div>`;
+            document.getElementById('contentArea').innerHTML = html;
+        }
+
+        // ==================== ANGGOTA TAB ====================
+        async function loadAnggotaTab() {
+            let html = `
+                <h2 style="color: #1a237e; margin-bottom: 20px; text-align: center;">
+                    <i class="fas fa-users"></i> Daftar Anggota Koramil
+                </h2>
+                
+                <div class="form-group">
+                    <input type="text" id="searchAnggota" class="form-control" placeholder="🔍 Cari anggota..." onkeyup="filterAnggota()">
+                </div>
+                
+                <div style="max-height: 400px; overflow-y: auto;">
+            `;
+
+            state.anggota.forEach((a, index) => {
+                html += `
+                    <div class="nasabah-item anggota-item" data-nama="${a.nama.toLowerCase()}">
+                        <div class="nasabah-info">
+                            <h4>${index+1}. ${a.nama}</h4>
+                            <div class="nasabah-meta">
+                                ${a.pangkat} · ID: ${a.id}
+                            </div>
+                        </div>
+                        <div class="nasabah-id">
+                            ${a.no_hp !== '-' ? a.no_hp : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            document.getElementById('contentArea').innerHTML = html;
+        }
+
+        // ==================== LAPORAN TAB ====================
+        async function loadLaporanTab() {
+            let html = `
+                <h2 style="color: #1a237e; margin-bottom: 20px; text-align: center;">
+                    <i class="fas fa-print"></i> Cetak Laporan
+                </h2>
+                
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <p style="margin-bottom: 15px;">Ringkasan data untuk dicetak:</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div><strong>Total Anggota:</strong> ${state.anggota.length}</div>
+                        <div><strong>Total Transaksi:</strong> ${state.transaksi.length}</div>
+                        <div><strong>Saldo Global:</strong> ${formatRupiah(state.globalBalance)}</div>
+                        <div><strong>Total Donatur:</strong> ${state.donatur.length}</div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-print" onclick="cetakLaporan()">
+                    <i class="fas fa-print"></i> CETAK LAPORAN LENGKAP
+                </button>
+                
+                <div style="margin-top: 20px; font-size: 12px; color: #666; text-align: center;">
+                    Laporan akan dicetak dengan format kop surat, ringkasan, dan tabel transaksi.
+                </div>
+            `;
+            document.getElementById('contentArea').innerHTML = html;
+        }
+
+        // ==================== FUNGSI BANTU ====================
+        window.toggleFormTransaksi = function() {
+            const jenis = document.getElementById('jenisTransaksi').value;
+            document.querySelectorAll('[id^="form"]').forEach(el => {
+                if (el.id !== 'formContainer') el.classList.add('hidden');
+            });
             
-            formHtml += `<button class="btn-simpan" onclick="simpanTransaksi('${aksi}')">SIMPAN</button>`;
-            formHtml += `<button class="btn-batal" onclick="state.tab='buku'; renderTab()">BATAL</button>`;
-            
-            document.getElementById('formContainer').innerHTML = formHtml;
-            if (aksi === 'DONASI') toggleDonasi();
+            if (jenis === 'SETOR') document.getElementById('formSetor').classList.remove('hidden');
+            if (jenis === 'PENGELUARAN') document.getElementById('formPengeluaran').classList.remove('hidden');
+            if (jenis === 'DONASI_UANG') document.getElementById('formDonasiUang').classList.remove('hidden');
+            if (jenis === 'DONASI_BARANG') document.getElementById('formDonasiBarang').classList.remove('hidden');
+            if (jenis === 'PINJAM') document.getElementById('formPinjam').classList.remove('hidden');
         };
 
         window.formatUang = function(input) {
             let val = input.value.replace(/[^0-9]/g, '');
-            input.value = val ? formatRupiahInput(parseInt(val)) : '';
-        };
-
-        window.toggleDonasi = function() {
-            let jenis = document.getElementById('jenisDonasi')?.value;
-            let uang = document.getElementById('donasiUangField');
-            let barang = document.getElementById('donasiBarangField');
-            if (uang && barang) {
-                if (jenis === 'UANG') {
-                    uang.classList.remove('hidden');
-                    barang.classList.add('hidden');
-                } else {
-                    uang.classList.add('hidden');
-                    barang.classList.remove('hidden');
-                }
+            if (val) {
+                input.value = parseInt(val).toLocaleString('id-ID');
+            } else {
+                input.value = '';
             }
         };
 
-        window.simpanTransaksi = function(aksi) {
-            let idNasabah = '', nama = '', nominal = 0, barang = '', keterangan = '';
+        window.parseRupiah = function(rupiah) {
+            return parseInt(rupiah.replace(/[^0-9]/g, '')) || 0;
+        };
+
+        window.filterAnggota = function() {
+            const keyword = document.getElementById('searchAnggota').value.toLowerCase();
+            document.querySelectorAll('.anggota-item').forEach(item => {
+                const nama = item.dataset.nama || '';
+                item.style.display = nama.includes(keyword) ? 'flex' : 'none';
+            });
+        };
+
+        window.simpanTransaksi = function() {
+            const anggotaVal = document.getElementById('pilihAnggota')?.value;
+            const jenis = document.getElementById('jenisTransaksi').value;
+            const keterangan = document.getElementById('keterangan')?.value || '';
             
-            if (aksi === 'SETOR') {
-                let val = document.getElementById('pilihAnggota')?.value;
-                if (!val) { showToast('Pilih anggota', true); return; }
-                [idNasabah, nama] = val.split('|');
-                nominal = parseRupiah(document.getElementById('jumlahSetor')?.value || '0');
-                if (nominal <= 0) { showToast('Jumlah harus diisi', true); return; }
-                keterangan = document.getElementById('keterangan')?.value || '';
-                
-                state.transaksi.push({
-                    timestamp: new Date().toISOString(),
-                    id_nasabah: idNasabah,
-                    nama: nama,
-                    jenis: 'SETOR',
-                    nominal: nominal,
-                    keterangan: keterangan
-                });
+            if (!anggotaVal) { showAlert('Pilih anggota', 'error'); return; }
+            if (!jenis) { showAlert('Pilih jenis transaksi', 'error'); return; }
+            
+            const [idAnggota, nama] = anggotaVal.split('|');
+            let nominal = 0, barang = '';
+            
+            if (jenis === 'SETOR') {
+                nominal = window.parseRupiah(document.getElementById('jumlahSetor')?.value || '0');
+                if (nominal <= 0) { showAlert('Jumlah setor harus diisi', 'error'); return; }
             }
-            else if (aksi === 'PENGELUARAN') {
-                nama = document.getElementById('namaPengeluaran')?.value.trim();
-                if (!nama) { showToast('Nama harus diisi', true); return; }
-                nominal = parseRupiah(document.getElementById('jumlahPengeluaran')?.value || '0');
-                if (nominal <= 0) { showToast('Jumlah harus diisi', true); return; }
-                keterangan = document.getElementById('keterangan')?.value || '';
-                
-                state.transaksi.push({
-                    timestamp: new Date().toISOString(),
-                    nama: nama,
-                    jenis: 'PENGELUARAN',
-                    nominal: nominal,
-                    keterangan: keterangan
-                });
+            else if (jenis === 'PENGELUARAN') {
+                const namaPengeluaran = document.getElementById('namaPengeluaran')?.value.trim();
+                if (!namaPengeluaran) { showAlert('Nama pengeluaran harus diisi', 'error'); return; }
+                nominal = window.parseRupiah(document.getElementById('jumlahPengeluaran')?.value || '0');
+                if (nominal <= 0) { showAlert('Jumlah harus diisi', 'error'); return; }
             }
-            else if (aksi === 'DONASI') {
-                nama = document.getElementById('namaDonatur')?.value.trim();
-                if (!nama) { showToast('Nama donatur harus diisi', true); return; }
-                let jenis = document.getElementById('jenisDonasi')?.value;
-                keterangan = document.getElementById('keterangan')?.value || '';
-                
-                if (jenis === 'UANG') {
-                    nominal = parseRupiah(document.getElementById('jumlahDonasi')?.value || '0');
-                    if (nominal <= 0) { showToast('Jumlah harus diisi', true); return; }
-                    state.transaksi.push({
-                        timestamp: new Date().toISOString(),
-                        nama: nama,
-                        jenis: 'DONASI_UANG',
-                        nominal: nominal,
-                        keterangan: keterangan
-                    });
-                } else {
-                    barang = document.getElementById('namaBarang')?.value.trim();
-                    if (!barang) { showToast('Nama barang harus diisi', true); return; }
-                    state.transaksi.push({
-                        timestamp: new Date().toISOString(),
-                        nama: nama,
-                        jenis: 'DONASI_BARANG',
-                        barang: barang,
-                        keterangan: keterangan
-                    });
-                }
+            else if (jenis === 'DONASI_UANG') {
+                const namaDonatur = document.getElementById('namaDonatur')?.value.trim();
+                if (!namaDonatur) { showAlert('Nama donatur harus diisi', 'error'); return; }
+                nominal = window.parseRupiah(document.getElementById('jumlahDonasi')?.value || '0');
+                if (nominal <= 0) { showAlert('Jumlah donasi harus diisi', 'error'); return; }
+            }
+            else if (jenis === 'DONASI_BARANG') {
+                const namaDonatur = document.getElementById('namaDonaturBarang')?.value.trim();
+                if (!namaDonatur) { showAlert('Nama donatur harus diisi', 'error'); return; }
+                barang = document.getElementById('namaBarang')?.value.trim();
+                if (!barang) { showAlert('Nama barang harus diisi', 'error'); return; }
+            }
+            else if (jenis === 'PINJAM') {
+                nominal = window.parseRupiah(document.getElementById('jumlahPinjam')?.value || '0');
+                if (nominal <= 0) { showAlert('Jumlah pinjaman harus diisi', 'error'); return; }
             }
             
-            saveData();
-            showToast('Transaksi disimpan');
-            state.tab = 'buku';
-            renderTab();
+            const transaksiBaru = {
+                timestamp: new Date().toISOString(),
+                id_nasabah: idAnggota,
+                nama: nama,
+                jenis: jenis,
+                nominal: nominal,
+                barang: barang,
+                keterangan: keterangan
+            };
+            
+            state.transaksi.push(transaksiBaru);
+            saveToLocalStorage();
+            showAlert('Transaksi berhasil disimpan');
+            
+            // Reset form
+            document.getElementById('pilihAnggota').value = '';
+            document.getElementById('jenisTransaksi').value = '';
+            document.querySelectorAll('[id^="form"]').forEach(el => el.classList.add('hidden'));
+            
+            // Kembali ke dashboard
+            loadTab('dashboard');
         };
 
-        window.tambahAnggota = function() {
-            let modal = document.createElement('div');
-            modal.className = 'modal';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Tambah Anggota</h3>
-                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group"><label>Nama Lengkap</label><input type="text" class="form-control" id="namaAnggota"></div>
-                        <div class="form-group"><label>Alamat</label><input type="text" class="form-control" id="alamatAnggota"></div>
-                        <div class="form-group"><label>No HP</label><input type="text" class="form-control" id="noHpAnggota"></div>
-                        <button class="modal-btn" onclick="simpanAnggota()">SIMPAN</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
+        window.showAddAnggotaModal = function() {
+            showModal('addAnggotaModal');
         };
 
-        window.simpanAnggota = function() {
-            let nama = document.getElementById('namaAnggota')?.value.trim();
-            if (!nama) { showToast('Nama harus diisi', true); return; }
+        window.addNewAnggota = function() {
+            const nama = document.getElementById('newNama').value.trim();
+            if (!nama) { showAlert('Nama harus diisi', 'error'); return; }
+            
+            const pangkat = document.getElementById('newPangkat').value.trim();
+            const phone = document.getElementById('newPhone').value.trim();
+            const alamat = document.getElementById('newAlamat').value.trim();
+            
+            const newId = 'AG' + (state.anggota.length + 1).toString().padStart(3, '0');
             
             state.anggota.push({
-                id: generateIdAnggota(),
+                id: newId,
                 nama: nama,
-                alamat: document.getElementById('alamatAnggota')?.value.trim() || '',
-                no_hp: document.getElementById('noHpAnggota')?.value.trim() || ''
+                pangkat: pangkat || '-',
+                alamat: alamat || '-',
+                no_hp: phone || '-'
             });
             
-            saveData();
-            document.querySelector('.modal')?.remove();
-            showToast('Anggota ditambahkan');
-            renderAnggota();
+            saveToLocalStorage();
+            closeModal();
+            showAlert('Anggota ditambahkan');
+            loadTab('anggota');
         };
 
-        function cetakLaporan() {
-            let w = window.open('', '_blank');
-            let totalSetor = state.transaksi.filter(t => t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG').reduce((a,b) => a + (b.nominal||0), 0);
-            let totalKeluar = state.transaksi.filter(t => t.jenis === 'PENGELUARAN').reduce((a,b) => a + (b.nominal||0), 0);
+        window.closeModal = closeModal;
+
+        // ==================== CETAK LAPORAN ====================
+        window.cetakLaporan = function() {
+            const printWindow = window.open('', '_blank');
             
-            w.document.write(`
-                <html><head><title>Laporan Kas Pura</title>
-                <style>body{font-family:Times New Roman;padding:20px} table{border-collapse:collapse;width:100%} th,td{border:1px solid #000;padding:8px} .kop{text-align:center;border-bottom:2px solid #1a237e;margin-bottom:20px}</style>
-                </head><body>
-                <div class="kop"><h1>LAPORAN KAS PURA</h1><h3>Koramil Sukasada</h3><p>${new Date().toLocaleDateString('id-ID')}</p></div>
-                <p>Saldo: ${formatRupiah(getGlobalBalance())}</p>
-                <p>Total Setor: ${formatRupiah(totalSetor)}</p>
-                <p>Total Pengeluaran: ${formatRupiah(totalKeluar)}</p>
-                <table><tr><th>No</th><th>Tanggal</th><th>Jenis</th><th>Nama</th><th>Nominal</th><th>Keterangan</th></tr>
-                ${state.transaksi.map((t,i) => `<tr><td>${i+1}</td><td>${formatTanggal(t.timestamp)}</td><td>${t.jenis}</td><td>${t.nama}</td><td>${t.jenis==='DONASI_BARANG'?t.barang:formatRupiah(t.nominal)}</td><td>${t.keterangan||'-'}</td></tr>`).join('')}
-                </table></body></html>
-            `);
-            w.document.close();
-            w.print();
+            const totalPemasukan = state.stats.totalSetor + state.stats.totalDonasi;
+            const totalPengeluaran = state.stats.totalPengeluaran + state.stats.totalPinjam;
+            
+            const html = `<!DOCTYPE html>
+<html>
+<head>
+    <title>Laporan Kas Pura - Koramil Sukasada</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Times New Roman', Times, serif; 
+            padding: 15px;
+            background: white;
+            color: black;
+            line-height: 1.4;
+            font-size: 11pt;
         }
+        .kop {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #1a237e;
+            padding-bottom: 10px;
+        }
+        .kop h1 {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #1a237e;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        .kop h3 {
+            font-size: 12pt;
+            font-weight: normal;
+            color: #333;
+        }
+        .kop p { font-size: 10pt; color: #666; }
+        .info-box {
+            border: 1px solid #000;
+            padding: 10px;
+            margin-bottom: 15px;
+            background: #f9f9f9;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 11pt;
+        }
+        .info-label { font-weight: bold; width: 150px; }
+        .info-value { flex: 1; }
+        .summary-section {
+            margin-bottom: 20px;
+            border: 1px solid #000;
+        }
+        .summary-header {
+            background: #1a237e;
+            color: white;
+            padding: 8px 10px;
+            font-weight: bold;
+            font-size: 12pt;
+        }
+        .summary-content {
+            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .summary-item {
+            border-bottom: 1px dotted #999;
+            padding: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .summary-item.total {
+            border-top: 2px solid #000;
+            border-bottom: none;
+            margin-top: 10px;
+            padding-top: 10px;
+            font-weight: bold;
+            font-size: 12pt;
+            grid-column: span 2;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 10pt;
+        }
+        th {
+            background: #1a237e;
+            color: white;
+            padding: 8px 4px;
+            text-align: center;
+            font-weight: bold;
+            border: 1px solid #333;
+        }
+        td {
+            padding: 6px 4px;
+            border: 1px solid #333;
+            vertical-align: top;
+        }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .positive { color: #006600; font-weight: bold; }
+        .negative { color: #cc0000; font-weight: bold; }
+        .footer {
+            margin-top: 70px;
+            text-align: right;
+            width: 100%;
+        }
+        .signature {
+            display: inline-block;
+            text-align: center;
+        }
+        @media print {
+            body { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="kop">
+        <h1>LAPORAN KAS PURA</h1>
+        <h3>Koramil Sukasada</h3>
+        <p>Periode: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+    </div>
+
+    <div class="info-box">
+        <div class="info-row"><span class="info-label">Saldo Global</span><span class="info-value">: ${formatRupiah(state.globalBalance)}</span></div>
+        <div class="info-row"><span class="info-label">Total Anggota</span><span class="info-value">: ${state.anggota.length} orang</span></div>
+        <div class="info-row"><span class="info-label">Total Donatur</span><span class="info-value">: ${state.donatur.length} orang</span></div>
+        <div class="info-row"><span class="info-label">Total Transaksi</span><span class="info-value">: ${state.transaksi.length} kali</span></div>
+    </div>
+
+    <div class="summary-section">
+        <div class="summary-header">RINGKASAN TRANSAKSI</div>
+        <div class="summary-content">
+            <div class="summary-item"><span>Total Pemasukan</span><span class="positive">${formatRupiah(totalPemasukan)}</span></div>
+            <div class="summary-item"><span>Total Pengeluaran</span><span class="negative">${formatRupiah(totalPengeluaran)}</span></div>
+            <div class="summary-item"><span style="margin-left: 20px;">- SETOR</span><span>${formatRupiah(state.stats.totalSetor)}</span></div>
+            <div class="summary-item"><span style="margin-left: 20px;">- DONASI</span><span class="positive">${formatRupiah(state.stats.totalDonasi)}</span></div>
+            <div class="summary-item"><span style="margin-left: 20px;">- PINJAM</span><span class="neutral">${formatRupiah(state.stats.totalPinjam)}</span></div>
+            <div class="summary-item"><span style="margin-left: 20px;">- PENGELUARAN</span><span class="negative">${formatRupiah(state.stats.totalPengeluaran)}</span></div>
+            <div class="summary-item total"><span>SALDO AKHIR</span><span style="color: #1a237e;">${formatRupiah(state.globalBalance)}</span></div>
+        </div>
+    </div>
+
+    <h3 style="margin: 20px 0 10px;">DAFTAR TRANSAKSI</h3>
+    
+    <table>
+        <thead>
+            <tr>
+                <th width="5%">No</th>
+                <th width="12%">Tanggal</th>
+                <th width="10%">Jenis</th>
+                <th width="10%">ID</th>
+                <th width="15%">Nama</th>
+                <th width="15%">Nominal/Barang</th>
+                <th width="33%">Keterangan</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${state.transaksi.map((t, index) => {
+                const tanggal = t.timestamp ? formatTanggalLengkap(t.timestamp) : '-';
+                const jenis = t.jenis.replace('_',' ') || '-';
+                const nominal = t.nominal || 0;
+                const nama = t.nama || '-';
+                const id = t.id_nasabah || '-';
+                const keterangan = t.keterangan || '-';
+                const nominalClass = (t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG') ? 'positive' : 
+                                     (t.jenis === 'PENGELUARAN' || t.jenis === 'PINJAM') ? 'negative' : '';
+                const nominalDisplay = (t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG') ? formatRupiah(nominal) :
+                                       (t.jenis === 'PENGELUARAN' || t.jenis === 'PINJAM') ? '(' + formatRupiah(nominal) + ')' :
+                                       (t.barang || '-');
+                
+                return `
+                    <tr>
+                        <td class="text-center">${index + 1}</td>
+                        <td class="text-center">${tanggal}</td>
+                        <td class="text-center">${jenis}</td>
+                        <td class="text-center">${id}</td>
+                        <td>${nama}</td>
+                        <td class="text-right ${nominalClass}">${nominalDisplay}</td>
+                        <td>${keterangan}</td>
+                    </tr>
+                `;
+            }).join('')}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <div class="signature">
+            Sukasada, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}<br>
+            Mengetahui,<br>
+            <br>
+            <br>
+            Bendahara
+        </div>
+    </div>
+</body>
+</html>`;
+            
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.print();
+        };
+
+        // Export functions ke global
+        window.loadTab = loadTab;
+        window.closeModal = closeModal;
     </script>
 </body>
 </html>
