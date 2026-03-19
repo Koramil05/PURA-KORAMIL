@@ -79,6 +79,11 @@
             font-size: 1.1rem;
         }
         
+        .header-btn:hover {
+            background: var(--accent);
+            color: var(--primary);
+        }
+        
         /* BOTTOM NAV */
         .nav {
             position: fixed;
@@ -104,6 +109,7 @@
             font-size: 0.7rem;
             gap: 4px;
             cursor: pointer;
+            transition: all 0.2s;
         }
         
         .nav-btn i { font-size: 1.2rem; }
@@ -198,6 +204,17 @@
         .stat-card.purple { border-left-color: var(--purple); }
         .stat-card.info { border-left-color: var(--info); }
         
+        .stat-label {
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+        }
+        
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+        
         /* TABLE */
         .table-container {
             overflow-x: auto;
@@ -263,6 +280,11 @@
             font-size: 1rem;
         }
         
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
         select.form-control {
             appearance: none;
             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
@@ -287,7 +309,6 @@
         .btn-setor { background: linear-gradient(135deg, #2e7d32, #4caf50); }
         .btn-pengeluaran { background: linear-gradient(135deg, #c62828, #f44336); }
         .btn-donasi { background: linear-gradient(135deg, #7b1fa2, #9c27b0); }
-        .btn-print { background: linear-gradient(135deg, #0288d1, #29b6f6); }
         
         /* SEARCH */
         .search-box {
@@ -316,6 +337,7 @@
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
             display: none;
             align-items: center;
             justify-content: center;
@@ -328,6 +350,8 @@
             border-radius: 16px;
             max-width: 400px;
             width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
             padding: 20px;
             border: 2px solid var(--accent);
         }
@@ -381,18 +405,23 @@
     <div class="header">
         <h1><i class="fas fa-temple"></i> Kas Pura Koramil</h1>
         <div class="header-actions">
-            <button class="header-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i></button>
-            <button class="header-btn" id="printBtn"><i class="fas fa-print"></i></button>
+            <button class="header-btn" onclick="refreshData()"><i class="fas fa-sync-alt"></i></button>
+            <button class="header-btn" onclick="cetakLaporan()"><i class="fas fa-print"></i></button>
         </div>
     </div>
 
-    <div class="content" id="content"></div>
+    <div class="content" id="content">
+        <div class="text-center" style="padding: 60px 20px;">
+            <div class="loading-spinner" style="border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+            <div class="mt-2" style="color: var(--text-dim);">Memuat aplikasi...</div>
+        </div>
+    </div>
 
     <div class="nav">
-        <button class="nav-btn active" data-tab="dashboard"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
-        <button class="nav-btn" data-tab="transaksi"><i class="fas fa-exchange-alt"></i><span>Transaksi</span></button>
-        <button class="nav-btn" data-tab="anggota"><i class="fas fa-users"></i><span>Anggota</span></button>
-        <button class="nav-btn" data-tab="donasi"><i class="fas fa-hand-holding-heart"></i><span>Donasi</span></button>
+        <button class="nav-btn active" onclick="ubahTab('dashboard')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
+        <button class="nav-btn" onclick="ubahTab('transaksi')"><i class="fas fa-exchange-alt"></i><span>Transaksi</span></button>
+        <button class="nav-btn" onclick="ubahTab('anggota')"><i class="fas fa-users"></i><span>Anggota</span></button>
+        <button class="nav-btn" onclick="ubahTab('donasi')"><i class="fas fa-hand-holding-heart"></i><span>Donasi</span></button>
     </div>
 
     <!-- MODAL TAMBAH ANGGOTA -->
@@ -400,7 +429,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3><i class="fas fa-user-plus"></i> Tambah Anggota</h3>
-                <button class="modal-close" onclick="closeModal('modalAnggota')">&times;</button>
+                <button class="modal-close" onclick="tutupModal('modalAnggota')">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -429,7 +458,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3><i class="fas fa-hand-holding-heart"></i> Tambah Donasi</h3>
-                <button class="modal-close" onclick="closeModal('modalDonasi')">&times;</button>
+                <button class="modal-close" onclick="tutupModal('modalDonasi')">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -483,54 +512,38 @@
             globalBalance: 0
         };
 
+        let anggotaList = []; // Untuk dropdown
+
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', () => {
             loadData();
-            
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const tab = this.dataset.tab;
-                    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    state.tab = tab;
-                    renderTab();
-                });
-            });
-
-            document.getElementById('refreshBtn').addEventListener('click', () => {
-                loadData();
-                showToast('Data dimuat ulang');
-            });
-
-            document.getElementById('printBtn').addEventListener('click', () => {
-                cetakLaporan();
-            });
         });
 
         // ==================== LOAD DATA ====================
         async function loadData() {
             try {
-                showToast('Memuat data...');
+                showLoading();
                 
                 // Load anggota
                 const anggotaRes = await fetch(API_URL + '?action=getAnggota');
                 const anggotaData = await anggotaRes.json();
                 if (anggotaData.success) {
-                    state.anggota = anggotaData.data;
+                    state.anggota = anggotaData.data || [];
+                    anggotaList = state.anggota;
                 }
                 
                 // Load transaksi
                 const transaksiRes = await fetch(API_URL + '?action=getTransaksi&limit=1000');
                 const transaksiData = await transaksiRes.json();
                 if (transaksiData.success) {
-                    state.transaksi = transaksiData.data;
+                    state.transaksi = transaksiData.data || [];
                 }
                 
                 // Load donasi
                 const donasiRes = await fetch(API_URL + '?action=getDonasi&limit=1000');
                 const donasiData = await donasiRes.json();
                 if (donasiData.success) {
-                    state.donasi = donasiData.data;
+                    state.donasi = donasiData.data || [];
                 }
                 
                 hitungStatistik();
@@ -538,20 +551,36 @@
                 
             } catch (error) {
                 console.error('Error:', error);
-                showToast('Gagal memuat data', true);
+                showToast('Gagal memuat data: ' + error.message, true);
+                // Fallback ke data dummy
+                state.anggota = [
+                    { id: 'AG001', nama: 'Kapten Inf I Nyoman Arya Kepakisan', pangkat: 'Kapten Inf', status: 'AKTIF' },
+                    { id: 'AG002', nama: 'Peltu I Nyoman Wilmana', pangkat: 'Peltu', status: 'AKTIF' }
+                ];
+                anggotaList = state.anggota;
+                renderTab();
             }
+        }
+
+        function showLoading() {
+            document.getElementById('content').innerHTML = `
+                <div class="text-center" style="padding: 60px 20px;">
+                    <div style="border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                    <div class="mt-2" style="color: var(--text-dim);">Memuat data...</div>
+                </div>
+            `;
         }
 
         function hitungStatistik() {
             let totalSetor = 0, totalPengeluaran = 0, totalDonasiUang = 0, totalDonasiBarang = 0;
             
-            state.transaksi.forEach(t => {
-                if (t.jenis === 'SETOR') totalSetor += t.nominal || 0;
-                if (t.jenis === 'PENGELUARAN') totalPengeluaran += t.nominal || 0;
+            (state.transaksi || []).forEach(t => {
+                if (t.jenis === 'SETOR') totalSetor += Number(t.nominal) || 0;
+                if (t.jenis === 'PENGELUARAN') totalPengeluaran += Number(t.nominal) || 0;
             });
             
-            state.donasi.forEach(d => {
-                if (d.jenis === 'UANG') totalDonasiUang += d.nominal || 0;
+            (state.donasi || []).forEach(d => {
+                if (d.jenis === 'UANG') totalDonasiUang += Number(d.nominal) || 0;
                 if (d.jenis === 'BARANG') totalDonasiBarang++;
             });
             
@@ -559,8 +588,10 @@
             state.globalBalance = totalSetor + totalDonasiUang - totalPengeluaran;
         }
 
+        // ==================== FUNGSI BANTU ====================
         function formatRupiah(angka) {
-            return 'Rp ' + (angka || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            if (angka === undefined || angka === null) angka = 0;
+            return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         }
 
         function formatTanggal(tgl) {
@@ -589,7 +620,8 @@
         }
 
         function parseRupiah(rupiah) {
-            return parseInt(rupiah.replace(/[^0-9]/g, '')) || 0;
+            if (!rupiah) return 0;
+            return parseInt(rupiah.toString().replace(/[^0-9]/g, '')) || 0;
         }
 
         function showToast(msg, isError = false) {
@@ -600,15 +632,24 @@
             setTimeout(() => toast.remove(), 2000);
         }
 
-        function showModal(modalId) {
+        function bukaModal(modalId) {
             document.getElementById(modalId).style.display = 'flex';
         }
 
-        function closeModal(modalId) {
+        function tutupModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
         }
 
-        // ==================== RENDER TAB ====================
+        // ==================== TAB ====================
+        function ubahTab(tab) {
+            state.tab = tab;
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if (btn.textContent.includes(tab)) btn.classList.add('active');
+            });
+            renderTab();
+        }
+
         function renderTab() {
             if (state.tab === 'dashboard') renderDashboard();
             else if (state.tab === 'transaksi') renderTransaksi();
@@ -621,35 +662,57 @@
             const totalPemasukan = state.stats.totalSetor + state.stats.totalDonasiUang;
             const totalPengeluaran = state.stats.totalPengeluaran;
             
-            const semuaTransaksi = [
-                ...state.transaksi.map(t => ({ ...t, tipe: 'transaksi' })),
-                ...state.donasi.map(d => ({ 
-                    ...d, 
-                    tipe: 'donasi',
-                    nama: d.namaDonatur,
-                    nominal: d.jenis === 'UANG' ? d.nominal : 0,
-                    display: d.jenis === 'UANG' ? formatRupiah(d.nominal) : d.barang
-                }))
-            ].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 10);
+            // Gabungkan transaksi dan donasi
+            const semuaTransaksi = [];
+            
+            (state.transaksi || []).forEach(t => {
+                semuaTransaksi.push({
+                    ...t,
+                    tipe: 'transaksi',
+                    namaTampil: t.nama,
+                    nilaiTampil: formatRupiah(t.nominal),
+                    kelasWarna: t.jenis === 'PENGELUARAN' ? 'text-negative' : 'text-positive',
+                    badge: t.jenis === 'SETOR' ? 'setor' : 'pengeluaran'
+                });
+            });
+            
+            (state.donasi || []).forEach(d => {
+                semuaTransaksi.push({
+                    timestamp: d.timestamp,
+                    jenis: d.jenis === 'UANG' ? 'DONASI' : 'DONASI BARANG',
+                    namaTampil: d.namaDonatur,
+                    nilaiTampil: d.jenis === 'UANG' ? formatRupiah(d.nominal) : d.barang,
+                    kelasWarna: 'text-purple',
+                    badge: 'donasi'
+                });
+            });
+            
+            semuaTransaksi.sort((a, b) => {
+                const da = new Date(a.timestamp || 0);
+                const db = new Date(b.timestamp || 0);
+                return db - da;
+            });
+            
+            const recent = semuaTransaksi.slice(0, 10);
 
             let html = `
                 <div class="balance-card">
                     <div class="balance-label">SALDO GLOBAL</div>
                     <div class="balance-value">${formatRupiah(state.globalBalance)}</div>
                     <div class="flex-between">
-                        <span>Anggota: ${state.anggota.length}</span>
-                        <span>Donasi: ${state.donasi.length}</span>
-                        <span>Transaksi: ${state.transaksi.length}</span>
+                        <span>👥 ${state.anggota.length} Anggota</span>
+                        <span>📊 ${state.transaksi.length} Transaksi</span>
+                        <span>🎁 ${state.donasi.length} Donasi</span>
                     </div>
                 </div>
 
                 <div class="stats-grid">
                     <div class="stat-card income">
-                        <div class="stat-label">Pemasukan</div>
+                        <div class="stat-label">Total Pemasukan</div>
                         <div class="stat-value text-positive">${formatRupiah(totalPemasukan)}</div>
                     </div>
                     <div class="stat-card expense">
-                        <div class="stat-label">Pengeluaran</div>
+                        <div class="stat-label">Total Pengeluaran</div>
                         <div class="stat-value text-negative">${formatRupiah(totalPengeluaran)}</div>
                     </div>
                 </div>
@@ -671,21 +734,16 @@
                             <tbody>
             `;
 
-            if (semuaTransaksi.length === 0) {
+            if (recent.length === 0) {
                 html += '<tr><td colspan="4" class="text-center">Belum ada transaksi</td></tr>';
             } else {
-                semuaTransaksi.forEach(t => {
-                    let badgeClass = t.jenis === 'SETOR' ? 'setor' : 
-                                    t.jenis === 'PENGELUARAN' ? 'pengeluaran' : 'donasi';
-                    let textClass = t.jenis === 'PENGELUARAN' ? 'text-negative' : 'text-positive';
-                    let display = t.jenis === 'DONASI_BARANG' ? t.barang : formatRupiah(t.nominal);
-                    
+                recent.forEach(t => {
                     html += `
                         <tr>
-                            <td>${formatTanggal(t.timestamp || t.tanggal)}</td>
-                            <td>${t.nama || t.namaDonatur}</td>
-                            <td><span class="badge ${badgeClass}">${t.jenis}</span></td>
-                            <td class="${textClass}">${display}</td>
+                            <td>${formatTanggal(t.timestamp)}</td>
+                            <td>${t.namaTampil || '-'}</td>
+                            <td><span class="badge ${t.badge || 'setor'}">${t.jenis || '-'}</span></td>
+                            <td class="${t.kelasWarna || ''}">${t.nilaiTampil || '-'}</td>
                         </tr>
                     `;
                 });
@@ -703,17 +761,21 @@
 
         // ==================== TRANSAKSI ====================
         function renderTransaksi() {
+            let anggotaOptions = '<option value="">-- Pilih Anggota --</option>';
+            (state.anggota || []).forEach(a => {
+                if (a.status === 'AKTIF') {
+                    anggotaOptions += `<option value="${a.id}|${a.nama}">${a.nama} (${a.pangkat || '-'})</option>`;
+                }
+            });
+
             let html = `
                 <div class="card">
                     <h3>Input Transaksi</h3>
                     
                     <div class="form-group">
                         <label>Pilih Anggota</label>
-                        <select id="pilihAnggota" class="form-control">
-                            <option value="">-- Pilih Anggota --</option>
-                            ${state.anggota.map(a => `
-                                <option value="${a.id}|${a.nama}">${a.nama} (${a.pangkat})</option>
-                            `).join('')}
+                        <select id="pilihAnggotaTransaksi" class="form-control">
+                            ${anggotaOptions}
                         </select>
                     </div>
                     
@@ -770,14 +832,14 @@
                             <tbody>
             `;
 
-            if (state.transaksi.length === 0) {
+            if (!state.transaksi || state.transaksi.length === 0) {
                 html += '<tr><td colspan="5" class="text-center">Belum ada transaksi</td></tr>';
             } else {
                 [...state.transaksi].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(t => {
                     html += `
                         <tr>
                             <td>${formatTanggal(t.timestamp)}</td>
-                            <td>${t.nama}</td>
+                            <td>${t.nama || '-'}</td>
                             <td><span class="badge ${t.jenis === 'SETOR' ? 'setor' : 'pengeluaran'}">${t.jenis}</span></td>
                             <td class="${t.jenis === 'SETOR' ? 'text-positive' : 'text-negative'}">${formatRupiah(t.nominal)}</td>
                             <td>${t.keterangan || '-'}</td>
@@ -802,7 +864,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h3><i class="fas fa-users"></i> Daftar Anggota Koramil</h3>
-                        <button class="header-btn" onclick="showModal('modalAnggota')"><i class="fas fa-plus"></i></button>
+                        <button class="header-btn" onclick="bukaModal('modalAnggota')"><i class="fas fa-plus"></i></button>
                     </div>
                     
                     <div class="search-box">
@@ -823,16 +885,16 @@
                             <tbody id="anggotaTableBody">
             `;
 
-            if (state.anggota.length === 0) {
+            if (!state.anggota || state.anggota.length === 0) {
                 html += '<tr><td colspan="4" class="text-center">Belum ada anggota</td></tr>';
             } else {
                 state.anggota.forEach((a, i) => {
                     html += `
-                        <tr class="anggota-row" data-nama="${a.nama.toLowerCase()}">
+                        <tr class="anggota-row" data-nama="${(a.nama || '').toLowerCase()}">
                             <td>${i+1}</td>
-                            <td>${a.nama}</td>
+                            <td>${a.nama || '-'}</td>
                             <td>${a.pangkat || '-'}</td>
-                            <td><span class="badge ${a.status === 'AKTIF' ? 'setor' : 'pengeluaran'}">${a.status}</span></td>
+                            <td><span class="badge ${a.status === 'AKTIF' ? 'setor' : 'pengeluaran'}">${a.status || 'AKTIF'}</span></td>
                         </tr>
                     `;
                 });
@@ -862,14 +924,14 @@
                     </div>
                     <div class="stat-card purple">
                         <div class="stat-label">Total Donatur</div>
-                        <div class="stat-value text-purple">${new Set(state.donasi.map(d => d.namaDonatur)).size}</div>
+                        <div class="stat-value text-purple">${new Set((state.donasi || []).map(d => d.namaDonatur)).size}</div>
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="card-header">
                         <h3><i class="fas fa-hand-holding-heart"></i> Donasi</h3>
-                        <button class="header-btn" onclick="showModal('modalDonasi')"><i class="fas fa-plus"></i></button>
+                        <button class="header-btn" onclick="bukaModal('modalDonasi')"><i class="fas fa-plus"></i></button>
                     </div>
                     
                     <div class="table-container">
@@ -885,14 +947,14 @@
                             <tbody>
             `;
 
-            if (state.donasi.length === 0) {
+            if (!state.donasi || state.donasi.length === 0) {
                 html += '<tr><td colspan="4" class="text-center">Belum ada donasi</td></tr>';
             } else {
                 [...state.donasi].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(d => {
                     html += `
                         <tr>
                             <td>${formatTanggal(d.timestamp)}</td>
-                            <td>${d.namaDonatur}</td>
+                            <td>${d.namaDonatur || '-'}</td>
                             <td><span class="badge donasi">${d.jenis}</span></td>
                             <td class="${d.jenis === 'UANG' ? 'text-positive' : 'text-info'}">
                                 ${d.jenis === 'UANG' ? formatRupiah(d.nominal) : d.barang}
@@ -927,8 +989,18 @@
 
         window.toggleJenisDonasi = function() {
             const jenis = document.getElementById('jenisDonasi').value;
-            document.getElementById('fieldDonasiUang').classList.toggle('hidden', jenis !== 'UANG');
-            document.getElementById('fieldDonasiBarang').classList.toggle('hidden', jenis !== 'BARANG');
+            const uangField = document.getElementById('fieldDonasiUang');
+            const barangField = document.getElementById('fieldDonasiBarang');
+            
+            if (uangField && barangField) {
+                if (jenis === 'UANG') {
+                    uangField.classList.remove('hidden');
+                    barangField.classList.add('hidden');
+                } else {
+                    uangField.classList.add('hidden');
+                    barangField.classList.remove('hidden');
+                }
+            }
         };
 
         window.filterAnggota = function() {
@@ -941,9 +1013,9 @@
 
         // ==================== SIMPAN DATA ====================
         window.simpanTransaksi = async function() {
-            const anggotaVal = document.getElementById('pilihAnggota').value;
+            const anggotaVal = document.getElementById('pilihAnggotaTransaksi').value;
             const jenis = document.getElementById('jenisTransaksi').value;
-            const keterangan = document.getElementById('keteranganTransaksi').value;
+            const keterangan = document.getElementById('keteranganTransaksi')?.value || '';
             
             if (!anggotaVal) { showToast('Pilih anggota', true); return; }
             if (!jenis) { showToast('Pilih jenis transaksi', true); return; }
@@ -952,146 +1024,163 @@
             let nominal = 0;
             
             if (jenis === 'SETOR') {
-                nominal = parseRupiah(document.getElementById('jumlahSetor').value || '0');
+                nominal = parseRupiah(document.getElementById('jumlahSetor')?.value);
                 if (nominal <= 0) { showToast('Jumlah setor harus diisi', true); return; }
             } else {
-                const namaPengeluaran = document.getElementById('namaPengeluaran').value.trim();
+                const namaPengeluaran = document.getElementById('namaPengeluaran')?.value.trim();
                 if (!namaPengeluaran) { showToast('Nama pengeluaran harus diisi', true); return; }
-                nominal = parseRupiah(document.getElementById('jumlahPengeluaran').value || '0');
+                nominal = parseRupiah(document.getElementById('jumlahPengeluaran')?.value);
                 if (nominal <= 0) { showToast('Jumlah harus diisi', true); return; }
             }
             
+            const now = new Date();
             const transaksiBaru = {
                 idTransaksi: 'TRX' + Date.now(),
-                timestamp: new Date().toISOString(),
-                tanggal: new Date().toISOString().split('T')[0],
+                timestamp: now.toISOString(),
+                tanggal: now.toISOString().split('T')[0],
                 jenis: jenis,
                 idAnggota: idAnggota,
                 nama: nama,
                 nominal: nominal,
                 keterangan: keterangan,
-                bulan: new Date().getMonth() + 1,
-                tahun: new Date().getFullYear()
+                bulan: now.getMonth() + 1,
+                tahun: now.getFullYear()
             };
             
             try {
+                showToast('Menyimpan...');
+                
+                const params = new URLSearchParams({
+                    action: 'saveTransaksi',
+                    ...transaksiBaru
+                });
+                
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     mode: 'cors',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({
-                        action: 'saveTransaksi',
-                        ...transaksiBaru
-                    })
+                    body: params
                 });
                 
                 const result = await response.json();
                 if (result.success) {
                     showToast('Transaksi disimpan');
                     await loadData();
-                    state.tab = 'dashboard';
-                    renderTab();
                 } else {
-                    showToast('Gagal menyimpan', true);
+                    showToast('Gagal: ' + (result.message || 'Unknown error'), true);
                 }
             } catch (error) {
+                console.error(error);
                 showToast('Gagal menyimpan', true);
             }
         };
 
         window.simpanAnggota = async function() {
-            const nama = document.getElementById('namaAnggota').value.trim();
+            const nama = document.getElementById('namaAnggota')?.value.trim();
             if (!nama) { showToast('Nama harus diisi', true); return; }
             
+            const now = new Date();
             const anggotaBaru = {
                 id: 'AG' + Date.now().toString().slice(-6),
                 nama: nama,
-                pangkat: document.getElementById('pangkatAnggota').value.trim() || '-',
-                no_hp: document.getElementById('hpAnggota').value.trim() || '-',
-                alamat: document.getElementById('alamatAnggota').value.trim() || '-',
+                pangkat: document.getElementById('pangkatAnggota')?.value.trim() || '-',
+                no_hp: document.getElementById('hpAnggota')?.value.trim() || '-',
+                alamat: document.getElementById('alamatAnggota')?.value.trim() || '-',
                 status: 'AKTIF',
-                tanggalDaftar: new Date().toISOString(),
-                lastUpdate: new Date().toISOString()
+                tanggalDaftar: now.toISOString(),
+                lastUpdate: now.toISOString()
             };
             
             try {
+                showToast('Menyimpan...');
+                
+                const params = new URLSearchParams({
+                    action: 'saveAnggota',
+                    ...anggotaBaru
+                });
+                
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     mode: 'cors',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({
-                        action: 'saveAnggota',
-                        ...anggotaBaru
-                    })
+                    body: params
                 });
                 
                 const result = await response.json();
                 if (result.success) {
                     showToast('Anggota ditambahkan');
-                    closeModal('modalAnggota');
+                    tutupModal('modalAnggota');
                     await loadData();
-                    state.tab = 'anggota';
-                    renderTab();
                 } else {
-                    showToast('Gagal menyimpan', true);
+                    showToast('Gagal: ' + (result.message || 'Unknown error'), true);
                 }
             } catch (error) {
+                console.error(error);
                 showToast('Gagal menyimpan', true);
             }
         };
 
         window.simpanDonasi = async function() {
-            const jenis = document.getElementById('jenisDonasi').value;
-            const namaDonatur = document.getElementById('namaDonatur').value.trim();
+            const jenis = document.getElementById('jenisDonasi')?.value;
+            const namaDonatur = document.getElementById('namaDonatur')?.value.trim();
             
             if (!namaDonatur) { showToast('Nama donatur harus diisi', true); return; }
             
+            const now = new Date();
             const donasiBaru = {
                 id: 'DNS' + Date.now(),
-                timestamp: new Date().toISOString(),
-                tanggal: new Date().toISOString().split('T')[0],
+                timestamp: now.toISOString(),
+                tanggal: now.toISOString().split('T')[0],
                 jenis: jenis,
                 namaDonatur: namaDonatur,
-                alamat: document.getElementById('alamatDonatur').value.trim() || '-',
-                keterangan: document.getElementById('keteranganDonasi').value.trim() || '-',
-                bulan: new Date().getMonth() + 1,
-                tahun: new Date().getFullYear()
+                alamat: document.getElementById('alamatDonatur')?.value.trim() || '-',
+                keterangan: document.getElementById('keteranganDonasi')?.value.trim() || '-',
+                bulan: now.getMonth() + 1,
+                tahun: now.getFullYear()
             };
             
             if (jenis === 'UANG') {
-                donasiBaru.nominal = parseRupiah(document.getElementById('jumlahDonasi').value || '0');
+                donasiBaru.nominal = parseRupiah(document.getElementById('jumlahDonasi')?.value);
                 donasiBaru.barang = '';
                 if (donasiBaru.nominal <= 0) { showToast('Jumlah donasi harus diisi', true); return; }
             } else {
-                donasiBaru.barang = document.getElementById('barangDonasi').value.trim();
+                donasiBaru.barang = document.getElementById('barangDonasi')?.value.trim();
                 donasiBaru.nominal = 0;
                 if (!donasiBaru.barang) { showToast('Nama barang harus diisi', true); return; }
             }
             
             try {
+                showToast('Menyimpan...');
+                
+                const params = new URLSearchParams({
+                    action: 'saveDonasi',
+                    ...donasiBaru
+                });
+                
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     mode: 'cors',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({
-                        action: 'saveDonasi',
-                        ...donasiBaru
-                    })
+                    body: params
                 });
                 
                 const result = await response.json();
                 if (result.success) {
                     showToast('Donasi disimpan');
-                    closeModal('modalDonasi');
+                    tutupModal('modalDonasi');
                     await loadData();
-                    state.tab = 'donasi';
-                    renderTab();
                 } else {
-                    showToast('Gagal menyimpan', true);
+                    showToast('Gagal: ' + (result.message || 'Unknown error'), true);
                 }
             } catch (error) {
+                console.error(error);
                 showToast('Gagal menyimpan', true);
             }
+        };
+
+        // ==================== REFRESH ====================
+        window.refreshData = function() {
+            loadData();
         };
 
         // ==================== CETAK LAPORAN ====================
@@ -1101,6 +1190,30 @@
             const totalPemasukan = state.stats.totalSetor + state.stats.totalDonasiUang;
             const totalPengeluaran = state.stats.totalPengeluaran;
             
+            const allData = [];
+            (state.transaksi || []).forEach(t => {
+                allData.push({
+                    ...t,
+                    jenisTampil: t.jenis,
+                    namaTampil: t.nama,
+                    nilaiTampil: t.jenis === 'SETOR' ? formatRupiah(t.nominal) : '(' + formatRupiah(t.nominal) + ')',
+                    kelas: t.jenis === 'SETOR' ? 'positive' : 'negative'
+                });
+            });
+            
+            (state.donasi || []).forEach(d => {
+                allData.push({
+                    timestamp: d.timestamp,
+                    jenisTampil: d.jenis === 'UANG' ? 'DONASI UANG' : 'DONASI BARANG',
+                    namaTampil: d.namaDonatur,
+                    nilaiTampil: d.jenis === 'UANG' ? formatRupiah(d.nominal) : d.barang,
+                    kelas: 'positive',
+                    keterangan: d.keterangan
+                });
+            });
+            
+            allData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
             const html = `<!DOCTYPE html>
 <html>
 <head>
@@ -1209,7 +1322,7 @@
     <div class="info-box">
         <div class="info-row"><span class="info-label">Saldo Global</span><span>: ${formatRupiah(state.globalBalance)}</span></div>
         <div class="info-row"><span class="info-label">Total Anggota</span><span>: ${state.anggota.length} orang</span></div>
-        <div class="info-row"><span class="info-label">Total Donatur</span><span>: ${new Set(state.donasi.map(d => d.namaDonatur)).size} orang</span></div>
+        <div class="info-row"><span class="info-label">Total Donatur</span><span>: ${new Set((state.donasi || []).map(d => d.namaDonatur)).size} orang</span></div>
         <div class="info-row"><span class="info-label">Total Transaksi</span><span>: ${state.transaksi.length} kali</span></div>
     </div>
 
@@ -1239,28 +1352,16 @@
             </tr>
         </thead>
         <tbody>
-            ${[...state.transaksi, ...state.donasi.map(d => ({
-                ...d,
-                nama: d.namaDonatur,
-                jenis: d.jenis === 'UANG' ? 'DONASI UANG' : 'DONASI BARANG',
-                nominal: d.jenis === 'UANG' ? d.nominal : 0,
-                display: d.jenis === 'UANG' ? formatRupiah(d.nominal) : d.barang
-            }))].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).map((t, i) => {
-                const nominalClass = (t.jenis === 'SETOR' || t.jenis === 'DONASI UANG') ? 'positive' : 
-                                     (t.jenis === 'PENGELUARAN') ? 'negative' : '';
-                const display = t.jenis === 'DONASI BARANG' ? t.display : formatRupiah(t.nominal);
-                
-                return `
-                    <tr>
-                        <td class="text-center">${i+1}</td>
-                        <td class="text-center">${formatTanggalLengkap(t.timestamp)}</td>
-                        <td class="text-center">${t.jenis}</td>
-                        <td>${t.nama}</td>
-                        <td class="text-right ${nominalClass}">${display}</td>
-                        <td>${t.keterangan || '-'}</td>
-                    </tr>
-                `;
-            }).join('')}
+            ${allData.map((item, i) => `
+                <tr>
+                    <td class="text-center">${i+1}</td>
+                    <td class="text-center">${formatTanggalLengkap(item.timestamp)}</td>
+                    <td class="text-center">${item.jenisTampil}</td>
+                    <td>${item.namaTampil}</td>
+                    <td class="text-right ${item.kelas}">${item.nilaiTampil}</td>
+                    <td>${item.keterangan || '-'}</td>
+                </tr>
+            `).join('')}
         </tbody>
     </table>
 
@@ -1278,16 +1379,6 @@
             printWindow.document.close();
             printWindow.print();
         };
-
-        // Export functions
-        window.closeModal = closeModal;
-        window.formatUang = formatUang;
-        window.toggleJenisDonasi = toggleJenisDonasi;
-        window.toggleFormTransaksi = toggleFormTransaksi;
-        window.filterAnggota = filterAnggota;
-        window.simpanAnggota = simpanAnggota;
-        window.simpanDonasi = simpanDonasi;
-        window.showModal = showModal;
     </script>
 </body>
 </html>
