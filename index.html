@@ -3,100 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kas Pura - Koramil Sukasada</title>
-    
-    <!-- PWA CONFIG -->
-    <meta name="mobile-web-app-capable" content="yes">
+    <title>Aplikasi Kas Sederhana</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a237e">
-    
-    <!-- FONT AWESOME -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        :root {
-            --primary: #1a237e;
-            --primary-dark: #0d1560;
-            --accent: #f5b342;
-            --success: #2e7d32;
-            --danger: #c62828;
-            --warning: #f57c00;
-            --purple: #7b1fa2;
-            --info: #0288d1;
-            --bg: #0a192f;
-            --text: #ffffff;
-            --text-dim: #90a4ae;
-            --card-bg: rgba(26, 35, 70, 0.95);
-            --border: rgba(255, 215, 140, 0.25);
-        }
-        
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
+        body {
+            background: linear-gradient(135deg, #0a192f 0%, #0d2b3e 100%);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg);
-            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 65px;
+            color: #fff;
         }
-        
-        /* HEADER */
         .header {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            height: 60px;
-            background: var(--primary);
+            background: linear-gradient(135deg, #1a237e, #283593);
+            padding: 14px 16px;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            padding: 0 16px;
-            border-bottom: 2px solid var(--accent);
-            z-index: 100;
-        }
-        
-        .header h1 {
-            font-size: 1.1rem;
-            display: flex;
             align-items: center;
-            gap: 8px;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
-        
-        .header h1 i { color: var(--accent); }
-        
-        .header-actions { display: flex; gap: 8px; }
-        
+        .header h1 { font-size: 18px; display: flex; align-items: center; gap: 8px; }
+        .header-actions { display: flex; gap: 10px; }
         .header-btn {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.15);
             border: none;
             color: white;
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             cursor: pointer;
-            font-size: 1.1rem;
         }
-        
-        .header-btn:hover {
-            background: var(--accent);
-            color: var(--primary);
+        .content { padding: 70px 12px 20px; }
+        .card {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        
-        /* BOTTOM NAV */
         .nav {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            height: 60px;
-            background: var(--primary);
+            background: #1a237e;
             display: flex;
-            border-top: 2px solid var(--accent);
-            z-index: 100;
+            height: 60px;
+            border-top: 1px solid rgba(255,255,255,0.1);
         }
-        
         .nav-btn {
             flex: 1;
             display: flex;
@@ -105,1341 +68,520 @@
             justify-content: center;
             background: transparent;
             border: none;
-            color: var(--text-dim);
-            font-size: 0.7rem;
-            gap: 4px;
+            color: rgba(255,255,255,0.6);
+            font-size: 11px;
             cursor: pointer;
-            transition: all 0.2s;
         }
-        
-        .nav-btn i { font-size: 1.2rem; }
-        .nav-btn.active { color: var(--accent); background: rgba(245,180,65,0.1); }
-        
-        /* CONTENT */
-        .content {
-            position: fixed;
-            top: 60px;
-            bottom: 60px;
-            left: 0;
-            right: 0;
-            overflow-y: auto;
-            padding: 16px;
+        .nav-btn.active { color: #ff9800; background: rgba(255,152,0,0.1); }
+        .nav-btn i { font-size: 20px; margin-bottom: 4px; }
+        .btn {
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            width: 100%;
+            cursor: pointer;
+            font-size: 16px;
         }
-        
-        /* CARD */
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
+        .btn.secondary { background: rgba(255,255,255,0.15); }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            color: white;
+            margin-bottom: 12px;
+        }
+        .info-card {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
             border-radius: 16px;
             padding: 20px;
-            margin-bottom: 16px;
-            backdrop-filter: blur(5px);
-        }
-        
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .card-header h3 {
-            font-size: 1.1rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .card-header h3 i { color: var(--accent); }
-        
-        /* BALANCE CARD */
-        .balance-card {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border: 2px solid var(--accent);
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 20px;
             text-align: center;
-        }
-        
-        .balance-label {
-            color: var(--text-dim);
-            font-size: 0.9rem;
-            text-transform: uppercase;
-        }
-        
-        .balance-value {
-            color: var(--accent);
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin: 8px 0;
-        }
-        
-        /* STATS GRID */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
             margin-bottom: 20px;
         }
-        
-        .stats-grid-3 {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        
+        .info-value { font-size: 32px; font-weight: bold; }
         .stat-card {
             background: rgba(255,255,255,0.05);
             border-radius: 12px;
-            padding: 16px;
-            border-left: 4px solid;
-        }
-        
-        .stat-card.income { border-left-color: var(--success); }
-        .stat-card.expense { border-left-color: var(--danger); }
-        .stat-card.purple { border-left-color: var(--purple); }
-        .stat-card.info { border-left-color: var(--info); }
-        
-        .stat-label {
-            color: var(--text-dim);
-            font-size: 0.8rem;
-            margin-bottom: 4px;
-        }
-        
-        .stat-value {
-            font-size: 1.4rem;
-            font-weight: 700;
-        }
-        
-        /* TABLE */
-        .table-container {
-            overflow-x: auto;
-            max-height: 400px;
-            overflow-y: auto;
-            border-radius: 12px;
-            background: rgba(0,0,0,0.2);
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 600px;
-        }
-        
-        th {
-            background: var(--primary);
-            color: white;
-            padding: 10px;
-            position: sticky;
-            top: 0;
-            font-size: 0.85rem;
-        }
-        
-        td {
-            padding: 10px;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.85rem;
-        }
-        
-        /* BADGE */
-        .badge {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            display: inline-block;
-        }
-        
-        .badge.setor { background: rgba(46,125,80,0.2); color: #81c784; }
-        .badge.pengeluaran { background: rgba(198,40,40,0.2); color: #ef5350; }
-        .badge.donasi { background: rgba(123,31,162,0.2); color: #ce93d8; }
-        
-        /* FORM */
-        .form-group {
-            margin-bottom: 16px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            color: var(--text-dim);
-            font-size: 0.9rem;
-        }
-        
-        .form-control {
-            width: 100%;
             padding: 12px;
-            background: rgba(0,0,0,0.3);
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            color: white;
-            font-size: 1rem;
+            text-align: center;
         }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-        
-        select.form-control {
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-        }
-        
-        /* BUTTONS */
-        .btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 1rem;
+        .stat-value { font-size: 20px; font-weight: bold; color: #4caf50; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .account-item, .transaction-item {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
             cursor: pointer;
-            margin-top: 8px;
         }
-        
-        .btn-setor { background: linear-gradient(135deg, #2e7d32, #4caf50); }
-        .btn-pengeluaran { background: linear-gradient(135deg, #c62828, #f44336); }
-        .btn-donasi { background: linear-gradient(135deg, #7b1fa2, #9c27b0); }
-        
-        /* SEARCH */
-        .search-box {
-            position: relative;
-            margin-bottom: 16px;
+        .account-avatar {
+            width: 40px;
+            height: 40px;
+            background: #ff9800;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
         }
-        
-        .search-box i {
-            position: absolute;
-            left: 12px;
-            top: 12px;
-            color: var(--text-dim);
+        .badge {
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            background: rgba(76,175,80,0.3);
+            color: #81c784;
         }
-        
-        .search-box input {
-            width: 100%;
-            padding: 12px 12px 12px 40px;
-            background: rgba(255,255,255,0.05);
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            color: white;
-        }
-        
-        /* MODAL */
+        .badge.nonaktif { background: rgba(244,67,54,0.3); color: #ef5350; }
         .modal {
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(5px);
-            display: none;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            padding: 20px;
+            padding: 16px;
         }
-        
         .modal-content {
-            background: var(--card-bg);
-            border-radius: 16px;
-            max-width: 400px;
+            background: #1e2a3a;
+            border-radius: 20px;
+            max-width: 500px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
-            padding: 20px;
-            border: 2px solid var(--accent);
         }
-        
         .modal-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
         }
-        
-        .modal-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
+        .modal-body { padding: 16px; }
+        .modal-footer {
+            padding: 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            gap: 12px;
         }
-        
-        /* TOAST */
         .toast {
             position: fixed;
             top: 70px;
             right: 16px;
-            background: var(--success);
-            color: white;
-            padding: 12px 20px;
+            background: #2e7d32;
+            padding: 12px 16px;
             border-radius: 8px;
             z-index: 2000;
             animation: slideIn 0.3s;
         }
-        
-        .toast.error { background: var(--danger); }
-        
+        .toast.error { background: #c62828; }
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-        
-        /* UTILITY */
-        .hidden { display: none !important; }
-        .flex-between { display: flex; justify-content: space-between; align-items: center; }
-        .text-positive { color: #81c784; }
-        .text-negative { color: #ff8a80; }
-        .text-purple { color: #ce93d8; }
+        .auto-id {
+            background: rgba(255,152,0,0.2);
+            border: 1px dashed #ff9800;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .auto-id-value { font-size: 18px; font-weight: bold; color: #ff9800; }
+        .btn-generate {
+            background: #ff9800;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: white;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .text-dim { color: rgba(255,255,255,0.6); }
         .text-center { text-align: center; }
-        .mt-2 { margin-top: 8px; }
+        .positive { color: #4caf50; }
+        .negative { color: #ef5350; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1><i class="fas fa-temple"></i> Kas Pura Koramil</h1>
+        <h1><i class="fas fa-wallet"></i> Aplikasi Kas</h1>
         <div class="header-actions">
-            <button class="header-btn" onclick="refreshData()"><i class="fas fa-sync-alt"></i></button>
-            <button class="header-btn" onclick="cetakLaporan()"><i class="fas fa-print"></i></button>
+            <button class="header-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i></button>
+            <button class="header-btn" id="printBtn"><i class="fas fa-print"></i></button>
         </div>
     </div>
-
-    <div class="content" id="content">
-        <div class="text-center" style="padding: 60px 20px;">
-            <div style="border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-            <div class="mt-2" style="color: var(--text-dim);">Memuat aplikasi...</div>
-        </div>
-    </div>
-
+    <div class="content" id="content"></div>
     <div class="nav">
-        <button class="nav-btn active" onclick="ubahTab('dashboard')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
-        <button class="nav-btn" onclick="ubahTab('transaksi')"><i class="fas fa-exchange-alt"></i><span>Transaksi</span></button>
-        <button class="nav-btn" onclick="ubahTab('anggota')"><i class="fas fa-users"></i><span>Anggota</span></button>
-        <button class="nav-btn" onclick="ubahTab('donasi')"><i class="fas fa-hand-holding-heart"></i><span>Donasi</span></button>
-    </div>
-
-    <!-- MODAL TAMBAH ANGGOTA -->
-    <div id="modalAnggota" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-user-plus"></i> Tambah Anggota</h3>
-                <button class="modal-close" onclick="tutupModal('modalAnggota')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Nama Lengkap</label>
-                    <input type="text" id="namaAnggota" class="form-control" placeholder="Nama lengkap">
-                </div>
-                <div class="form-group">
-                    <label>Pangkat</label>
-                    <input type="text" id="pangkatAnggota" class="form-control" placeholder="Contoh: Kapten Inf">
-                </div>
-                <div class="form-group">
-                    <label>No HP</label>
-                    <input type="text" id="hpAnggota" class="form-control" placeholder="08123456789">
-                </div>
-                <div class="form-group">
-                    <label>Alamat</label>
-                    <textarea id="alamatAnggota" class="form-control" rows="2" placeholder="Alamat"></textarea>
-                </div>
-                <button class="btn" onclick="simpanAnggota()">SIMPAN</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DONASI -->
-    <div id="modalDonasi" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-hand-holding-heart"></i> Tambah Donasi</h3>
-                <button class="modal-close" onclick="tutupModal('modalDonasi')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Jenis Donasi</label>
-                    <select id="jenisDonasi" class="form-control" onchange="toggleJenisDonasi()">
-                        <option value="UANG">💰 Donasi Uang</option>
-                        <option value="BARANG">📦 Donasi Barang</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Nama Donatur</label>
-                    <input type="text" id="namaDonatur" class="form-control" placeholder="Nama donatur">
-                </div>
-                <div class="form-group" id="fieldDonasiUang">
-                    <label>Jumlah Donasi (Rp)</label>
-                    <input type="text" id="jumlahDonasi" class="form-control" placeholder="0" onkeyup="formatUang(this)">
-                </div>
-                <div class="form-group hidden" id="fieldDonasiBarang">
-                    <label>Nama Barang</label>
-                    <input type="text" id="barangDonasi" class="form-control" placeholder="Contoh: Beras 5kg">
-                </div>
-                <div class="form-group">
-                    <label>Alamat</label>
-                    <input type="text" id="alamatDonatur" class="form-control" placeholder="Alamat donatur">
-                </div>
-                <div class="form-group">
-                    <label>Keterangan</label>
-                    <textarea id="keteranganDonasi" class="form-control" rows="2" placeholder="Opsional"></textarea>
-                </div>
-                <button class="btn btn-donasi" onclick="simpanDonasi()">SIMPAN DONASI</button>
-            </div>
-        </div>
+        <button class="nav-btn active" data-tab="dashboard"><i class="fas fa-chart-line"></i><span>Dashboard</span></button>
+        <button class="nav-btn" data-tab="transaksi"><i class="fas fa-exchange-alt"></i><span>Transaksi</span></button>
+        <button class="nav-btn" data-tab="anggota"><i class="fas fa-users"></i><span>Anggota</span></button>
+        <button class="nav-btn" data-tab="donatur"><i class="fas fa-hand-holding-heart"></i><span>Donatur</span></button>
     </div>
 
     <script>
         // ==================== KONFIGURASI ====================
-        const API_URL = 'https://script.google.com/macros/s/AKfycbytsI_OZavWyoy08FvvZT_1jIR7HrAUGW1jwd54HnBjma6oE_4ppfthFLv1A9VwoNVr/exec';
-        const FOLDER_ID = '15fXXVeH3iZjucdgyQuvh9cjXyqke9udj';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbz54hQIpb3pgdTPI5t96KzMTPKxAXb479gVgKUGILs1zwaTRPGSLrzMFuxQRzuKlog9/exec';
+        const TOKEN = 'kas2024';
         
-        // ==================== STATE ====================
         let state = {
             tab: 'dashboard',
             anggota: [],
+            donatur: [],
             transaksi: [],
-            donasi: [],
-            stats: {
-                totalSetor: 0,
-                totalPengeluaran: 0,
-                totalDonasiUang: 0,
-                totalDonasiBarang: 0
-            },
-            globalBalance: 0
+            saldo: 0,
+            search: '',
+            transaksiForm: { jenis: 'SETOR', nominal: 0, id_anggota: '', tanggal: new Date().toISOString().split('T')[0], keterangan: '' },
+            donasiForm: { donatur: '', nominal: 0, tanggal: new Date().toISOString().split('T')[0], keterangan: '' }
         };
-
-        let anggotaList = [];
-
-        // ==================== INIT ====================
-        document.addEventListener('DOMContentLoaded', () => {
-            testKoneksi();
-        });
-
-        // ==================== TEST KONEKSI ====================
-        async function testKoneksi() {
-            try {
-                showLoading('Menguji koneksi ke server...');
-                
-                const response = await fetch(API_URL + '?action=getStatus');
-                const data = await response.json();
-                
-                if (data.success) {
-                    console.log('✅ Koneksi berhasil:', data);
-                    loadData();
-                } else {
-                    showToast('Server merespon tapi error: ' + (data.message || 'Unknown'), true);
-                    // Fallback ke data dummy untuk testing
-                    state.anggota = [
-                        { id: 'AG001', nama: 'Kapten Inf I Nyoman Arya Kepakisan', pangkat: 'Kapten Inf', status: 'AKTIF' },
-                        { id: 'AG002', nama: 'Peltu I Nyoman Wilmana', pangkat: 'Peltu', status: 'AKTIF' }
-                    ];
-                    anggotaList = state.anggota;
-                    renderTab();
-                }
-            } catch (error) {
-                console.error('❌ Gagal koneksi:', error);
-                showToast('Gagal terhubung ke server. Cek URL API.', true);
-                // Fallback
-                document.getElementById('content').innerHTML = `
-                    <div class="card">
-                        <h3 style="color: var(--danger);">Gagal Terhubung</h3>
-                        <p class="mt-2">Tidak dapat terhubung ke server. Pastikan URL API benar dan sudah di-deploy.</p>
-                        <p class="mt-2">URL: ${API_URL}</p>
-                        <button class="btn" onclick="testKoneksi()">COBA LAGI</button>
-                    </div>
-                `;
-            }
-        }
 
         // ==================== LOAD DATA ====================
         async function loadData() {
             try {
-                showLoading('Memuat data dari spreadsheet...');
-                
-                // Load anggota
-                const anggotaRes = await fetch(API_URL + '?action=getAnggota');
-                const anggotaData = await anggotaRes.json();
-                console.log('📥 Data anggota:', anggotaData);
-                
-                if (anggotaData.success) {
-                    state.anggota = anggotaData.data || [];
-                    anggotaList = state.anggota;
-                } else {
-                    console.warn('⚠️ Gagal load anggota:', anggotaData.message);
-                }
-                
-                // Load transaksi
-                const transaksiRes = await fetch(API_URL + '?action=getTransaksi&limit=1000');
-                const transaksiData = await transaksiRes.json();
-                console.log('📥 Data transaksi:', transaksiData);
-                
-                if (transaksiData.success) {
-                    state.transaksi = transaksiData.data || [];
-                } else {
-                    console.warn('⚠️ Gagal load transaksi:', transaksiData.message);
-                }
-                
-                // Load donasi
-                const donasiRes = await fetch(API_URL + '?action=getDonasi&limit=1000');
-                const donasiData = await donasiRes.json();
-                console.log('📥 Data donasi:', donasiData);
-                
-                if (donasiData.success) {
-                    state.donasi = donasiData.data || [];
-                } else {
-                    console.warn('⚠️ Gagal load donasi:', donasiData.message);
-                }
-                
-                hitungStatistik();
-                renderTab();
-                showToast('Data berhasil dimuat');
-                
-            } catch (error) {
-                console.error('❌ Error load data:', error);
-                showToast('Gagal memuat data: ' + error.message, true);
-            }
+                showToast('Memuat data...');
+                const [anggotaRes, donaturRes, transaksiRes, saldoRes] = await Promise.all([
+                    fetch(`${API_URL}?action=getAnggota&token=${TOKEN}`),
+                    fetch(`${API_URL}?action=getDonatur&token=${TOKEN}`),
+                    fetch(`${API_URL}?action=getTransaksi&token=${TOKEN}`),
+                    fetch(`${API_URL}?action=getSaldoGlobal&token=${TOKEN}`)
+                ]);
+                state.anggota = (await anggotaRes.json()).data || [];
+                state.donatur = (await donaturRes.json()).data || [];
+                state.transaksi = (await transaksiRes.json()).data || [];
+                state.saldo = (await saldoRes.json()).data?.saldo_global || 0;
+                render();
+                showToast('Data dimuat');
+            } catch(e) { showToast('Gagal memuat: ' + e.message, true); }
         }
 
-        function showLoading(pesan = 'Memuat data...') {
-            document.getElementById('content').innerHTML = `
-                <div class="text-center" style="padding: 60px 20px;">
-                    <div style="border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-                    <div class="mt-2" style="color: var(--text-dim);">${pesan}</div>
-                </div>
-            `;
+        // ==================== RENDER ====================
+        function render() {
+            const content = document.getElementById('content');
+            if (state.tab === 'dashboard') content.innerHTML = renderDashboard();
+            else if (state.tab === 'transaksi') content.innerHTML = renderTransaksi();
+            else if (state.tab === 'anggota') content.innerHTML = renderAnggota();
+            else if (state.tab === 'donatur') content.innerHTML = renderDonatur();
+            attachEvents();
         }
 
-        function hitungStatistik() {
-            let totalSetor = 0, totalPengeluaran = 0, totalDonasiUang = 0, totalDonasiBarang = 0;
-            
-            (state.transaksi || []).forEach(t => {
-                if (t.jenis === 'SETOR') totalSetor += Number(t.nominal) || 0;
-                if (t.jenis === 'PENGELUARAN') totalPengeluaran += Number(t.nominal) || 0;
-            });
-            
-            (state.donasi || []).forEach(d => {
-                if (d.jenis === 'UANG') totalDonasiUang += Number(d.nominal) || 0;
-                if (d.jenis === 'BARANG') totalDonasiBarang++;
-            });
-            
-            state.stats = { totalSetor, totalPengeluaran, totalDonasiUang, totalDonasiBarang };
-            state.globalBalance = totalSetor + totalDonasiUang - totalPengeluaran;
-        }
-
-        // ==================== FUNGSI BANTU ====================
-        function formatRupiah(angka) {
-            if (angka === undefined || angka === null) angka = 0;
-            return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        }
-
-        function formatTanggal(tgl) {
-            if (!tgl) return '-';
-            try {
-                const d = new Date(tgl);
-                return d.toLocaleDateString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric' });
-            } catch { return '-'; }
-        }
-
-        function formatTanggalLengkap(tgl) {
-            if (!tgl) return '-';
-            try {
-                const d = new Date(tgl);
-                const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-                const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-                return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
-            } catch { return '-'; }
-        }
-
-        function formatUang(input) {
-            let val = input.value.replace(/[^0-9]/g, '');
-            if (val) {
-                input.value = parseInt(val).toLocaleString('id-ID');
-            }
-        }
-
-        function parseRupiah(rupiah) {
-            if (!rupiah) return 0;
-            return parseInt(rupiah.toString().replace(/[^0-9]/g, '')) || 0;
-        }
-
-        function showToast(msg, isError = false) {
-            const toast = document.createElement('div');
-            toast.className = 'toast' + (isError ? ' error' : '');
-            toast.innerText = msg;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 2000);
-        }
-
-        function bukaModal(modalId) {
-            document.getElementById(modalId).style.display = 'flex';
-        }
-
-        function tutupModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        // ==================== TAB ====================
-        function ubahTab(tab) {
-            state.tab = tab;
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                if (btn.textContent.toLowerCase().includes(tab)) btn.classList.add('active');
-            });
-            renderTab();
-        }
-
-        function renderTab() {
-            if (state.tab === 'dashboard') renderDashboard();
-            else if (state.tab === 'transaksi') renderTransaksi();
-            else if (state.tab === 'anggota') renderAnggota();
-            else if (state.tab === 'donasi') renderDonasi();
-        }
-
-        // ==================== DASHBOARD ====================
         function renderDashboard() {
-            const totalPemasukan = state.stats.totalSetor + state.stats.totalDonasiUang;
-            const totalPengeluaran = state.stats.totalPengeluaran;
-            
-            const semuaTransaksi = [];
-            
-            (state.transaksi || []).forEach(t => {
-                semuaTransaksi.push({
-                    timestamp: t.timestamp,
-                    jenis: t.jenis,
-                    namaTampil: t.nama,
-                    nilaiTampil: formatRupiah(t.nominal),
-                    kelasWarna: t.jenis === 'PENGELUARAN' ? 'text-negative' : 'text-positive',
-                    badge: t.jenis === 'SETOR' ? 'setor' : 'pengeluaran'
-                });
-            });
-            
-            (state.donasi || []).forEach(d => {
-                semuaTransaksi.push({
-                    timestamp: d.timestamp,
-                    jenis: d.jenis === 'UANG' ? 'DONASI' : 'DONASI BARANG',
-                    namaTampil: d.namaDonatur,
-                    nilaiTampil: d.jenis === 'UANG' ? formatRupiah(d.nominal) : d.barang,
-                    kelasWarna: 'text-purple',
-                    badge: 'donasi'
-                });
-            });
-            
-            semuaTransaksi.sort((a, b) => new Date(b.timestamp||0) - new Date(a.timestamp||0));
-            const recent = semuaTransaksi.slice(0, 10);
-
-            let html = `
-                <div class="balance-card">
-                    <div class="balance-label">SALDO GLOBAL</div>
-                    <div class="balance-value">${formatRupiah(state.globalBalance)}</div>
-                    <div class="flex-between">
-                        <span>👥 ${state.anggota.length} Anggota</span>
-                        <span>📊 ${state.transaksi.length} Transaksi</span>
-                        <span>🎁 ${state.donasi.length} Donasi</span>
-                    </div>
-                </div>
-
-                <div class="stats-grid">
-                    <div class="stat-card income">
-                        <div class="stat-label">Total Pemasukan</div>
-                        <div class="stat-value text-positive">${formatRupiah(totalPemasukan)}</div>
-                    </div>
-                    <div class="stat-card expense">
-                        <div class="stat-label">Total Pengeluaran</div>
-                        <div class="stat-value text-negative">${formatRupiah(totalPengeluaran)}</div>
-                    </div>
-                </div>
-
+            const totalMasuk = state.transaksi.filter(t => t.jenis === 'SETOR' || t.jenis === 'DONASI').reduce((s,t) => s + (t.nominal||0), 0);
+            const totalKeluar = state.transaksi.filter(t => t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN').reduce((s,t) => s + (t.nominal||0), 0);
+            return `
                 <div class="card">
-                    <div class="card-header">
-                        <h3><i class="fas fa-history"></i> Transaksi Terbaru</h3>
+                    <div class="info-card">
+                        <div>Saldo Kas</div>
+                        <div class="info-value">${formatRupiah(state.saldo)}</div>
                     </div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Tanggal</th>
-                                    <th>Nama</th>
-                                    <th>Jenis</th>
-                                    <th>Nominal</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-            `;
-
-            if (recent.length === 0) {
-                html += '<tr><td colspan="4" class="text-center">Belum ada transaksi</td></tr>';
-            } else {
-                recent.forEach(t => {
-                    html += `
-                        <tr>
-                            <td>${formatTanggal(t.timestamp)}</td>
-                            <td>${t.namaTampil || '-'}</td>
-                            <td><span class="badge ${t.badge || 'setor'}">${t.jenis || '-'}</span></td>
-                            <td class="${t.kelasWarna || ''}">${t.nilaiTampil || '-'}</td>
-                        </tr>
-                    `;
-                });
-            }
-
-            html += `
-                            </tbody>
-                        </table>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px">
+                        <div class="stat-card"><div>💚 Pemasukan</div><div class="stat-value">${formatRupiah(totalMasuk)}</div></div>
+                        <div class="stat-card"><div>❤️ Pengeluaran</div><div class="stat-value negative">${formatRupiah(totalKeluar)}</div></div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px">
+                        <button class="btn secondary" onclick="quickTransaksi('SETOR')">💰 Setor</button>
+                        <button class="btn secondary" onclick="quickTransaksi('PINJAM')">📤 Pinjam</button>
+                        <button class="btn secondary" onclick="quickTransaksi('PENGELUARAN')">🛒 Belanja</button>
                     </div>
                 </div>
+                <div class="card">
+                    <h3>📋 Transaksi Terbaru</h3>
+                    ${state.transaksi.slice(0,10).map(t => `
+                        <div class="transaction-item">
+                            <div><span class="badge">${t.jenis}</span><div class="text-dim">${t.tanggal}</div><div>${t.nama || '-'}</div></div>
+                            <span class="${t.jenis === 'SETOR' || t.jenis === 'DONASI' ? 'positive' : 'negative'}">${formatRupiah(t.nominal)}</span>
+                        </div>
+                    `).join('') || '<div class="text-center text-dim">Belum ada transaksi</div>'}
+                </div>
             `;
-
-            document.getElementById('content').innerHTML = html;
         }
 
-        // ==================== TRANSAKSI ====================
         function renderTransaksi() {
-            let anggotaOptions = '<option value="">-- Pilih Anggota --</option>';
-            (state.anggota || []).forEach(a => {
-                if (a.status === 'AKTIF') {
-                    anggotaOptions += `<option value="${a.id}|${a.nama}">${a.nama} (${a.pangkat || '-'})</option>`;
-                }
-            });
-
-            let html = `
+            return `
                 <div class="card">
-                    <h3>Input Transaksi</h3>
-                    
-                    <div class="form-group">
-                        <label>Pilih Anggota</label>
-                        <select id="pilihAnggotaTransaksi" class="form-control">
-                            ${anggotaOptions}
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Jenis</label>
-                        <select id="jenisTransaksi" class="form-control" onchange="toggleFormTransaksi()">
-                            <option value="">-- Pilih --</option>
-                            <option value="SETOR">💰 SETOR</option>
-                            <option value="PENGELUARAN">📤 PENGELUARAN</option>
-                        </select>
-                    </div>
-                    
-                    <div id="formSetor" class="hidden">
-                        <div class="form-group">
-                            <label>Jumlah Setor (Rp)</label>
-                            <input type="text" id="jumlahSetor" class="form-control" placeholder="0" onkeyup="formatUang(this)">
-                        </div>
-                    </div>
-                    
-                    <div id="formPengeluaran" class="hidden">
-                        <div class="form-group">
-                            <label>Nama Pengeluaran</label>
-                            <input type="text" id="namaPengeluaran" class="form-control" placeholder="Contoh: Beli ATK">
-                        </div>
-                        <div class="form-group">
-                            <label>Jumlah (Rp)</label>
-                            <input type="text" id="jumlahPengeluaran" class="form-control" placeholder="0" onkeyup="formatUang(this)">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Keterangan</label>
-                        <textarea id="keteranganTransaksi" class="form-control" rows="2"></textarea>
-                    </div>
-                    
-                    <button class="btn" onclick="simpanTransaksi()">SIMPAN TRANSAKSI</button>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Riwayat Transaksi</h3>
-                    </div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Tanggal</th>
-                                    <th>Nama</th>
-                                    <th>Jenis</th>
-                                    <th>Nominal</th>
-                                    <th>Ket</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-            `;
-
-            if (!state.transaksi || state.transaksi.length === 0) {
-                html += '<tr><td colspan="5" class="text-center">Belum ada transaksi</td></tr>';
-            } else {
-                [...state.transaksi].sort((a,b) => new Date(b.timestamp||0) - new Date(a.timestamp||0)).forEach(t => {
-                    html += `
-                        <tr>
-                            <td>${formatTanggal(t.timestamp)}</td>
-                            <td>${t.nama || '-'}</td>
-                            <td><span class="badge ${t.jenis === 'SETOR' ? 'setor' : 'pengeluaran'}">${t.jenis}</span></td>
-                            <td class="${t.jenis === 'SETOR' ? 'text-positive' : 'text-negative'}">${formatRupiah(t.nominal)}</td>
-                            <td>${t.keterangan || '-'}</td>
-                        </tr>
-                    `;
-                });
-            }
-
-            html += `
-                            </tbody>
-                        </table>
-                    </div>
+                    <h3>📝 Transaksi Baru</h3>
+                    <div class="info-card" style="background:#283593"><div>Saldo Saat Ini</div><div class="info-value">${formatRupiah(state.saldo)}</div></div>
+                    <select id="jenisTransaksi">
+                        <option ${state.transaksiForm.jenis === 'SETOR' ? 'selected' : ''} value="SETOR">💰 SETOR (Tambah Saldo)</option>
+                        <option ${state.transaksiForm.jenis === 'PINJAM' ? 'selected' : ''} value="PINJAM">📤 PINJAM (Kurang Saldo)</option>
+                        <option ${state.transaksiForm.jenis === 'PENGELUARAN' ? 'selected' : ''} value="PENGELUARAN">🛒 PENGELUARAN (Kurang Saldo)</option>
+                    </select>
+                    <input type="date" id="tglTransaksi" value="${state.transaksiForm.tanggal}">
+                    <select id="pilihAnggota">
+                        <option value="">Pilih Anggota (opsional)</option>
+                        ${state.anggota.map(a => `<option value="${a.id}" data-nama="${a.nama}">${a.id} - ${a.nama}</option>`).join('')}
+                    </select>
+                    <input type="text" id="nominalTransaksi" placeholder="Nominal Rp" value="${state.transaksiForm.nominal ? formatNumber(state.transaksiForm.nominal) : ''}">
+                    <input type="text" id="keteranganTransaksi" placeholder="Keterangan" value="${state.transaksiForm.keterangan}">
+                    <button class="btn" id="simpanTransaksi">SIMPAN</button>
                 </div>
             `;
-
-            document.getElementById('content').innerHTML = html;
         }
 
-        // ==================== ANGGOTA ====================
         function renderAnggota() {
-            let html = `
+            const filtered = state.anggota.filter(a => a.nama.toLowerCase().includes(state.search.toLowerCase()) || a.id.includes(state.search));
+            return `
                 <div class="card">
-                    <div class="card-header">
-                        <h3><i class="fas fa-users"></i> Daftar Anggota Koramil</h3>
-                        <button class="header-btn" onclick="bukaModal('modalAnggota')"><i class="fas fa-plus"></i></button>
-                    </div>
-                    
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="searchAnggota" placeholder="Cari anggota..." onkeyup="filterAnggota()">
-                    </div>
-                    
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Nama</th>
-                                    <th>Pangkat</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="anggotaTableBody">
-            `;
-
-            if (!state.anggota || state.anggota.length === 0) {
-                html += '<tr><td colspan="4" class="text-center">Belum ada anggota</td></tr>';
-            } else {
-                state.anggota.forEach((a, i) => {
-                    html += `
-                        <tr class="anggota-row" data-nama="${(a.nama || '').toLowerCase()}">
-                            <td>${i+1}</td>
-                            <td>${a.nama || '-'}</td>
-                            <td>${a.pangkat || '-'}</td>
-                            <td><span class="badge ${a.status === 'AKTIF' ? 'setor' : 'pengeluaran'}">${a.status || 'AKTIF'}</span></td>
-                        </tr>
-                    `;
-                });
-            }
-
-            html += `
-                            </tbody>
-                        </table>
+                    <div class="flex-between"><h3>👥 Anggota</h3><button class="btn secondary" style="width:auto;padding:8px 16px" onclick="tambahAnggota()">+ Tambah</button></div>
+                    <input type="text" id="cariAnggota" placeholder="Cari ID atau nama..." value="${state.search}">
+                    <div>
+                        ${filtered.map(a => `
+                            <div class="account-item" onclick="detailAnggota('${a.id}')">
+                                <div class="account-avatar">${a.nama.charAt(0)}</div>
+                                <div><div><b>${a.nama}</b></div><div class="text-dim">ID: ${a.id} | ${a.no_hp || '-'}</div></div>
+                                <span class="badge ${a.status === 'NONAKTIF' ? 'nonaktif' : ''}">${a.status || 'AKTIF'}</span>
+                            </div>
+                        `).join('') || '<div class="text-center text-dim">Tidak ada anggota</div>'}
                     </div>
                 </div>
             `;
-
-            document.getElementById('content').innerHTML = html;
         }
 
-        // ==================== DONASI ====================
-        function renderDonasi() {
-            let html = `
-                <div class="stats-grid-3">
-                    <div class="stat-card purple">
-                        <div class="stat-label">Donasi Uang</div>
-                        <div class="stat-value text-purple">${formatRupiah(state.stats.totalDonasiUang)}</div>
-                    </div>
-                    <div class="stat-card info">
-                        <div class="stat-label">Donasi Barang</div>
-                        <div class="stat-value text-info">${state.stats.totalDonasiBarang}</div>
-                    </div>
-                    <div class="stat-card purple">
-                        <div class="stat-label">Total Donatur</div>
-                        <div class="stat-value text-purple">${new Set((state.donasi || []).map(d => d.namaDonatur)).size}</div>
-                    </div>
-                </div>
-
+        function renderDonatur() {
+            return `
                 <div class="card">
-                    <div class="card-header">
-                        <h3><i class="fas fa-hand-holding-heart"></i> Donasi</h3>
-                        <button class="header-btn" onclick="bukaModal('modalDonasi')"><i class="fas fa-plus"></i></button>
-                    </div>
-                    
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Tanggal</th>
-                                    <th>Donatur</th>
-                                    <th>Jenis</th>
-                                    <th>Nominal/Barang</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-            `;
-
-            if (!state.donasi || state.donasi.length === 0) {
-                html += '<tr><td colspan="4" class="text-center">Belum ada donasi</td></tr>';
-            } else {
-                [...state.donasi].sort((a,b) => new Date(b.timestamp||0) - new Date(a.timestamp||0)).forEach(d => {
-                    html += `
-                        <tr>
-                            <td>${formatTanggal(d.timestamp)}</td>
-                            <td>${d.namaDonatur || '-'}</td>
-                            <td><span class="badge donasi">${d.jenis}</span></td>
-                            <td class="${d.jenis === 'UANG' ? 'text-positive' : 'text-info'}">
-                                ${d.jenis === 'UANG' ? formatRupiah(d.nominal) : d.barang}
-                            </td>
-                        </tr>
-                    `;
-                });
-            }
-
-            html += `
-                            </tbody>
-                        </table>
-                    </div>
+                    <h3>🤝 Donasi Masuk</h3>
+                    <div class="info-card" style="background:#ff9800"><div>Donasi akan menambah saldo</div><div class="info-value">+ ${formatRupiah(state.donasiForm.nominal)}</div></div>
+                    <input type="date" id="tglDonasi" value="${state.donasiForm.tanggal}">
+                    <select id="pilihDonatur">
+                        <option value="">Pilih Donatur</option>
+                        ${state.donatur.map(d => `<option value="${d.nama}">${d.nama}</option>`).join('')}
+                        <option value="NEW">+ Tambah Donatur Baru</option>
+                    </select>
+                    <input type="text" id="nominalDonasi" placeholder="Nominal Rp" value="${state.donasiForm.nominal ? formatNumber(state.donasiForm.nominal) : ''}">
+                    <input type="text" id="ketDonasi" placeholder="Keterangan" value="${state.donasiForm.keterangan}">
+                    <button class="btn" id="simpanDonasi" style="background:#ff9800">SIMPAN DONASI</button>
                 </div>
             `;
-
-            document.getElementById('content').innerHTML = html;
         }
 
-        // ==================== FUNGSI FORM ====================
-        function toggleFormTransaksi() {
-            const jenis = document.getElementById('jenisTransaksi').value;
-            document.getElementById('formSetor').classList.add('hidden');
-            document.getElementById('formPengeluaran').classList.add('hidden');
-            
-            if (jenis === 'SETOR') {
-                document.getElementById('formSetor').classList.remove('hidden');
-            } else if (jenis === 'PENGELUARAN') {
-                document.getElementById('formPengeluaran').classList.remove('hidden');
-            }
-        }
-
-        function toggleJenisDonasi() {
-            const jenis = document.getElementById('jenisDonasi').value;
-            const uangField = document.getElementById('fieldDonasiUang');
-            const barangField = document.getElementById('fieldDonasiBarang');
-            
-            if (uangField && barangField) {
-                if (jenis === 'UANG') {
-                    uangField.classList.remove('hidden');
-                    barangField.classList.add('hidden');
-                } else {
-                    uangField.classList.add('hidden');
-                    barangField.classList.remove('hidden');
-                }
-            }
-        }
-
-        function filterAnggota() {
-            const keyword = document.getElementById('searchAnggota').value.toLowerCase();
-            document.querySelectorAll('.anggota-row').forEach(row => {
-                const nama = row.dataset.nama || '';
-                row.style.display = nama.includes(keyword) ? '' : 'none';
-            });
-        }
-
-        // ==================== SIMPAN DATA ====================
+        // ==================== FUNGSI UTAMA ====================
         async function simpanTransaksi() {
-            const anggotaVal = document.getElementById('pilihAnggotaTransaksi').value;
             const jenis = document.getElementById('jenisTransaksi').value;
-            const keterangan = document.getElementById('keteranganTransaksi')?.value || '';
+            const tanggal = document.getElementById('tglTransaksi').value;
+            const selectAnggota = document.getElementById('pilihAnggota');
+            const id_anggota = selectAnggota.value;
+            const nama = selectAnggota.selectedOptions[0]?.dataset?.nama || '';
+            const nominal = parseInt(document.getElementById('nominalTransaksi').value.replace(/\D/g, '')) || 0;
+            const keterangan = document.getElementById('keteranganTransaksi').value;
             
-            if (!anggotaVal) { showToast('Pilih anggota', true); return; }
-            if (!jenis) { showToast('Pilih jenis transaksi', true); return; }
-            
-            const [idAnggota, nama] = anggotaVal.split('|');
-            let nominal = 0;
-            
-            if (jenis === 'SETOR') {
-                nominal = parseRupiah(document.getElementById('jumlahSetor')?.value);
-                if (nominal <= 0) { showToast('Jumlah setor harus diisi', true); return; }
-            } else {
-                const namaPengeluaran = document.getElementById('namaPengeluaran')?.value.trim();
-                if (!namaPengeluaran) { showToast('Nama pengeluaran harus diisi', true); return; }
-                nominal = parseRupiah(document.getElementById('jumlahPengeluaran')?.value);
-                if (nominal <= 0) { showToast('Jumlah harus diisi', true); return; }
+            if (!nominal) { showToast('Nominal harus diisi', true); return; }
+            if (jenis !== 'SETOR' && jenis !== 'PENGELUARAN' && !id_anggota && !nama) {
+                if (confirm('Tidak memilih anggota? Lanjutkan sebagai transaksi umum?')) {
+                    // lanjut
+                } else return;
             }
             
-            const now = new Date();
-            const transaksiBaru = {
-                idTransaksi: 'TRX' + Date.now(),
-                timestamp: now.toISOString(),
-                tanggal: now.toISOString().split('T')[0],
-                jenis: jenis,
-                idAnggota: idAnggota,
-                nama: nama,
-                nominal: nominal,
-                keterangan: keterangan,
-                bulan: now.getMonth() + 1,
-                tahun: now.getFullYear()
-            };
+            const formData = new URLSearchParams({
+                action: 'addTransaksi', token: TOKEN,
+                jenis: jenis, tanggal: tanggal, id_anggota: id_anggota, nama: nama,
+                nominal: nominal, keterangan: keterangan
+            });
             
             try {
-                showToast('Menyimpan transaksi...');
-                
-                const params = new URLSearchParams();
-                params.append('action', 'saveTransaksi');
-                Object.keys(transaksiBaru).forEach(key => {
-                    params.append(key, transaksiBaru[key]);
-                });
-                
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: params
-                });
-                
-                const result = await response.json();
-                console.log('📤 Response simpan transaksi:', result);
-                
-                if (result.success) {
-                    showToast('Transaksi disimpan');
+                const res = await fetch(API_URL, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    showToast('Transaksi berhasil');
+                    state.transaksiForm = { jenis: 'SETOR', nominal: 0, id_anggota: '', tanggal: new Date().toISOString().split('T')[0], keterangan: '' };
                     await loadData();
-                } else {
-                    showToast('Gagal: ' + (result.message || 'Unknown error'), true);
-                }
-            } catch (error) {
-                console.error('❌ Error simpan transaksi:', error);
-                showToast('Gagal menyimpan: ' + error.message, true);
-            }
-        }
-
-        async function simpanAnggota() {
-            const nama = document.getElementById('namaAnggota')?.value.trim();
-            if (!nama) { showToast('Nama harus diisi', true); return; }
-            
-            const now = new Date();
-            const anggotaBaru = {
-                id: 'AG' + Date.now().toString().slice(-6),
-                nama: nama,
-                pangkat: document.getElementById('pangkatAnggota')?.value.trim() || '-',
-                no_hp: document.getElementById('hpAnggota')?.value.trim() || '-',
-                alamat: document.getElementById('alamatAnggota')?.value.trim() || '-',
-                status: 'AKTIF',
-                tanggalDaftar: now.toISOString(),
-                lastUpdate: now.toISOString()
-            };
-            
-            try {
-                showToast('Menyimpan anggota...');
-                
-                const params = new URLSearchParams();
-                params.append('action', 'saveAnggota');
-                Object.keys(anggotaBaru).forEach(key => {
-                    params.append(key, anggotaBaru[key]);
-                });
-                
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: params
-                });
-                
-                const result = await response.json();
-                console.log('📤 Response simpan anggota:', result);
-                
-                if (result.success) {
-                    showToast('Anggota ditambahkan');
-                    tutupModal('modalAnggota');
-                    await loadData();
-                } else {
-                    showToast('Gagal: ' + (result.message || 'Unknown error'), true);
-                }
-            } catch (error) {
-                console.error('❌ Error simpan anggota:', error);
-                showToast('Gagal menyimpan: ' + error.message, true);
-            }
+                } else showToast('Gagal: ' + data.message, true);
+            } catch(e) { showToast('Error: ' + e.message, true); }
         }
 
         async function simpanDonasi() {
-            const jenis = document.getElementById('jenisDonasi')?.value;
-            const namaDonatur = document.getElementById('namaDonatur')?.value.trim();
+            const donatur = document.getElementById('pilihDonatur').value;
+            if (!donatur || donatur === '') { showToast('Pilih donatur', true); return; }
+            if (donatur === 'NEW') { tambahDonatur(); return; }
+            const nominal = parseInt(document.getElementById('nominalDonasi').value.replace(/\D/g, '')) || 0;
+            if (!nominal) { showToast('Nominal harus diisi', true); return; }
             
-            if (!namaDonatur) { showToast('Nama donatur harus diisi', true); return; }
-            
-            const now = new Date();
-            const donasiBaru = {
-                id: 'DNS' + Date.now(),
-                timestamp: now.toISOString(),
-                tanggal: now.toISOString().split('T')[0],
-                jenis: jenis,
-                namaDonatur: namaDonatur,
-                alamat: document.getElementById('alamatDonatur')?.value.trim() || '-',
-                keterangan: document.getElementById('keteranganDonasi')?.value.trim() || '-',
-                bulan: now.getMonth() + 1,
-                tahun: now.getFullYear()
-            };
-            
-            if (jenis === 'UANG') {
-                donasiBaru.nominal = parseRupiah(document.getElementById('jumlahDonasi')?.value);
-                donasiBaru.barang = '';
-                if (donasiBaru.nominal <= 0) { showToast('Jumlah donasi harus diisi', true); return; }
-            } else {
-                donasiBaru.barang = document.getElementById('barangDonasi')?.value.trim();
-                donasiBaru.nominal = 0;
-                if (!donasiBaru.barang) { showToast('Nama barang harus diisi', true); return; }
-            }
+            const formData = new URLSearchParams({
+                action: 'addTransaksi', token: TOKEN,
+                jenis: 'DONASI', tanggal: document.getElementById('tglDonasi').value,
+                id_anggota: '', nama: donatur, nominal: nominal,
+                keterangan: document.getElementById('ketDonasi').value
+            });
             
             try {
-                showToast('Menyimpan donasi...');
-                
-                const params = new URLSearchParams();
-                params.append('action', 'saveDonasi');
-                Object.keys(donasiBaru).forEach(key => {
-                    params.append(key, donasiBaru[key]);
-                });
-                
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: params
-                });
-                
-                const result = await response.json();
-                console.log('📤 Response simpan donasi:', result);
-                
-                if (result.success) {
-                    showToast('Donasi disimpan');
-                    tutupModal('modalDonasi');
+                const res = await fetch(API_URL, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    showToast('Donasi berhasil');
+                    state.donasiForm = { donatur: '', nominal: 0, tanggal: new Date().toISOString().split('T')[0], keterangan: '' };
                     await loadData();
-                } else {
-                    showToast('Gagal: ' + (result.message || 'Unknown error'), true);
-                }
-            } catch (error) {
-                console.error('❌ Error simpan donasi:', error);
-                showToast('Gagal menyimpan: ' + error.message, true);
+                } else showToast('Gagal: ' + data.message, true);
+            } catch(e) { showToast('Error: ' + e.message, true); }
+        }
+
+        function tambahAnggota() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header"><h3>Tambah Anggota</h3><button onclick="this.closest('.modal').remove()">✖</button></div>
+                    <div class="modal-body">
+                        <div class="auto-id"><div>ID Otomatis</div><div class="auto-id-value" id="previewId">AGT001</div><button class="btn-generate" onclick="generateNewId()">Generate</button></div>
+                        <input type="text" id="namaAnggota" placeholder="Nama Lengkap *">
+                        <input type="text" id="hpAnggota" placeholder="No HP *">
+                        <input type="text" id="alamatAnggota" placeholder="Alamat">
+                        <select id="statusAnggota"><option>AKTIF</option><option>NONAKTIF</option></select>
+                    </div>
+                    <div class="modal-footer"><button class="btn secondary" onclick="this.closest('.modal').remove()">Batal</button><button class="btn" id="saveAnggota">Simpan</button></div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            generateNewId();
+            document.getElementById('saveAnggota').onclick = async () => {
+                const id = document.getElementById('previewId').innerText;
+                const nama = document.getElementById('namaAnggota').value;
+                const hp = document.getElementById('hpAnggota').value;
+                if (!nama || !hp) { showToast('Nama dan No HP wajib', true); return; }
+                const formData = new URLSearchParams({ action: 'addAnggota', token: TOKEN, id: id, nama: nama, no_hp: hp, alamat: document.getElementById('alamatAnggota').value, status: document.getElementById('statusAnggota').value });
+                const res = await fetch(API_URL, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.status === 'success') { modal.remove(); await loadData(); showToast('Anggota ditambahkan: ' + id); }
+                else showToast('Gagal: ' + data.message, true);
+            };
+        }
+
+        function generateNewId() {
+            const lastId = state.anggota.length > 0 ? state.anggota[state.anggota.length-1].id : 'AGT000';
+            const num = parseInt(lastId.replace('AGT', '')) || 0;
+            const newId = 'AGT' + String(num + 1).padStart(3, '0');
+            const el = document.getElementById('previewId');
+            if (el) el.innerText = newId;
+        }
+
+        function tambahDonatur() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header"><h3>Tambah Donatur</h3><button onclick="this.closest('.modal').remove()">✖</button></div>
+                    <div class="modal-body"><input type="text" id="namaDonaturBaru" placeholder="Nama Donatur *"><input type="text" id="kontakDonatur" placeholder="Kontak"></div>
+                    <div class="modal-footer"><button class="btn secondary" onclick="this.closest('.modal').remove()">Batal</button><button class="btn" id="saveDonaturBaru">Simpan</button></div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            document.getElementById('saveDonaturBaru').onclick = async () => {
+                const nama = document.getElementById('namaDonaturBaru').value;
+                if (!nama) { showToast('Nama donatur wajib', true); return; }
+                const formData = new URLSearchParams({ action: 'addDonatur', token: TOKEN, nama: nama, kontak: document.getElementById('kontakDonatur').value });
+                const res = await fetch(API_URL, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.status === 'success') { modal.remove(); await loadData(); showToast('Donatur ditambahkan'); }
+                else showToast('Gagal: ' + data.message, true);
+            };
+        }
+
+        function detailAnggota(id) {
+            const anggota = state.anggota.find(a => a.id === id);
+            if (!anggota) return;
+            const transaksi = state.transaksi.filter(t => t.id_anggota === id || t.nama === anggota.nama);
+            const totalSetor = transaksi.filter(t => t.jenis === 'SETOR').reduce((s,t) => s + (t.nominal||0), 0);
+            const totalPinjam = transaksi.filter(t => t.jenis === 'PINJAM').reduce((s,t) => s + (t.nominal||0), 0);
+            const saldo = totalSetor - totalPinjam;
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header"><h3>${anggota.nama}</h3><button onclick="this.closest('.modal').remove()">✖</button></div>
+                    <div class="modal-body">
+                        <div><b>ID:</b> ${anggota.id}</div><div><b>No HP:</b> ${anggota.no_hp || '-'}</div><div><b>Alamat:</b> ${anggota.alamat || '-'}</div>
+                        <hr style="margin:12px 0;border-color:rgba(255,255,255,0.1)">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+                            <div class="stat-card"><div>Total Setor</div><div class="positive">${formatRupiah(totalSetor)}</div></div>
+                            <div class="stat-card"><div>Total Pinjam</div><div class="negative">${formatRupiah(totalPinjam)}</div></div>
+                        </div>
+                        <div class="stat-card" style="background:#283593"><div>Saldo Akhir</div><div class="${saldo >= 0 ? 'positive' : 'negative'}">${formatRupiah(saldo)}</div></div>
+                        <h4>Riwayat Transaksi</h4>
+                        ${transaksi.slice(0,10).map(t => `<div class="flex-between"><span>${t.tanggal} - ${t.jenis}</span><span>${formatRupiah(t.nominal)}</span></div>`).join('') || '<div class="text-dim">Belum ada transaksi</div>'}
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function quickTransaksi(jenis) {
+            state.transaksiForm.jenis = jenis;
+            state.tab = 'transaksi';
+            render();
+        }
+
+        function cetakLaporan() {
+            const totalMasuk = state.transaksi.filter(t => t.jenis === 'SETOR' || t.jenis === 'DONASI').reduce((s,t) => s + (t.nominal||0), 0);
+            const totalKeluar = state.transaksi.filter(t => t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN').reduce((s,t) => s + (t.nominal||0), 0);
+            const win = window.open('', '_blank');
+            win.document.write(`
+                <html><head><title>Laporan Kas</title><style>body{font-family:Arial;padding:20px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:8px}th{background:#1a237e;color:#fff}</style></head>
+                <body><h1>Laporan Keuangan</h1><p>Tanggal: ${new Date().toLocaleDateString('id-ID')}</p>
+                <h3>Ringkasan</h3><p>Saldo: ${formatRupiah(state.saldo)}</p><p>Pemasukan: ${formatRupiah(totalMasuk)}</p><p>Pengeluaran: ${formatRupiah(totalKeluar)}</p>
+                <h3>Daftar Transaksi</h3>
+                <table><tr><th>Tanggal</th><th>Jenis</th><th>Nama</th><th>Nominal</th><th>Keterangan</th></tr>
+                ${state.transaksi.map(t => `<tr><td>${t.tanggal}</td><td>${t.jenis}</td><td>${t.nama || '-'}</td><td>${formatRupiah(t.nominal)}</td><td>${t.keterangan || '-'}</td></tr>`).join('')}
+                </table></body></html>
+            `);
+            win.document.close();
+            win.print();
+        }
+
+        function attachEvents() {
+            document.getElementById('refreshBtn')?.addEventListener('click', loadData);
+            document.getElementById('printBtn')?.addEventListener('click', cetakLaporan);
+            if (state.tab === 'transaksi') {
+                document.getElementById('simpanTransaksi')?.addEventListener('click', simpanTransaksi);
+                document.getElementById('jenisTransaksi')?.addEventListener('change', (e) => state.transaksiForm.jenis = e.target.value);
+                document.getElementById('nominalTransaksi')?.addEventListener('input', (e) => {
+                    let val = e.target.value.replace(/\D/g, '');
+                    state.transaksiForm.nominal = parseInt(val) || 0;
+                    e.target.value = val ? formatNumber(val) : '';
+                });
+            }
+            if (state.tab === 'anggota') {
+                document.getElementById('cariAnggota')?.addEventListener('input', (e) => { state.search = e.target.value; render(); });
+            }
+            if (state.tab === 'donatur') {
+                document.getElementById('simpanDonasi')?.addEventListener('click', simpanDonasi);
+                document.getElementById('pilihDonatur')?.addEventListener('change', (e) => {
+                    if (e.target.value === 'NEW') tambahDonatur();
+                    else state.donasiForm.donatur = e.target.value;
+                });
+                document.getElementById('nominalDonasi')?.addEventListener('input', (e) => {
+                    let val = e.target.value.replace(/\D/g, '');
+                    state.donasiForm.nominal = parseInt(val) || 0;
+                    e.target.value = val ? formatNumber(val) : '';
+                });
             }
         }
 
-        // ==================== REFRESH ====================
-        function refreshData() {
-            testKoneksi();
+        // UTILITY
+        function formatRupiah(n) { return 'Rp ' + (n||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+        function formatNumber(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+        function showToast(msg, err = false) {
+            const t = document.createElement('div'); t.className = 'toast' + (err ? ' error' : ''); t.innerHTML = msg;
+            document.body.appendChild(t);
+            setTimeout(() => { t.remove(); }, 3000);
         }
 
-        // ==================== CETAK LAPORAN ====================
-        function cetakLaporan() {
-            const printWindow = window.open('', '_blank');
-            
-            const totalPemasukan = state.stats.totalSetor + state.stats.totalDonasiUang;
-            const totalPengeluaran = state.stats.totalPengeluaran;
-            
-            const allData = [];
-            (state.transaksi || []).forEach(t => {
-                allData.push({
-                    timestamp: t.timestamp,
-                    jenisTampil: t.jenis,
-                    namaTampil: t.nama,
-                    nilaiTampil: t.jenis === 'SETOR' ? formatRupiah(t.nominal) : '(' + formatRupiah(t.nominal) + ')',
-                    kelas: t.jenis === 'SETOR' ? 'positive' : 'negative',
-                    keterangan: t.keterangan
-                });
+        // INIT
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.tab = btn.dataset.tab;
+                render();
             });
-            
-            (state.donasi || []).forEach(d => {
-                allData.push({
-                    timestamp: d.timestamp,
-                    jenisTampil: d.jenis === 'UANG' ? 'DONASI UANG' : 'DONASI BARANG',
-                    namaTampil: d.namaDonatur,
-                    nilaiTampil: d.jenis === 'UANG' ? formatRupiah(d.nominal) : d.barang,
-                    kelas: 'positive',
-                    keterangan: d.keterangan
-                });
-            });
-            
-            allData.sort((a, b) => new Date(b.timestamp||0) - new Date(a.timestamp||0));
-
-            const html = `<!DOCTYPE html>
-<html>
-<head>
-    <title>Laporan Kas Pura - Koramil Sukasada</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Times New Roman', Times, serif; 
-            padding: 15px;
-            background: white;
-            color: black;
-            line-height: 1.4;
-            font-size: 11pt;
-        }
-        .kop {
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #1a237e;
-            padding-bottom: 10px;
-        }
-        .kop h1 {
-            font-size: 18pt;
-            font-weight: bold;
-            color: #1a237e;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-        }
-        .kop h3 {
-            font-size: 12pt;
-            font-weight: normal;
-            color: #333;
-        }
-        .kop p { font-size: 10pt; color: #666; }
-        .info-box {
-            border: 1px solid #000;
-            padding: 10px;
-            margin-bottom: 15px;
-            background: #f9f9f9;
-        }
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-        }
-        .info-label { font-weight: bold; width: 150px; }
-        .summary-section {
-            margin-bottom: 20px;
-            border: 1px solid #000;
-        }
-        .summary-header {
-            background: #1a237e;
-            color: white;
-            padding: 8px;
-            font-weight: bold;
-        }
-        .summary-content {
-            padding: 10px;
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-        .summary-item {
-            border-bottom: 1px dotted #999;
-            padding: 5px 0;
-            display: flex;
-            justify-content: space-between;
-        }
-        .summary-item.total {
-            border-top: 2px solid #000;
-            margin-top: 10px;
-            padding-top: 10px;
-            font-weight: bold;
-            grid-column: span 2;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        th {
-            background: #1a237e;
-            color: white;
-            padding: 8px;
-            border: 1px solid #333;
-        }
-        td {
-            padding: 6px;
-            border: 1px solid #333;
-        }
-        .text-right { text-align: right; }
-        .positive { color: #006600; }
-        .negative { color: #cc0000; }
-        .footer {
-            margin-top: 70px;
-            text-align: right;
-        }
-    </style>
-</head>
-<body>
-    <div class="kop">
-        <h1>LAPORAN KAS PURA</h1>
-        <h3>Koramil Sukasada</h3>
-        <p>Periode: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-    </div>
-
-    <div class="info-box">
-        <div class="info-row"><span class="info-label">Saldo Global</span><span>: ${formatRupiah(state.globalBalance)}</span></div>
-        <div class="info-row"><span class="info-label">Total Anggota</span><span>: ${state.anggota.length} orang</span></div>
-        <div class="info-row"><span class="info-label">Total Donatur</span><span>: ${new Set((state.donasi || []).map(d => d.namaDonatur)).size} orang</span></div>
-        <div class="info-row"><span class="info-label">Total Transaksi</span><span>: ${state.transaksi.length} kali</span></div>
-    </div>
-
-    <div class="summary-section">
-        <div class="summary-header">RINGKASAN TRANSAKSI</div>
-        <div class="summary-content">
-            <div class="summary-item"><span>Total Pemasukan</span><span class="positive">${formatRupiah(totalPemasukan)}</span></div>
-            <div class="summary-item"><span>Total Pengeluaran</span><span class="negative">${formatRupiah(totalPengeluaran)}</span></div>
-            <div class="summary-item"><span style="margin-left:20px">- SETOR</span><span>${formatRupiah(state.stats.totalSetor)}</span></div>
-            <div class="summary-item"><span style="margin-left:20px">- DONASI UANG</span><span class="positive">${formatRupiah(state.stats.totalDonasiUang)}</span></div>
-            <div class="summary-item"><span style="margin-left:20px">- DONASI BARANG</span><span class="positive">${state.stats.totalDonasiBarang} item</span></div>
-            <div class="summary-item"><span style="margin-left:20px">- PENGELUARAN</span><span class="negative">${formatRupiah(state.stats.totalPengeluaran)}</span></div>
-            <div class="summary-item total"><span>SALDO AKHIR</span><span style="color:#1a237e;">${formatRupiah(state.globalBalance)}</span></div>
-        </div>
-    </div>
-
-    <h3>DAFTAR TRANSAKSI</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>No</th>
-                <th>Tanggal</th>
-                <th>Jenis</th>
-                <th>Nama</th>
-                <th>Nominal/Barang</th>
-                <th>Keterangan</th>
-            </tr>
-        </thead>
-        <tbody>
-            ${allData.map((item, i) => `
-                <tr>
-                    <td class="text-center">${i+1}</td>
-                    <td class="text-center">${formatTanggalLengkap(item.timestamp)}</td>
-                    <td class="text-center">${item.jenisTampil}</td>
-                    <td>${item.namaTampil}</td>
-                    <td class="text-right ${item.kelas}">${item.nilaiTampil}</td>
-                    <td>${item.keterangan || '-'}</td>
-                </tr>
-            `).join('')}
-        </tbody>
-    </table>
-
-    <div class="footer">
-        Sukasada, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}<br>
-        Mengetahui,<br>
-        <br>
-        <br>
-        Bendahara
-    </div>
-</body>
-</html>`;
-            
-            printWindow.document.write(html);
-            printWindow.document.close();
-            printWindow.print();
-        }
-
-        // Export functions ke global
-        window.ubahTab = ubahTab;
-        window.toggleFormTransaksi = toggleFormTransaksi;
-        window.toggleJenisDonasi = toggleJenisDonasi;
-        window.formatUang = formatUang;
-        window.filterAnggota = filterAnggota;
-        window.simpanTransaksi = simpanTransaksi;
-        window.simpanAnggota = simpanAnggota;
-        window.simpanDonasi = simpanDonasi;
-        window.bukaModal = bukaModal;
-        window.tutupModal = tutupModal;
-        window.refreshData = refreshData;
-        window.cetakLaporan = cetakLaporan;
+        });
+        loadData();
     </script>
 </body>
 </html>
