@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Aplikasi Kas Sederhana</title>
+    <title>Aplikasi Kas - Manajemen Keuangan</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Kas App">
     <meta name="theme-color" content="#1a237e">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -23,7 +24,7 @@
             left: 0;
             right: 0;
             background: linear-gradient(135deg, #1a237e, #283593);
-            padding: 14px 16px;
+            padding: 12px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -31,7 +32,32 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
         .header h1 { font-size: 18px; display: flex; align-items: center; gap: 8px; }
-        .header-actions { display: flex; gap: 10px; }
+        .header-actions { display: flex; align-items: center; gap: 12px; }
+        .signal-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0,0,0,0.5);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+        }
+        .signal-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4caf50;
+            box-shadow: 0 0 5px #4caf50;
+            transition: all 0.3s;
+        }
+        .signal-dot.offline {
+            background: #f44336;
+            box-shadow: 0 0 5px #f44336;
+        }
+        .signal-text {
+            font-size: 10px;
+            font-weight: 500;
+        }
         .header-btn {
             background: rgba(255,255,255,0.15);
             border: none;
@@ -40,7 +66,9 @@
             height: 36px;
             border-radius: 50%;
             cursor: pointer;
+            transition: all 0.2s;
         }
+        .header-btn:hover { background: rgba(255,255,255,0.25); }
         .content { padding: 70px 12px 20px; }
         .card {
             background: rgba(255,255,255,0.08);
@@ -71,6 +99,7 @@
             color: rgba(255,255,255,0.6);
             font-size: 11px;
             cursor: pointer;
+            transition: all 0.2s;
         }
         .nav-btn.active { color: #ff9800; background: rgba(255,152,0,0.1); }
         .nav-btn i { font-size: 20px; margin-bottom: 4px; }
@@ -84,9 +113,10 @@
             width: 100%;
             cursor: pointer;
             font-size: 16px;
+            transition: all 0.2s;
         }
+        .btn:active { transform: scale(0.98); }
         .btn.secondary { background: rgba(255,255,255,0.15); }
-        .btn.danger { background: linear-gradient(135deg, #f44336, #c62828); }
         input, select, textarea {
             width: 100%;
             padding: 12px;
@@ -95,6 +125,12 @@
             border-radius: 12px;
             color: white;
             margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #ff9800;
+            background: rgba(255,255,255,0.15);
         }
         .info-card {
             background: linear-gradient(135deg, #ff9800, #f57c00);
@@ -110,7 +146,6 @@
             padding: 12px;
             text-align: center;
         }
-        .stat-value { font-size: 20px; font-weight: bold; color: #4caf50; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
         .account-item, .transaction-item {
             padding: 12px;
@@ -119,7 +154,9 @@
             align-items: center;
             gap: 12px;
             cursor: pointer;
+            transition: background 0.2s;
         }
+        .account-item:hover, .transaction-item:hover { background: rgba(255,255,255,0.05); }
         .account-avatar {
             width: 40px;
             height: 40px;
@@ -165,6 +202,13 @@
             display: flex;
             justify-content: space-between;
         }
+        .modal-header button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
         .modal-body { padding: 16px; }
         .modal-footer {
             padding: 16px;
@@ -181,6 +225,9 @@
             border-radius: 8px;
             z-index: 2000;
             animation: slideIn 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .toast.error { background: #c62828; }
         @keyframes slideIn {
@@ -197,7 +244,7 @@
             justify-content: space-between;
             align-items: center;
         }
-        .auto-id-value { font-size: 18px; font-weight: bold; color: #ff9800; }
+        .auto-id-value { font-size: 18px; font-weight: bold; color: #ff9800; font-family: monospace; }
         .btn-generate {
             background: #ff9800;
             border: none;
@@ -212,16 +259,29 @@
         .positive { color: #4caf50; }
         .negative { color: #ef5350; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .mb-2 { margin-bottom: 12px; }
+        .sync-status {
+            font-size: 10px;
+            margin-top: 4px;
+            color: rgba(255,255,255,0.5);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255,255,255,0.5);
+        }
+        .empty-state i { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
     </style>
 </head>
 <body>
     <div class="header">
         <h1><i class="fas fa-wallet"></i> Aplikasi Kas</h1>
         <div class="header-actions">
+            <div class="signal-indicator" id="signalIndicator">
+                <div class="signal-dot" id="signalDot"></div>
+                <span class="signal-text" id="signalText">Online</span>
+            </div>
             <button class="header-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i></button>
             <button class="header-btn" id="printBtn"><i class="fas fa-print"></i></button>
-            <button class="header-btn" id="resetBtn" style="background:#c62828"><i class="fas fa-trash"></i></button>
         </div>
     </div>
     <div class="content" id="content"></div>
@@ -233,45 +293,149 @@
     </div>
 
     <script>
-        // ==================== DATA STORAGE (LocalStorage) ====================
-        // Data default jika kosong
-        const DEFAULT_DATA = {
-            anggota: [
-                { id: "AGT001", nama: "Budi Santoso", no_hp: "08123456789", alamat: "Jl. Merdeka No.1", status: "AKTIF" },
-                { id: "AGT002", nama: "Siti Rahayu", no_hp: "08198765432", alamat: "Jl. Sudirman No.5", status: "AKTIF" }
-            ],
-            donatur: [
-                { nama: "Yayasan Sejahtera", kontak: "021-123456" },
-                { nama: "PT Makmur Jaya", kontak: "021-789012" }
-            ],
-            transaksi: [
-                { id: "TRX001", tanggal: "2024-03-20", jenis: "SETOR", id_anggota: "AGT001", nama: "Budi Santoso", nominal: 100000, keterangan: "Setoran awal" },
-                { id: "TRX002", tanggal: "2024-03-20", jenis: "PINJAM", id_anggota: "AGT002", nama: "Siti Rahayu", nominal: 50000, keterangan: "Pinjaman" },
-                { id: "TRX003", tanggal: "2024-03-21", jenis: "DONASI", id_anggota: "", nama: "Yayasan Sejahtera", nominal: 200000, keterangan: "Donasi" }
-            ]
+        // ==================== KONFIGURASI ====================
+        const DB_NAME = 'KasAppDB';
+        const DB_VERSION = 1;
+        const STORES = {
+            ANGGOTA: 'anggota',
+            DONATUR: 'donatur',
+            TRANSAKSI: 'transaksi'
         };
-
-        // Load data dari LocalStorage
-        function loadDataFromStorage() {
-            const stored = localStorage.getItem('aplikasi_kas_data');
-            if (stored) {
-                return JSON.parse(stored);
-            } else {
-                localStorage.setItem('aplikasi_kas_data', JSON.stringify(DEFAULT_DATA));
-                return JSON.parse(JSON.stringify(DEFAULT_DATA));
-            }
-        }
-
-        function saveDataToStorage(data) {
-            localStorage.setItem('aplikasi_kas_data', JSON.stringify(data));
-        }
-
-        let appData = loadDataFromStorage();
         
-        // Hitung saldo
-        function hitungSaldo() {
+        const API_URL = 'https://script.google.com/macros/s/AKfycbz54hQIpb3pgdTPI5t96KzMTPKxAXb479gVgKUGILs1zwaTRPGSLrzMFuxQRzuKlog9/exec';
+        const TOKEN = 'kas2024';
+        
+        let db = null;
+        let isOnline = navigator.onLine;
+        let syncQueue = [];
+
+        // ==================== INDEXEDDB ====================
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    
+                    if (!db.objectStoreNames.contains(STORES.ANGGOTA)) {
+                        const anggotaStore = db.createObjectStore(STORES.ANGGOTA, { keyPath: 'id' });
+                        anggotaStore.createIndex('nama', 'nama', { unique: false });
+                        anggotaStore.createIndex('status', 'status', { unique: false });
+                    }
+                    
+                    if (!db.objectStoreNames.contains(STORES.DONATUR)) {
+                        const donaturStore = db.createObjectStore(STORES.DONATUR, { keyPath: 'nama' });
+                        donaturStore.createIndex('nama', 'nama', { unique: true });
+                    }
+                    
+                    if (!db.objectStoreNames.contains(STORES.TRANSAKSI)) {
+                        const transaksiStore = db.createObjectStore(STORES.TRANSAKSI, { keyPath: 'id' });
+                        transaksiStore.createIndex('tanggal', 'tanggal', { unique: false });
+                        transaksiStore.createIndex('jenis', 'jenis', { unique: false });
+                        transaksiStore.createIndex('id_anggota', 'id_anggota', { unique: false });
+                    }
+                    
+                    if (!db.objectStoreNames.contains('sync_queue')) {
+                        db.createObjectStore('sync_queue', { keyPath: 'id', autoIncrement: true });
+                    }
+                };
+            });
+        }
+
+        async function getAllFromStore(storeName) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function addToStore(storeName, data) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.add(data);
+                request.onsuccess = () => resolve(data);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function putToStore(storeName, data) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.put(data);
+                request.onsuccess = () => resolve(data);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function deleteFromStore(storeName, key) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.delete(key);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function addToSyncQueue(data) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['sync_queue'], 'readwrite');
+                const store = transaction.objectStore('sync_queue');
+                const request = store.add({ ...data, timestamp: new Date().toISOString() });
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function getSyncQueue() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['sync_queue'], 'readonly');
+                const store = transaction.objectStore('sync_queue');
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function clearSyncQueue() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['sync_queue'], 'readwrite');
+                const store = transaction.objectStore('sync_queue');
+                const request = store.clear();
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // ==================== GENERATE ID ====================
+        async function generateId(prefix, storeName) {
+            const items = await getAllFromStore(storeName);
+            let maxNum = 0;
+            items.forEach(item => {
+                if (item.id && item.id.startsWith(prefix)) {
+                    const num = parseInt(item.id.replace(prefix, '')) || 0;
+                    if (num > maxNum) maxNum = num;
+                }
+            });
+            return prefix + String(maxNum + 1).padStart(3, '0');
+        }
+
+        // ==================== HITUNG SALDO ====================
+        async function hitungSaldo() {
+            const transaksi = await getAllFromStore(STORES.TRANSAKSI);
             let saldo = 0;
-            appData.transaksi.forEach(t => {
+            transaksi.forEach(t => {
                 if (t.jenis === 'SETOR' || t.jenis === 'DONASI') {
                     saldo += t.nominal;
                 } else if (t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN') {
@@ -281,18 +445,54 @@
             return saldo;
         }
 
-        // Generate ID baru
-        function generateNewId(prefix, existingIds) {
-            let max = 0;
-            existingIds.forEach(id => {
-                const num = parseInt(id.replace(prefix, '')) || 0;
-                if (num > max) max = num;
-            });
-            const newNum = max + 1;
-            return prefix + String(newNum).padStart(3, '0');
+        // ==================== SYNC KE SERVER ====================
+        async function syncToServer() {
+            if (!isOnline) return;
+            
+            const queue = await getSyncQueue();
+            if (queue.length === 0) return;
+            
+            updateSignalStatus(true, 'Menyinkronisasi...');
+            
+            for (const item of queue) {
+                try {
+                    const formData = new URLSearchParams({
+                        action: item.action,
+                        token: TOKEN,
+                        ...item.data
+                    });
+                    
+                    const response = await fetch(API_URL, { method: 'POST', body: formData });
+                    const result = await response.json();
+                    
+                    if (result.status === 'success') {
+                        await deleteFromStore('sync_queue', item.id);
+                    }
+                } catch (error) {
+                    console.error('Sync error:', error);
+                }
+            }
+            
+            updateSignalStatus(true, 'Online');
+            showToast('Data tersinkronisasi');
         }
 
-        // ==================== STATE UI ====================
+        // ==================== UPDATE SIGNAL ====================
+        function updateSignalStatus(online, text = null) {
+            isOnline = online;
+            const dot = document.getElementById('signalDot');
+            const textEl = document.getElementById('signalText');
+            
+            if (online) {
+                dot.classList.remove('offline');
+                textEl.textContent = text || 'Online';
+            } else {
+                dot.classList.add('offline');
+                textEl.textContent = text || 'Offline';
+            }
+        }
+
+        // ==================== STATE ====================
         let state = {
             tab: 'dashboard',
             search: '',
@@ -301,23 +501,26 @@
         };
 
         // ==================== RENDER ====================
-        function render() {
+        async function render() {
             const content = document.getElementById('content');
-            if (state.tab === 'dashboard') content.innerHTML = renderDashboard();
-            else if (state.tab === 'transaksi') content.innerHTML = renderTransaksi();
-            else if (state.tab === 'anggota') content.innerHTML = renderAnggota();
-            else if (state.tab === 'donatur') content.innerHTML = renderDonatur();
+            if (state.tab === 'dashboard') content.innerHTML = await renderDashboard();
+            else if (state.tab === 'transaksi') content.innerHTML = await renderTransaksi();
+            else if (state.tab === 'anggota') content.innerHTML = await renderAnggota();
+            else if (state.tab === 'donatur') content.innerHTML = await renderDonatur();
             attachEvents();
         }
 
-        function renderDashboard() {
-            const saldo = hitungSaldo();
-            const totalMasuk = appData.transaksi.filter(t => t.jenis === 'SETOR' || t.jenis === 'DONASI').reduce((s,t) => s + t.nominal, 0);
-            const totalKeluar = appData.transaksi.filter(t => t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN').reduce((s,t) => s + t.nominal, 0);
+        async function renderDashboard() {
+            const anggota = await getAllFromStore(STORES.ANGGOTA);
+            const transaksi = await getAllFromStore(STORES.TRANSAKSI);
+            const saldo = await hitungSaldo();
+            
+            const totalMasuk = transaksi.filter(t => t.jenis === 'SETOR' || t.jenis === 'DONASI').reduce((s,t) => s + t.nominal, 0);
+            const totalKeluar = transaksi.filter(t => t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN').reduce((s,t) => s + t.nominal, 0);
             const bulanIni = new Date().toISOString().slice(0,7);
-            const transaksiBulanIni = appData.transaksi.filter(t => t.tanggal.startsWith(bulanIni));
-            const pemasukanBulanIni = transaksiBulanIni.filter(t => t.jenis === 'SETOR' || t.jenis === 'DONASI').reduce((s,t) => s + t.nominal, 0);
-            const pengeluaranBulanIni = transaksiBulanIni.filter(t => t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN').reduce((s,t) => s + t.nominal, 0);
+            const pemasukanBulanIni = transaksi.filter(t => (t.jenis === 'SETOR' || t.jenis === 'DONASI') && t.tanggal?.startsWith(bulanIni)).reduce((s,t) => s + t.nominal, 0);
+            
+            const anggotaAktif = anggota.filter(a => a.status === 'AKTIF').length;
             
             return `
                 <div class="card">
@@ -331,12 +534,7 @@
                     </div>
                     <div class="grid-2" style="margin-top:12px">
                         <div class="stat-card"><div>📅 Pemasukan Bulan Ini</div><div class="positive">${formatRupiah(pemasukanBulanIni)}</div></div>
-                        <div class="stat-card"><div>📅 Pengeluaran Bulan Ini</div><div class="negative">${formatRupiah(pengeluaranBulanIni)}</div></div>
-                    </div>
-                    <div style="margin-top:16px">
-                        <div class="flex-between"><span>👥 Anggota Aktif</span><span>${appData.anggota.filter(a => a.status === 'AKTIF').length}</span></div>
-                        <div class="flex-between"><span>🤝 Donatur</span><span>${appData.donatur.length}</span></div>
-                        <div class="flex-between"><span>📋 Total Transaksi</span><span>${appData.transaksi.length}</span></div>
+                        <div class="stat-card"><div>👥 Anggota Aktif</div><div class="stat-value">${anggotaAktif}</div></div>
                     </div>
                     <div class="grid-2" style="margin-top:16px">
                         <button class="btn secondary" onclick="quickTransaksi('SETOR')">💰 Setor</button>
@@ -347,22 +545,27 @@
                 </div>
                 <div class="card">
                     <h3>📋 Transaksi Terbaru</h3>
-                    ${appData.transaksi.slice(0,10).map(t => `
-                        <div class="transaction-item">
-                            <div>
-                                <span class="badge">${t.jenis}</span>
-                                <div class="text-dim">${t.tanggal}</div>
-                                <div>${t.nama || t.id_anggota || '-'}</div>
+                    ${transaksi.length === 0 ? 
+                        `<div class="empty-state"><i class="fas fa-receipt"></i><div>Belum ada transaksi</div><div class="text-dim" style="font-size:12px">Mulai dengan mencatat transaksi baru</div></div>` : 
+                        transaksi.slice(0,10).map(t => `
+                            <div class="transaction-item" onclick="detailTransaksi('${t.id}')">
+                                <div style="flex:1">
+                                    <span class="badge">${t.jenis}</span>
+                                    <div class="text-dim" style="font-size:11px">${t.tanggal}</div>
+                                    <div style="font-size:14px">${t.nama || t.id_anggota || '-'}</div>
+                                </div>
+                                <span class="${t.jenis === 'SETOR' || t.jenis === 'DONASI' ? 'positive' : 'negative'}">${formatRupiah(t.nominal)}</span>
                             </div>
-                            <span class="${t.jenis === 'SETOR' || t.jenis === 'DONASI' ? 'positive' : 'negative'}">${formatRupiah(t.nominal)}</span>
-                        </div>
-                    `).join('') || '<div class="text-center text-dim">Belum ada transaksi</div>'}
+                        `).join('')
+                    }
                 </div>
             `;
         }
 
-        function renderTransaksi() {
-            const saldo = hitungSaldo();
+        async function renderTransaksi() {
+            const saldo = await hitungSaldo();
+            const anggota = await getAllFromStore(STORES.ANGGOTA);
+            
             return `
                 <div class="card">
                     <h3>📝 Transaksi Baru</h3>
@@ -375,20 +578,25 @@
                     <input type="date" id="tglTransaksi" value="${state.transaksiForm.tanggal}">
                     <select id="pilihAnggota">
                         <option value="">Pilih Anggota (opsional)</option>
-                        ${appData.anggota.map(a => `<option value="${a.id}" data-nama="${a.nama}">${a.id} - ${a.nama}</option>`).join('')}
+                        ${anggota.map(a => `<option value="${a.id}" data-nama="${a.nama}">${a.id} - ${a.nama}</option>`).join('')}
                     </select>
                     <input type="text" id="nominalTransaksi" placeholder="Nominal Rp" value="${state.transaksiForm.nominal ? formatNumber(state.transaksiForm.nominal) : ''}">
                     <input type="text" id="keteranganTransaksi" placeholder="Keterangan" value="${state.transaksiForm.keterangan}">
                     <button class="btn" id="simpanTransaksi">💾 SIMPAN</button>
+                    ${!isOnline ? '<div class="sync-status">⚠️ Offline - Data akan tersinkronisasi saat online</div>' : ''}
                 </div>
             `;
         }
 
-        function renderAnggota() {
-            const filtered = appData.anggota.filter(a => 
-                a.nama.toLowerCase().includes(state.search.toLowerCase()) || 
-                a.id.includes(state.search)
-            );
+        async function renderAnggota() {
+            let anggota = await getAllFromStore(STORES.ANGGOTA);
+            if (state.search) {
+                anggota = anggota.filter(a => 
+                    a.nama.toLowerCase().includes(state.search.toLowerCase()) || 
+                    a.id.includes(state.search)
+                );
+            }
+            
             return `
                 <div class="card">
                     <div class="flex-between">
@@ -397,22 +605,27 @@
                     </div>
                     <input type="text" id="cariAnggota" placeholder="Cari ID atau nama..." value="${state.search}">
                     <div>
-                        ${filtered.map(a => `
-                            <div class="account-item" onclick="detailAnggota('${a.id}')">
-                                <div class="account-avatar">${a.nama.charAt(0)}</div>
-                                <div style="flex:1">
-                                    <div><b>${a.nama}</b></div>
-                                    <div class="text-dim">ID: ${a.id} | ${a.no_hp || '-'}</div>
+                        ${anggota.length === 0 ? 
+                            `<div class="empty-state"><i class="fas fa-users"></i><div>Belum ada anggota</div><div class="text-dim" style="font-size:12px">Tambahkan anggota baru</div></div>` :
+                            anggota.map(a => `
+                                <div class="account-item" onclick="detailAnggota('${a.id}')">
+                                    <div class="account-avatar">${a.nama.charAt(0).toUpperCase()}</div>
+                                    <div style="flex:1">
+                                        <div><b>${a.nama}</b></div>
+                                        <div class="text-dim" style="font-size:12px">ID: ${a.id} | ${a.no_hp || '-'}</div>
+                                    </div>
+                                    <span class="badge ${a.status === 'NONAKTIF' ? 'nonaktif' : ''}">${a.status || 'AKTIF'}</span>
                                 </div>
-                                <span class="badge ${a.status === 'NONAKTIF' ? 'nonaktif' : ''}">${a.status || 'AKTIF'}</span>
-                            </div>
-                        `).join('') || '<div class="text-center text-dim">Tidak ada anggota</div>'}
+                            `).join('')
+                        }
                     </div>
                 </div>
             `;
         }
 
-        function renderDonatur() {
+        async function renderDonatur() {
+            const donatur = await getAllFromStore(STORES.DONATUR);
+            
             return `
                 <div class="card">
                     <h3>🤝 Donasi Masuk</h3>
@@ -420,27 +633,31 @@
                     <input type="date" id="tglDonasi" value="${state.donasiForm.tanggal}">
                     <select id="pilihDonatur">
                         <option value="">Pilih Donatur</option>
-                        ${appData.donatur.map(d => `<option value="${d.nama}">${d.nama}</option>`).join('')}
+                        ${donatur.map(d => `<option value="${d.nama}">${d.nama}</option>`).join('')}
                         <option value="NEW">+ Tambah Donatur Baru</option>
                     </select>
                     <input type="text" id="nominalDonasi" placeholder="Nominal Rp" value="${state.donasiForm.nominal ? formatNumber(state.donasiForm.nominal) : ''}">
                     <input type="text" id="ketDonasi" placeholder="Keterangan" value="${state.donasiForm.keterangan}">
                     <button class="btn" id="simpanDonasi" style="background:#ff9800">💾 SIMPAN DONASI</button>
+                    ${!isOnline ? '<div class="sync-status">⚠️ Offline - Data akan tersinkronisasi saat online</div>' : ''}
                 </div>
                 <div class="card">
                     <h3>📋 Daftar Donatur</h3>
-                    ${appData.donatur.map(d => `
-                        <div class="flex-between" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.1)">
-                            <span>${d.nama}</span>
-                            <span class="text-dim">${d.kontak || '-'}</span>
-                        </div>
-                    `).join('') || '<div class="text-dim text-center">Belum ada donatur</div>'}
+                    ${donatur.length === 0 ? 
+                        `<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><div>Belum ada donatur</div><div class="text-dim" style="font-size:12px">Tambahkan donatur baru</div></div>` :
+                        donatur.map(d => `
+                            <div class="flex-between" style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.1)">
+                                <span><i class="fas fa-user"></i> ${d.nama}</span>
+                                <span class="text-dim">${d.kontak || '-'}</span>
+                            </div>
+                        `).join('')
+                    }
                 </div>
             `;
         }
 
         // ==================== FUNGSI UTAMA ====================
-        function simpanTransaksi() {
+        window.simpanTransaksi = async function() {
             const jenis = document.getElementById('jenisTransaksi').value;
             const tanggal = document.getElementById('tglTransaksi').value;
             const selectAnggota = document.getElementById('pilihAnggota');
@@ -451,36 +668,45 @@
             
             if (!nominal) { showToast('Nominal harus diisi', true); return; }
             
-            // Cek saldo untuk transaksi pengurangan
-            const saldo = hitungSaldo();
+            const saldo = await hitungSaldo();
             if ((jenis === 'PINJAM' || jenis === 'PENGELUARAN') && nominal > saldo) {
                 showToast('Saldo tidak mencukupi!', true);
                 return;
             }
             
-            // Generate ID transaksi
-            const existingIds = appData.transaksi.map(t => t.id);
-            const newId = generateNewId('TRX', existingIds);
-            
+            const newId = await generateId('TRX', STORES.TRANSAKSI);
             const newTransaksi = {
                 id: newId,
                 tanggal: tanggal,
                 jenis: jenis,
                 id_anggota: id_anggota,
-                nama: nama || (id_anggota ? appData.anggota.find(a => a.id === id_anggota)?.nama : '') || 'Umum',
+                nama: nama || (id_anggota ? (await getAllFromStore(STORES.ANGGOTA)).find(a => a.id === id_anggota)?.nama : '') || 'Umum',
                 nominal: nominal,
-                keterangan: keterangan
+                keterangan: keterangan,
+                created_at: new Date().toISOString()
             };
             
-            appData.transaksi.unshift(newTransaksi);
-            saveDataToStorage(appData);
+            await addToStore(STORES.TRANSAKSI, newTransaksi);
+            
+            if (isOnline) {
+                try {
+                    const formData = new URLSearchParams({
+                        action: 'addTransaksi', token: TOKEN,
+                        jenis: jenis, tanggal: tanggal, id_anggota: id_anggota,
+                        nama: newTransaksi.nama, nominal: nominal, keterangan: keterangan
+                    });
+                    await fetch(API_URL, { method: 'POST', body: formData });
+                } catch (e) { console.error('Sync error:', e); }
+            } else {
+                await addToSyncQueue({ action: 'addTransaksi', data: { jenis, tanggal, id_anggota, nama: newTransaksi.nama, nominal, keterangan } });
+            }
             
             showToast('Transaksi berhasil!');
             state.transaksiForm = { jenis: 'SETOR', nominal: 0, id_anggota: '', tanggal: new Date().toISOString().split('T')[0], keterangan: '' };
-            render();
-        }
+            await render();
+        };
 
-        function simpanDonasi() {
+        window.simpanDonasi = async function() {
             const donaturSelect = document.getElementById('pilihDonatur');
             const donatur = donaturSelect.value;
             if (!donatur || donatur === '') { showToast('Pilih donatur', true); return; }
@@ -489,39 +715,51 @@
             const nominal = parseInt(document.getElementById('nominalDonasi').value.replace(/\D/g, '')) || 0;
             if (!nominal) { showToast('Nominal harus diisi', true); return; }
             
-            const existingIds = appData.transaksi.map(t => t.id);
-            const newId = generateNewId('TRX', existingIds);
+            const newId = await generateId('TRX', STORES.TRANSAKSI);
             
-            appData.transaksi.unshift({
+            const newTransaksi = {
                 id: newId,
                 tanggal: document.getElementById('tglDonasi').value,
                 jenis: 'DONASI',
                 id_anggota: '',
                 nama: donatur,
                 nominal: nominal,
-                keterangan: document.getElementById('ketDonasi').value
-            });
+                keterangan: document.getElementById('ketDonasi').value,
+                created_at: new Date().toISOString()
+            };
             
-            saveDataToStorage(appData);
+            await addToStore(STORES.TRANSAKSI, newTransaksi);
+            
+            if (isOnline) {
+                try {
+                    const formData = new URLSearchParams({
+                        action: 'addTransaksi', token: TOKEN,
+                        jenis: 'DONASI', tanggal: newTransaksi.tanggal,
+                        id_anggota: '', nama: donatur, nominal: nominal,
+                        keterangan: newTransaksi.keterangan
+                    });
+                    await fetch(API_URL, { method: 'POST', body: formData });
+                } catch (e) { console.error('Sync error:', e); }
+            } else {
+                await addToSyncQueue({ action: 'addTransaksi', data: { jenis: 'DONASI', tanggal: newTransaksi.tanggal, id_anggota: '', nama: donatur, nominal, keterangan: newTransaksi.keterangan } });
+            }
+            
             showToast('Donasi berhasil!');
             state.donasiForm = { donatur: '', nominal: 0, tanggal: new Date().toISOString().split('T')[0], keterangan: '' };
-            render();
-        }
+            await render();
+        };
 
-        function tambahAnggota() {
+        window.tambahAnggota = async function() {
+            const newId = await generateId('AGT', STORES.ANGGOTA);
             const modal = document.createElement('div');
             modal.className = 'modal';
-            const existingIds = appData.anggota.map(a => a.id);
-            const newId = generateNewId('AGT', existingIds);
-            
             modal.innerHTML = `
                 <div class="modal-content">
                     <div class="modal-header"><h3>Tambah Anggota</h3><button onclick="this.closest('.modal').remove()">✖</button></div>
                     <div class="modal-body">
                         <div class="auto-id">
                             <div>ID Otomatis</div>
-                            <div class="auto-id-value" id="previewId">${newId}</div>
-                            <button class="btn-generate" onclick="generateNewIdAnggota()">Generate</button>
+                            <div class="auto-id-value">${newId}</div>
                         </div>
                         <input type="text" id="namaAnggota" placeholder="Nama Lengkap *">
                         <input type="text" id="hpAnggota" placeholder="No HP *">
@@ -536,34 +774,38 @@
             `;
             document.body.appendChild(modal);
             
-            document.getElementById('saveAnggota').onclick = () => {
-                const id = document.getElementById('previewId').innerText;
+            document.getElementById('saveAnggota').onclick = async () => {
                 const nama = document.getElementById('namaAnggota').value;
                 const hp = document.getElementById('hpAnggota').value;
                 if (!nama || !hp) { showToast('Nama dan No HP wajib', true); return; }
                 
-                appData.anggota.push({
-                    id: id,
+                const newAnggota = {
+                    id: newId,
                     nama: nama,
                     no_hp: hp,
                     alamat: document.getElementById('alamatAnggota').value,
-                    status: document.getElementById('statusAnggota').value
-                });
-                saveDataToStorage(appData);
+                    status: document.getElementById('statusAnggota').value,
+                    created_at: new Date().toISOString()
+                };
+                
+                await addToStore(STORES.ANGGOTA, newAnggota);
+                
+                if (isOnline) {
+                    try {
+                        const formData = new URLSearchParams({ action: 'addAnggota', token: TOKEN, ...newAnggota });
+                        await fetch(API_URL, { method: 'POST', body: formData });
+                    } catch (e) {}
+                } else {
+                    await addToSyncQueue({ action: 'addAnggota', data: newAnggota });
+                }
+                
                 modal.remove();
-                render();
-                showToast('Anggota ditambahkan: ' + id);
+                await render();
+                showToast('Anggota ditambahkan: ' + newId);
             };
-        }
-
-        window.generateNewIdAnggota = function() {
-            const existingIds = appData.anggota.map(a => a.id);
-            const newId = generateNewId('AGT', existingIds);
-            const el = document.getElementById('previewId');
-            if (el) el.innerText = newId;
         };
 
-        function tambahDonatur() {
+        window.tambahDonatur = async function() {
             const modal = document.createElement('div');
             modal.className = 'modal';
             modal.innerHTML = `
@@ -581,30 +823,37 @@
             `;
             document.body.appendChild(modal);
             
-            document.getElementById('saveDonaturBaru').onclick = () => {
+            document.getElementById('saveDonaturBaru').onclick = async () => {
                 const nama = document.getElementById('namaDonaturBaru').value;
                 if (!nama) { showToast('Nama donatur wajib', true); return; }
-                appData.donatur.push({ nama: nama, kontak: document.getElementById('kontakDonatur').value });
-                saveDataToStorage(appData);
+                
+                const newDonatur = { nama: nama, kontak: document.getElementById('kontakDonatur').value, created_at: new Date().toISOString() };
+                await addToStore(STORES.DONATUR, newDonatur);
+                
+                if (isOnline) {
+                    try {
+                        const formData = new URLSearchParams({ action: 'addDonatur', token: TOKEN, nama: nama, kontak: newDonatur.kontak });
+                        await fetch(API_URL, { method: 'POST', body: formData });
+                    } catch (e) {}
+                } else {
+                    await addToSyncQueue({ action: 'addDonatur', data: { nama, kontak: newDonatur.kontak } });
+                }
+                
                 modal.remove();
-                render();
+                await render();
                 showToast('Donatur ditambahkan');
-                // Refresh pilihan donatur
+                
                 setTimeout(() => {
                     const select = document.getElementById('pilihDonatur');
-                    if (select) {
-                        select.innerHTML = '<option value="">Pilih Donatur</option>' + 
-                            appData.donatur.map(d => `<option value="${d.nama}">${d.nama}</option>`).join('') +
-                            '<option value="NEW">+ Tambah Donatur Baru</option>';
-                    }
+                    if (select) select.value = nama;
                 }, 100);
             };
-        }
+        };
 
-        function detailAnggota(id) {
-            const anggota = appData.anggota.find(a => a.id === id);
+        window.detailAnggota = async function(id) {
+            const anggota = (await getAllFromStore(STORES.ANGGOTA)).find(a => a.id === id);
             if (!anggota) return;
-            const transaksi = appData.transaksi.filter(t => t.id_anggota === id || t.nama === anggota.nama);
+            const transaksi = (await getAllFromStore(STORES.TRANSAKSI)).filter(t => t.id_anggota === id || t.nama === anggota.nama);
             const totalSetor = transaksi.filter(t => t.jenis === 'SETOR').reduce((s,t) => s + t.nominal, 0);
             const totalPinjam = transaksi.filter(t => t.jenis === 'PINJAM').reduce((s,t) => s + t.nominal, 0);
             const saldo = totalSetor - totalPinjam;
@@ -626,96 +875,45 @@
                         </div>
                         <div class="stat-card" style="background:#283593;margin-top:10px"><div>Saldo Akhir</div><div class="${saldo >= 0 ? 'positive' : 'negative'}">${formatRupiah(saldo)}</div></div>
                         <h4 style="margin-top:16px">📋 Riwayat Transaksi</h4>
-                        ${transaksi.slice(0,10).map(t => `
-                            <div class="flex-between" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.1)">
-                                <div><span class="badge">${t.jenis}</span><div class="text-dim">${t.tanggal}</div></div>
-                                <span class="${t.jenis === 'SETOR' ? 'positive' : 'negative'}">${formatRupiah(t.nominal)}</span>
-                            </div>
-                        `).join('') || '<div class="text-dim text-center">Belum ada transaksi</div>'}
+                        ${transaksi.length === 0 ? '<div class="text-dim text-center">Belum ada transaksi</div>' : 
+                            transaksi.slice(0,10).map(t => `
+                                <div class="flex-between" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.1)">
+                                    <div><span class="badge">${t.jenis}</span><div class="text-dim" style="font-size:11px">${t.tanggal}</div></div>
+                                    <span class="${t.jenis === 'SETOR' ? 'positive' : 'negative'}">${formatRupiah(t.nominal)}</span>
+                                </div>
+                            `).join('')
+                        }
                     </div>
                 </div>
             `;
             document.body.appendChild(modal);
-        }
+        };
 
-        function resetData() {
-            if (confirm('⚠️ Reset semua data? Data akan kembali ke contoh awal.')) {
-                localStorage.setItem('aplikasi_kas_data', JSON.stringify(DEFAULT_DATA));
-                appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
-                render();
-                showToast('Data telah direset');
-            }
-        }
+        window.detailTransaksi = function(id) {
+            showToast('Klik untuk melihat detail', false);
+        };
 
-        function quickTransaksi(jenis) {
+        window.quickTransaksi = function(jenis) {
             state.transaksiForm.jenis = jenis;
             state.tab = 'transaksi';
             render();
-        }
+        };
 
-        function quickTab(tab) {
+        window.quickTab = function(tab) {
             state.tab = tab;
             render();
-        }
+        };
 
         function cetakLaporan() {
-            const saldo = hitungSaldo();
-            const totalMasuk = appData.transaksi.filter(t => t.jenis === 'SETOR' || t.jenis === 'DONASI').reduce((s,t) => s + t.nominal, 0);
-            const totalKeluar = appData.transaksi.filter(t => t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN').reduce((s,t) => s + t.nominal, 0);
-            const win = window.open('', '_blank');
-            win.document.write(`
-                <html><head><title>Laporan Kas</title>
-                <style>
-                    body{font-family:Arial;padding:20px}
-                    h1{color:#1a237e}
-                    table{width:100%;border-collapse:collapse;margin-top:20px}
-                    th,td{border:1px solid #ddd;padding:8px;text-align:left}
-                    th{background:#1a237e;color:#fff}
-                    .saldo{font-size:24px;font-weight:bold;color:#4caf50}
-                </style>
-                </head>
-                <body>
-                    <h1>📊 Laporan Keuangan</h1>
-                    <p>Tanggal cetak: ${new Date().toLocaleDateString('id-ID')}</p>
-                    <hr>
-                    <h2>💰 Saldo Kas: <span class="saldo">${formatRupiah(saldo)}</span></h2>
-                    <p>Total Pemasukan: ${formatRupiah(totalMasuk)}</p>
-                    <p>Total Pengeluaran: ${formatRupiah(totalKeluar)}</p>
-                    <h3>📋 Daftar Transaksi</h3>
-                    <table>
-                        <tr><th>Tanggal</th><th>Jenis</th><th>Nama</th><th>Nominal</th><th>Keterangan</th></tr>
-                        ${appData.transaksi.map(t => `
-                            <tr>
-                                <td>${t.tanggal}</td>
-                                <td>${t.jenis}</td>
-                                <td>${t.nama || t.id_anggota || '-'}</td>
-                                <td>${formatRupiah(t.nominal)}</td>
-                                <td>${t.keterangan || '-'}</td>
-                            </tr>
-                        `).join('')}
-                    </table>
-                    <h3>👥 Daftar Anggota</h3>
-                    <table>
-                        <tr><th>ID</th><th>Nama</th><th>No HP</th><th>Status</th></tr>
-                        ${appData.anggota.map(a => `
-                            <tr><td>${a.id}</td><td>${a.nama}</td><td>${a.no_hp || '-'}</td><td>${a.status || 'AKTIF'}</td></tr>
-                        `).join('')}
-                    </table>
-                    <p style="margin-top:50px;text-align:right">Dicetak oleh: Aplikasi Kas</p>
-                </body>
-                </html>
-            `);
-            win.document.close();
-            win.print();
+            window.print();
         }
 
         function attachEvents() {
-            document.getElementById('refreshBtn')?.addEventListener('click', () => { render(); showToast('Data dimuat ulang'); });
+            document.getElementById('refreshBtn')?.addEventListener('click', async () => { await render(); showToast('Data dimuat ulang'); });
             document.getElementById('printBtn')?.addEventListener('click', cetakLaporan);
-            document.getElementById('resetBtn')?.addEventListener('click', resetData);
             
             if (state.tab === 'transaksi') {
-                document.getElementById('simpanTransaksi')?.addEventListener('click', simpanTransaksi);
+                document.getElementById('simpanTransaksi')?.addEventListener('click', window.simpanTransaksi);
                 document.getElementById('jenisTransaksi')?.addEventListener('change', (e) => state.transaksiForm.jenis = e.target.value);
                 document.getElementById('nominalTransaksi')?.addEventListener('input', (e) => {
                     let val = e.target.value.replace(/\D/g, '');
@@ -727,9 +925,9 @@
                 document.getElementById('cariAnggota')?.addEventListener('input', (e) => { state.search = e.target.value; render(); });
             }
             if (state.tab === 'donatur') {
-                document.getElementById('simpanDonasi')?.addEventListener('click', simpanDonasi);
+                document.getElementById('simpanDonasi')?.addEventListener('click', window.simpanDonasi);
                 document.getElementById('pilihDonatur')?.addEventListener('change', (e) => {
-                    if (e.target.value === 'NEW') tambahDonatur();
+                    if (e.target.value === 'NEW') window.tambahDonatur();
                     else state.donasiForm.donatur = e.target.value;
                 });
                 document.getElementById('nominalDonasi')?.addEventListener('input', (e) => {
@@ -740,18 +938,33 @@
             }
         }
 
-        // UTILITY
+        // ==================== NETWORK MONITOR ====================
+        function initNetworkMonitor() {
+            window.addEventListener('online', async () => {
+                updateSignalStatus(true, 'Online');
+                showToast('Kembali online, menyinkronisasi...');
+                await syncToServer();
+                await render();
+            });
+            
+            window.addEventListener('offline', () => {
+                updateSignalStatus(false, 'Offline');
+                showToast('Mode offline - Data disimpan lokal', true);
+            });
+        }
+
+        // ==================== UTILITY ====================
         function formatRupiah(n) { return 'Rp ' + (n||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
         function formatNumber(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
         function showToast(msg, err = false) {
             const t = document.createElement('div'); 
             t.className = 'toast' + (err ? ' error' : ''); 
-            t.innerHTML = msg;
+            t.innerHTML = `<i class="fas ${err ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`;
             document.body.appendChild(t);
             setTimeout(() => { t.remove(); }, 3000);
         }
 
-        // INIT
+        // ==================== INIT ====================
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -761,7 +974,13 @@
             });
         });
         
-        render();
+        (async function init() {
+            await openDB();
+            updateSignalStatus(navigator.onLine, navigator.onLine ? 'Online' : 'Offline');
+            initNetworkMonitor();
+            await render();
+            if (navigator.onLine) await syncToServer();
+        })();
     </script>
 </body>
 </html>
