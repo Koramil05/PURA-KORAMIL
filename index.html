@@ -86,6 +86,7 @@
             font-size: 16px;
         }
         .btn.secondary { background: rgba(255,255,255,0.15); }
+        .btn.danger { background: linear-gradient(135deg, #f44336, #c62828); }
         input, select, textarea {
             width: 100%;
             padding: 12px;
@@ -210,6 +211,8 @@
         .text-center { text-align: center; }
         .positive { color: #4caf50; }
         .negative { color: #ef5350; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .mb-2 { margin-bottom: 12px; }
     </style>
 </head>
 <body>
@@ -218,6 +221,7 @@
         <div class="header-actions">
             <button class="header-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i></button>
             <button class="header-btn" id="printBtn"><i class="fas fa-print"></i></button>
+            <button class="header-btn" id="resetBtn" style="background:#c62828"><i class="fas fa-trash"></i></button>
         </div>
     </div>
     <div class="content" id="content"></div>
@@ -229,39 +233,72 @@
     </div>
 
     <script>
-        // ==================== KONFIGURASI ====================
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwWw4IBCdzWBvOtH4Pcr2sA4sE2UVetay4lLsx3ZLn9_GWsFohB8GfjZkvl_UDMz982/exec';
-        const TOKEN = 'kas2024';
+        // ==================== DATA STORAGE (LocalStorage) ====================
+        // Data default jika kosong
+        const DEFAULT_DATA = {
+            anggota: [
+                { id: "AGT001", nama: "Budi Santoso", no_hp: "08123456789", alamat: "Jl. Merdeka No.1", status: "AKTIF" },
+                { id: "AGT002", nama: "Siti Rahayu", no_hp: "08198765432", alamat: "Jl. Sudirman No.5", status: "AKTIF" }
+            ],
+            donatur: [
+                { nama: "Yayasan Sejahtera", kontak: "021-123456" },
+                { nama: "PT Makmur Jaya", kontak: "021-789012" }
+            ],
+            transaksi: [
+                { id: "TRX001", tanggal: "2024-03-20", jenis: "SETOR", id_anggota: "AGT001", nama: "Budi Santoso", nominal: 100000, keterangan: "Setoran awal" },
+                { id: "TRX002", tanggal: "2024-03-20", jenis: "PINJAM", id_anggota: "AGT002", nama: "Siti Rahayu", nominal: 50000, keterangan: "Pinjaman" },
+                { id: "TRX003", tanggal: "2024-03-21", jenis: "DONASI", id_anggota: "", nama: "Yayasan Sejahtera", nominal: 200000, keterangan: "Donasi" }
+            ]
+        };
+
+        // Load data dari LocalStorage
+        function loadDataFromStorage() {
+            const stored = localStorage.getItem('aplikasi_kas_data');
+            if (stored) {
+                return JSON.parse(stored);
+            } else {
+                localStorage.setItem('aplikasi_kas_data', JSON.stringify(DEFAULT_DATA));
+                return JSON.parse(JSON.stringify(DEFAULT_DATA));
+            }
+        }
+
+        function saveDataToStorage(data) {
+            localStorage.setItem('aplikasi_kas_data', JSON.stringify(data));
+        }
+
+        let appData = loadDataFromStorage();
         
+        // Hitung saldo
+        function hitungSaldo() {
+            let saldo = 0;
+            appData.transaksi.forEach(t => {
+                if (t.jenis === 'SETOR' || t.jenis === 'DONASI') {
+                    saldo += t.nominal;
+                } else if (t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN') {
+                    saldo -= t.nominal;
+                }
+            });
+            return saldo;
+        }
+
+        // Generate ID baru
+        function generateNewId(prefix, existingIds) {
+            let max = 0;
+            existingIds.forEach(id => {
+                const num = parseInt(id.replace(prefix, '')) || 0;
+                if (num > max) max = num;
+            });
+            const newNum = max + 1;
+            return prefix + String(newNum).padStart(3, '0');
+        }
+
+        // ==================== STATE UI ====================
         let state = {
             tab: 'dashboard',
-            anggota: [],
-            donatur: [],
-            transaksi: [],
-            saldo: 0,
             search: '',
             transaksiForm: { jenis: 'SETOR', nominal: 0, id_anggota: '', tanggal: new Date().toISOString().split('T')[0], keterangan: '' },
             donasiForm: { donatur: '', nominal: 0, tanggal: new Date().toISOString().split('T')[0], keterangan: '' }
         };
-
-        // ==================== LOAD DATA ====================
-        async function loadData() {
-            try {
-                showToast('Memuat data...');
-                const [anggotaRes, donaturRes, transaksiRes, saldoRes] = await Promise.all([
-                    fetch(`${API_URL}?action=getAnggota&token=${TOKEN}`),
-                    fetch(`${API_URL}?action=getDonatur&token=${TOKEN}`),
-                    fetch(`${API_URL}?action=getTransaksi&token=${TOKEN}`),
-                    fetch(`${API_URL}?action=getSaldoGlobal&token=${TOKEN}`)
-                ]);
-                state.anggota = (await anggotaRes.json()).data || [];
-                state.donatur = (await donaturRes.json()).data || [];
-                state.transaksi = (await transaksiRes.json()).data || [];
-                state.saldo = (await saldoRes.json()).data?.saldo_global || 0;
-                render();
-                showToast('Data dimuat');
-            } catch(e) { showToast('Gagal memuat: ' + e.message, true); }
-        }
 
         // ==================== RENDER ====================
         function render() {
@@ -274,29 +311,49 @@
         }
 
         function renderDashboard() {
-            const totalMasuk = state.transaksi.filter(t => t.jenis === 'SETOR' || t.jenis === 'DONASI').reduce((s,t) => s + (t.nominal||0), 0);
-            const totalKeluar = state.transaksi.filter(t => t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN').reduce((s,t) => s + (t.nominal||0), 0);
+            const saldo = hitungSaldo();
+            const totalMasuk = appData.transaksi.filter(t => t.jenis === 'SETOR' || t.jenis === 'DONASI').reduce((s,t) => s + t.nominal, 0);
+            const totalKeluar = appData.transaksi.filter(t => t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN').reduce((s,t) => s + t.nominal, 0);
+            const bulanIni = new Date().toISOString().slice(0,7);
+            const transaksiBulanIni = appData.transaksi.filter(t => t.tanggal.startsWith(bulanIni));
+            const pemasukanBulanIni = transaksiBulanIni.filter(t => t.jenis === 'SETOR' || t.jenis === 'DONASI').reduce((s,t) => s + t.nominal, 0);
+            const pengeluaranBulanIni = transaksiBulanIni.filter(t => t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN').reduce((s,t) => s + t.nominal, 0);
+            
             return `
                 <div class="card">
                     <div class="info-card">
-                        <div>Saldo Kas</div>
-                        <div class="info-value">${formatRupiah(state.saldo)}</div>
+                        <div>💰 Saldo Kas</div>
+                        <div class="info-value">${formatRupiah(saldo)}</div>
                     </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px">
+                    <div class="grid-2">
                         <div class="stat-card"><div>💚 Pemasukan</div><div class="stat-value">${formatRupiah(totalMasuk)}</div></div>
                         <div class="stat-card"><div>❤️ Pengeluaran</div><div class="stat-value negative">${formatRupiah(totalKeluar)}</div></div>
                     </div>
-                    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px">
+                    <div class="grid-2" style="margin-top:12px">
+                        <div class="stat-card"><div>📅 Pemasukan Bulan Ini</div><div class="positive">${formatRupiah(pemasukanBulanIni)}</div></div>
+                        <div class="stat-card"><div>📅 Pengeluaran Bulan Ini</div><div class="negative">${formatRupiah(pengeluaranBulanIni)}</div></div>
+                    </div>
+                    <div style="margin-top:16px">
+                        <div class="flex-between"><span>👥 Anggota Aktif</span><span>${appData.anggota.filter(a => a.status === 'AKTIF').length}</span></div>
+                        <div class="flex-between"><span>🤝 Donatur</span><span>${appData.donatur.length}</span></div>
+                        <div class="flex-between"><span>📋 Total Transaksi</span><span>${appData.transaksi.length}</span></div>
+                    </div>
+                    <div class="grid-2" style="margin-top:16px">
                         <button class="btn secondary" onclick="quickTransaksi('SETOR')">💰 Setor</button>
                         <button class="btn secondary" onclick="quickTransaksi('PINJAM')">📤 Pinjam</button>
                         <button class="btn secondary" onclick="quickTransaksi('PENGELUARAN')">🛒 Belanja</button>
+                        <button class="btn secondary" onclick="quickTab('donatur')">🤝 Donasi</button>
                     </div>
                 </div>
                 <div class="card">
                     <h3>📋 Transaksi Terbaru</h3>
-                    ${state.transaksi.slice(0,10).map(t => `
+                    ${appData.transaksi.slice(0,10).map(t => `
                         <div class="transaction-item">
-                            <div><span class="badge">${t.jenis}</span><div class="text-dim">${t.tanggal}</div><div>${t.nama || '-'}</div></div>
+                            <div>
+                                <span class="badge">${t.jenis}</span>
+                                <div class="text-dim">${t.tanggal}</div>
+                                <div>${t.nama || t.id_anggota || '-'}</div>
+                            </div>
                             <span class="${t.jenis === 'SETOR' || t.jenis === 'DONASI' ? 'positive' : 'negative'}">${formatRupiah(t.nominal)}</span>
                         </div>
                     `).join('') || '<div class="text-center text-dim">Belum ada transaksi</div>'}
@@ -305,10 +362,11 @@
         }
 
         function renderTransaksi() {
+            const saldo = hitungSaldo();
             return `
                 <div class="card">
                     <h3>📝 Transaksi Baru</h3>
-                    <div class="info-card" style="background:#283593"><div>Saldo Saat Ini</div><div class="info-value">${formatRupiah(state.saldo)}</div></div>
+                    <div class="info-card" style="background:#283593"><div>💰 Saldo Saat Ini</div><div class="info-value">${formatRupiah(saldo)}</div></div>
                     <select id="jenisTransaksi">
                         <option ${state.transaksiForm.jenis === 'SETOR' ? 'selected' : ''} value="SETOR">💰 SETOR (Tambah Saldo)</option>
                         <option ${state.transaksiForm.jenis === 'PINJAM' ? 'selected' : ''} value="PINJAM">📤 PINJAM (Kurang Saldo)</option>
@@ -317,26 +375,35 @@
                     <input type="date" id="tglTransaksi" value="${state.transaksiForm.tanggal}">
                     <select id="pilihAnggota">
                         <option value="">Pilih Anggota (opsional)</option>
-                        ${state.anggota.map(a => `<option value="${a.id}" data-nama="${a.nama}">${a.id} - ${a.nama}</option>`).join('')}
+                        ${appData.anggota.map(a => `<option value="${a.id}" data-nama="${a.nama}">${a.id} - ${a.nama}</option>`).join('')}
                     </select>
                     <input type="text" id="nominalTransaksi" placeholder="Nominal Rp" value="${state.transaksiForm.nominal ? formatNumber(state.transaksiForm.nominal) : ''}">
                     <input type="text" id="keteranganTransaksi" placeholder="Keterangan" value="${state.transaksiForm.keterangan}">
-                    <button class="btn" id="simpanTransaksi">SIMPAN</button>
+                    <button class="btn" id="simpanTransaksi">💾 SIMPAN</button>
                 </div>
             `;
         }
 
         function renderAnggota() {
-            const filtered = state.anggota.filter(a => a.nama.toLowerCase().includes(state.search.toLowerCase()) || a.id.includes(state.search));
+            const filtered = appData.anggota.filter(a => 
+                a.nama.toLowerCase().includes(state.search.toLowerCase()) || 
+                a.id.includes(state.search)
+            );
             return `
                 <div class="card">
-                    <div class="flex-between"><h3>👥 Anggota</h3><button class="btn secondary" style="width:auto;padding:8px 16px" onclick="tambahAnggota()">+ Tambah</button></div>
+                    <div class="flex-between">
+                        <h3>👥 Anggota</h3>
+                        <button class="btn secondary" style="width:auto;padding:8px 16px" onclick="tambahAnggota()">+ Tambah</button>
+                    </div>
                     <input type="text" id="cariAnggota" placeholder="Cari ID atau nama..." value="${state.search}">
                     <div>
                         ${filtered.map(a => `
                             <div class="account-item" onclick="detailAnggota('${a.id}')">
                                 <div class="account-avatar">${a.nama.charAt(0)}</div>
-                                <div><div><b>${a.nama}</b></div><div class="text-dim">ID: ${a.id} | ${a.no_hp || '-'}</div></div>
+                                <div style="flex:1">
+                                    <div><b>${a.nama}</b></div>
+                                    <div class="text-dim">ID: ${a.id} | ${a.no_hp || '-'}</div>
+                                </div>
                                 <span class="badge ${a.status === 'NONAKTIF' ? 'nonaktif' : ''}">${a.status || 'AKTIF'}</span>
                             </div>
                         `).join('') || '<div class="text-center text-dim">Tidak ada anggota</div>'}
@@ -349,22 +416,31 @@
             return `
                 <div class="card">
                     <h3>🤝 Donasi Masuk</h3>
-                    <div class="info-card" style="background:#ff9800"><div>Donasi akan menambah saldo</div><div class="info-value">+ ${formatRupiah(state.donasiForm.nominal)}</div></div>
+                    <div class="info-card" style="background:#ff9800"><div>💝 Donasi akan menambah saldo</div><div class="info-value">+ ${formatRupiah(state.donasiForm.nominal)}</div></div>
                     <input type="date" id="tglDonasi" value="${state.donasiForm.tanggal}">
                     <select id="pilihDonatur">
                         <option value="">Pilih Donatur</option>
-                        ${state.donatur.map(d => `<option value="${d.nama}">${d.nama}</option>`).join('')}
+                        ${appData.donatur.map(d => `<option value="${d.nama}">${d.nama}</option>`).join('')}
                         <option value="NEW">+ Tambah Donatur Baru</option>
                     </select>
                     <input type="text" id="nominalDonasi" placeholder="Nominal Rp" value="${state.donasiForm.nominal ? formatNumber(state.donasiForm.nominal) : ''}">
                     <input type="text" id="ketDonasi" placeholder="Keterangan" value="${state.donasiForm.keterangan}">
-                    <button class="btn" id="simpanDonasi" style="background:#ff9800">SIMPAN DONASI</button>
+                    <button class="btn" id="simpanDonasi" style="background:#ff9800">💾 SIMPAN DONASI</button>
+                </div>
+                <div class="card">
+                    <h3>📋 Daftar Donatur</h3>
+                    ${appData.donatur.map(d => `
+                        <div class="flex-between" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.1)">
+                            <span>${d.nama}</span>
+                            <span class="text-dim">${d.kontak || '-'}</span>
+                        </div>
+                    `).join('') || '<div class="text-dim text-center">Belum ada donatur</div>'}
                 </div>
             `;
         }
 
         // ==================== FUNGSI UTAMA ====================
-        async function simpanTransaksi() {
+        function simpanTransaksi() {
             const jenis = document.getElementById('jenisTransaksi').value;
             const tanggal = document.getElementById('tglTransaksi').value;
             const selectAnggota = document.getElementById('pilihAnggota');
@@ -374,92 +450,118 @@
             const keterangan = document.getElementById('keteranganTransaksi').value;
             
             if (!nominal) { showToast('Nominal harus diisi', true); return; }
-            if (jenis !== 'SETOR' && jenis !== 'PENGELUARAN' && !id_anggota && !nama) {
-                if (confirm('Tidak memilih anggota? Lanjutkan sebagai transaksi umum?')) {
-                    // lanjut
-                } else return;
+            
+            // Cek saldo untuk transaksi pengurangan
+            const saldo = hitungSaldo();
+            if ((jenis === 'PINJAM' || jenis === 'PENGELUARAN') && nominal > saldo) {
+                showToast('Saldo tidak mencukupi!', true);
+                return;
             }
             
-            const formData = new URLSearchParams({
-                action: 'addTransaksi', token: TOKEN,
-                jenis: jenis, tanggal: tanggal, id_anggota: id_anggota, nama: nama,
-                nominal: nominal, keterangan: keterangan
-            });
+            // Generate ID transaksi
+            const existingIds = appData.transaksi.map(t => t.id);
+            const newId = generateNewId('TRX', existingIds);
             
-            try {
-                const res = await fetch(API_URL, { method: 'POST', body: formData });
-                const data = await res.json();
-                if (data.status === 'success') {
-                    showToast('Transaksi berhasil');
-                    state.transaksiForm = { jenis: 'SETOR', nominal: 0, id_anggota: '', tanggal: new Date().toISOString().split('T')[0], keterangan: '' };
-                    await loadData();
-                } else showToast('Gagal: ' + data.message, true);
-            } catch(e) { showToast('Error: ' + e.message, true); }
+            const newTransaksi = {
+                id: newId,
+                tanggal: tanggal,
+                jenis: jenis,
+                id_anggota: id_anggota,
+                nama: nama || (id_anggota ? appData.anggota.find(a => a.id === id_anggota)?.nama : '') || 'Umum',
+                nominal: nominal,
+                keterangan: keterangan
+            };
+            
+            appData.transaksi.unshift(newTransaksi);
+            saveDataToStorage(appData);
+            
+            showToast('Transaksi berhasil!');
+            state.transaksiForm = { jenis: 'SETOR', nominal: 0, id_anggota: '', tanggal: new Date().toISOString().split('T')[0], keterangan: '' };
+            render();
         }
 
-        async function simpanDonasi() {
-            const donatur = document.getElementById('pilihDonatur').value;
+        function simpanDonasi() {
+            const donaturSelect = document.getElementById('pilihDonatur');
+            const donatur = donaturSelect.value;
             if (!donatur || donatur === '') { showToast('Pilih donatur', true); return; }
             if (donatur === 'NEW') { tambahDonatur(); return; }
+            
             const nominal = parseInt(document.getElementById('nominalDonasi').value.replace(/\D/g, '')) || 0;
             if (!nominal) { showToast('Nominal harus diisi', true); return; }
             
-            const formData = new URLSearchParams({
-                action: 'addTransaksi', token: TOKEN,
-                jenis: 'DONASI', tanggal: document.getElementById('tglDonasi').value,
-                id_anggota: '', nama: donatur, nominal: nominal,
+            const existingIds = appData.transaksi.map(t => t.id);
+            const newId = generateNewId('TRX', existingIds);
+            
+            appData.transaksi.unshift({
+                id: newId,
+                tanggal: document.getElementById('tglDonasi').value,
+                jenis: 'DONASI',
+                id_anggota: '',
+                nama: donatur,
+                nominal: nominal,
                 keterangan: document.getElementById('ketDonasi').value
             });
             
-            try {
-                const res = await fetch(API_URL, { method: 'POST', body: formData });
-                const data = await res.json();
-                if (data.status === 'success') {
-                    showToast('Donasi berhasil');
-                    state.donasiForm = { donatur: '', nominal: 0, tanggal: new Date().toISOString().split('T')[0], keterangan: '' };
-                    await loadData();
-                } else showToast('Gagal: ' + data.message, true);
-            } catch(e) { showToast('Error: ' + e.message, true); }
+            saveDataToStorage(appData);
+            showToast('Donasi berhasil!');
+            state.donasiForm = { donatur: '', nominal: 0, tanggal: new Date().toISOString().split('T')[0], keterangan: '' };
+            render();
         }
 
         function tambahAnggota() {
             const modal = document.createElement('div');
             modal.className = 'modal';
+            const existingIds = appData.anggota.map(a => a.id);
+            const newId = generateNewId('AGT', existingIds);
+            
             modal.innerHTML = `
                 <div class="modal-content">
                     <div class="modal-header"><h3>Tambah Anggota</h3><button onclick="this.closest('.modal').remove()">✖</button></div>
                     <div class="modal-body">
-                        <div class="auto-id"><div>ID Otomatis</div><div class="auto-id-value" id="previewId">AGT001</div><button class="btn-generate" onclick="generateNewId()">Generate</button></div>
+                        <div class="auto-id">
+                            <div>ID Otomatis</div>
+                            <div class="auto-id-value" id="previewId">${newId}</div>
+                            <button class="btn-generate" onclick="generateNewIdAnggota()">Generate</button>
+                        </div>
                         <input type="text" id="namaAnggota" placeholder="Nama Lengkap *">
                         <input type="text" id="hpAnggota" placeholder="No HP *">
                         <input type="text" id="alamatAnggota" placeholder="Alamat">
                         <select id="statusAnggota"><option>AKTIF</option><option>NONAKTIF</option></select>
                     </div>
-                    <div class="modal-footer"><button class="btn secondary" onclick="this.closest('.modal').remove()">Batal</button><button class="btn" id="saveAnggota">Simpan</button></div>
+                    <div class="modal-footer">
+                        <button class="btn secondary" onclick="this.closest('.modal').remove()">Batal</button>
+                        <button class="btn" id="saveAnggota">Simpan</button>
+                    </div>
                 </div>
             `;
             document.body.appendChild(modal);
-            generateNewId();
-            document.getElementById('saveAnggota').onclick = async () => {
+            
+            document.getElementById('saveAnggota').onclick = () => {
                 const id = document.getElementById('previewId').innerText;
                 const nama = document.getElementById('namaAnggota').value;
                 const hp = document.getElementById('hpAnggota').value;
                 if (!nama || !hp) { showToast('Nama dan No HP wajib', true); return; }
-                const formData = new URLSearchParams({ action: 'addAnggota', token: TOKEN, id: id, nama: nama, no_hp: hp, alamat: document.getElementById('alamatAnggota').value, status: document.getElementById('statusAnggota').value });
-                const res = await fetch(API_URL, { method: 'POST', body: formData });
-                const data = await res.json();
-                if (data.status === 'success') { modal.remove(); await loadData(); showToast('Anggota ditambahkan: ' + id); }
-                else showToast('Gagal: ' + data.message, true);
+                
+                appData.anggota.push({
+                    id: id,
+                    nama: nama,
+                    no_hp: hp,
+                    alamat: document.getElementById('alamatAnggota').value,
+                    status: document.getElementById('statusAnggota').value
+                });
+                saveDataToStorage(appData);
+                modal.remove();
+                render();
+                showToast('Anggota ditambahkan: ' + id);
             };
         }
 
-        function generateNewId() {
-            const lastId = state.anggota.length > 0 ? state.anggota[state.anggota.length-1].id : 'AGT000';
-            const num = parseInt(lastId.replace('AGT', '')) || 0;
-            const newId = 'AGT' + String(num + 1).padStart(3, '0');
+        window.generateNewIdAnggota = function() {
+            const existingIds = appData.anggota.map(a => a.id);
+            const newId = generateNewId('AGT', existingIds);
             const el = document.getElementById('previewId');
             if (el) el.innerText = newId;
-        }
+        };
 
         function tambahDonatur() {
             const modal = document.createElement('div');
@@ -467,48 +569,82 @@
             modal.innerHTML = `
                 <div class="modal-content">
                     <div class="modal-header"><h3>Tambah Donatur</h3><button onclick="this.closest('.modal').remove()">✖</button></div>
-                    <div class="modal-body"><input type="text" id="namaDonaturBaru" placeholder="Nama Donatur *"><input type="text" id="kontakDonatur" placeholder="Kontak"></div>
-                    <div class="modal-footer"><button class="btn secondary" onclick="this.closest('.modal').remove()">Batal</button><button class="btn" id="saveDonaturBaru">Simpan</button></div>
+                    <div class="modal-body">
+                        <input type="text" id="namaDonaturBaru" placeholder="Nama Donatur *">
+                        <input type="text" id="kontakDonatur" placeholder="Kontak">
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn secondary" onclick="this.closest('.modal').remove()">Batal</button>
+                        <button class="btn" id="saveDonaturBaru">Simpan</button>
+                    </div>
                 </div>
             `;
             document.body.appendChild(modal);
-            document.getElementById('saveDonaturBaru').onclick = async () => {
+            
+            document.getElementById('saveDonaturBaru').onclick = () => {
                 const nama = document.getElementById('namaDonaturBaru').value;
                 if (!nama) { showToast('Nama donatur wajib', true); return; }
-                const formData = new URLSearchParams({ action: 'addDonatur', token: TOKEN, nama: nama, kontak: document.getElementById('kontakDonatur').value });
-                const res = await fetch(API_URL, { method: 'POST', body: formData });
-                const data = await res.json();
-                if (data.status === 'success') { modal.remove(); await loadData(); showToast('Donatur ditambahkan'); }
-                else showToast('Gagal: ' + data.message, true);
+                appData.donatur.push({ nama: nama, kontak: document.getElementById('kontakDonatur').value });
+                saveDataToStorage(appData);
+                modal.remove();
+                render();
+                showToast('Donatur ditambahkan');
+                // Refresh pilihan donatur
+                setTimeout(() => {
+                    const select = document.getElementById('pilihDonatur');
+                    if (select) {
+                        select.innerHTML = '<option value="">Pilih Donatur</option>' + 
+                            appData.donatur.map(d => `<option value="${d.nama}">${d.nama}</option>`).join('') +
+                            '<option value="NEW">+ Tambah Donatur Baru</option>';
+                    }
+                }, 100);
             };
         }
 
         function detailAnggota(id) {
-            const anggota = state.anggota.find(a => a.id === id);
+            const anggota = appData.anggota.find(a => a.id === id);
             if (!anggota) return;
-            const transaksi = state.transaksi.filter(t => t.id_anggota === id || t.nama === anggota.nama);
-            const totalSetor = transaksi.filter(t => t.jenis === 'SETOR').reduce((s,t) => s + (t.nominal||0), 0);
-            const totalPinjam = transaksi.filter(t => t.jenis === 'PINJAM').reduce((s,t) => s + (t.nominal||0), 0);
+            const transaksi = appData.transaksi.filter(t => t.id_anggota === id || t.nama === anggota.nama);
+            const totalSetor = transaksi.filter(t => t.jenis === 'SETOR').reduce((s,t) => s + t.nominal, 0);
+            const totalPinjam = transaksi.filter(t => t.jenis === 'PINJAM').reduce((s,t) => s + t.nominal, 0);
             const saldo = totalSetor - totalPinjam;
+            
             const modal = document.createElement('div');
             modal.className = 'modal';
             modal.innerHTML = `
                 <div class="modal-content">
                     <div class="modal-header"><h3>${anggota.nama}</h3><button onclick="this.closest('.modal').remove()">✖</button></div>
                     <div class="modal-body">
-                        <div><b>ID:</b> ${anggota.id}</div><div><b>No HP:</b> ${anggota.no_hp || '-'}</div><div><b>Alamat:</b> ${anggota.alamat || '-'}</div>
+                        <div><b>ID:</b> ${anggota.id}</div>
+                        <div><b>No HP:</b> ${anggota.no_hp || '-'}</div>
+                        <div><b>Alamat:</b> ${anggota.alamat || '-'}</div>
+                        <div><b>Status:</b> <span class="badge">${anggota.status || 'AKTIF'}</span></div>
                         <hr style="margin:12px 0;border-color:rgba(255,255,255,0.1)">
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+                        <div class="grid-2">
                             <div class="stat-card"><div>Total Setor</div><div class="positive">${formatRupiah(totalSetor)}</div></div>
                             <div class="stat-card"><div>Total Pinjam</div><div class="negative">${formatRupiah(totalPinjam)}</div></div>
                         </div>
-                        <div class="stat-card" style="background:#283593"><div>Saldo Akhir</div><div class="${saldo >= 0 ? 'positive' : 'negative'}">${formatRupiah(saldo)}</div></div>
-                        <h4>Riwayat Transaksi</h4>
-                        ${transaksi.slice(0,10).map(t => `<div class="flex-between"><span>${t.tanggal} - ${t.jenis}</span><span>${formatRupiah(t.nominal)}</span></div>`).join('') || '<div class="text-dim">Belum ada transaksi</div>'}
+                        <div class="stat-card" style="background:#283593;margin-top:10px"><div>Saldo Akhir</div><div class="${saldo >= 0 ? 'positive' : 'negative'}">${formatRupiah(saldo)}</div></div>
+                        <h4 style="margin-top:16px">📋 Riwayat Transaksi</h4>
+                        ${transaksi.slice(0,10).map(t => `
+                            <div class="flex-between" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.1)">
+                                <div><span class="badge">${t.jenis}</span><div class="text-dim">${t.tanggal}</div></div>
+                                <span class="${t.jenis === 'SETOR' ? 'positive' : 'negative'}">${formatRupiah(t.nominal)}</span>
+                            </div>
+                        `).join('') || '<div class="text-dim text-center">Belum ada transaksi</div>'}
                     </div>
                 </div>
             `;
             document.body.appendChild(modal);
+        }
+
+        function resetData() {
+            if (confirm('⚠️ Reset semua data? Data akan kembali ke contoh awal.')) {
+                localStorage.setItem('aplikasi_kas_data', JSON.stringify(DEFAULT_DATA));
+                appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+                render();
+                showToast('Data telah direset');
+            }
         }
 
         function quickTransaksi(jenis) {
@@ -517,26 +653,67 @@
             render();
         }
 
+        function quickTab(tab) {
+            state.tab = tab;
+            render();
+        }
+
         function cetakLaporan() {
-            const totalMasuk = state.transaksi.filter(t => t.jenis === 'SETOR' || t.jenis === 'DONASI').reduce((s,t) => s + (t.nominal||0), 0);
-            const totalKeluar = state.transaksi.filter(t => t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN').reduce((s,t) => s + (t.nominal||0), 0);
+            const saldo = hitungSaldo();
+            const totalMasuk = appData.transaksi.filter(t => t.jenis === 'SETOR' || t.jenis === 'DONASI').reduce((s,t) => s + t.nominal, 0);
+            const totalKeluar = appData.transaksi.filter(t => t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN').reduce((s,t) => s + t.nominal, 0);
             const win = window.open('', '_blank');
             win.document.write(`
-                <html><head><title>Laporan Kas</title><style>body{font-family:Arial;padding:20px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:8px}th{background:#1a237e;color:#fff}</style></head>
-                <body><h1>Laporan Keuangan</h1><p>Tanggal: ${new Date().toLocaleDateString('id-ID')}</p>
-                <h3>Ringkasan</h3><p>Saldo: ${formatRupiah(state.saldo)}</p><p>Pemasukan: ${formatRupiah(totalMasuk)}</p><p>Pengeluaran: ${formatRupiah(totalKeluar)}</p>
-                <h3>Daftar Transaksi</h3>
-                <table><tr><th>Tanggal</th><th>Jenis</th><th>Nama</th><th>Nominal</th><th>Keterangan</th></tr>
-                ${state.transaksi.map(t => `<tr><td>${t.tanggal}</td><td>${t.jenis}</td><td>${t.nama || '-'}</td><td>${formatRupiah(t.nominal)}</td><td>${t.keterangan || '-'}</td></tr>`).join('')}
-                </table></body></html>
+                <html><head><title>Laporan Kas</title>
+                <style>
+                    body{font-family:Arial;padding:20px}
+                    h1{color:#1a237e}
+                    table{width:100%;border-collapse:collapse;margin-top:20px}
+                    th,td{border:1px solid #ddd;padding:8px;text-align:left}
+                    th{background:#1a237e;color:#fff}
+                    .saldo{font-size:24px;font-weight:bold;color:#4caf50}
+                </style>
+                </head>
+                <body>
+                    <h1>📊 Laporan Keuangan</h1>
+                    <p>Tanggal cetak: ${new Date().toLocaleDateString('id-ID')}</p>
+                    <hr>
+                    <h2>💰 Saldo Kas: <span class="saldo">${formatRupiah(saldo)}</span></h2>
+                    <p>Total Pemasukan: ${formatRupiah(totalMasuk)}</p>
+                    <p>Total Pengeluaran: ${formatRupiah(totalKeluar)}</p>
+                    <h3>📋 Daftar Transaksi</h3>
+                    <table>
+                        <tr><th>Tanggal</th><th>Jenis</th><th>Nama</th><th>Nominal</th><th>Keterangan</th></tr>
+                        ${appData.transaksi.map(t => `
+                            <tr>
+                                <td>${t.tanggal}</td>
+                                <td>${t.jenis}</td>
+                                <td>${t.nama || t.id_anggota || '-'}</td>
+                                <td>${formatRupiah(t.nominal)}</td>
+                                <td>${t.keterangan || '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </table>
+                    <h3>👥 Daftar Anggota</h3>
+                    <table>
+                        <tr><th>ID</th><th>Nama</th><th>No HP</th><th>Status</th></tr>
+                        ${appData.anggota.map(a => `
+                            <tr><td>${a.id}</td><td>${a.nama}</td><td>${a.no_hp || '-'}</td><td>${a.status || 'AKTIF'}</td></tr>
+                        `).join('')}
+                    </table>
+                    <p style="margin-top:50px;text-align:right">Dicetak oleh: Aplikasi Kas</p>
+                </body>
+                </html>
             `);
             win.document.close();
             win.print();
         }
 
         function attachEvents() {
-            document.getElementById('refreshBtn')?.addEventListener('click', loadData);
+            document.getElementById('refreshBtn')?.addEventListener('click', () => { render(); showToast('Data dimuat ulang'); });
             document.getElementById('printBtn')?.addEventListener('click', cetakLaporan);
+            document.getElementById('resetBtn')?.addEventListener('click', resetData);
+            
             if (state.tab === 'transaksi') {
                 document.getElementById('simpanTransaksi')?.addEventListener('click', simpanTransaksi);
                 document.getElementById('jenisTransaksi')?.addEventListener('change', (e) => state.transaksiForm.jenis = e.target.value);
@@ -567,7 +744,9 @@
         function formatRupiah(n) { return 'Rp ' + (n||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
         function formatNumber(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
         function showToast(msg, err = false) {
-            const t = document.createElement('div'); t.className = 'toast' + (err ? ' error' : ''); t.innerHTML = msg;
+            const t = document.createElement('div'); 
+            t.className = 'toast' + (err ? ' error' : ''); 
+            t.innerHTML = msg;
             document.body.appendChild(t);
             setTimeout(() => { t.remove(); }, 3000);
         }
@@ -581,7 +760,8 @@
                 render();
             });
         });
-        loadData();
+        
+        render();
     </script>
 </body>
 </html>
