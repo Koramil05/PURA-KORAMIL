@@ -9,10 +9,10 @@
     <meta name="apple-mobile-web-app-title" content="Kas App">
     <meta name="theme-color" content="#1a237e">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+<style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: linear-gradient(135deg, #0a192f 0%, #0d2b3e 100%);
+            background: linear-gradient(135deg, #1a2a3a 0%, #0f1a22 100%);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
             padding-bottom: 65px;
@@ -23,7 +23,7 @@
             top: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(135deg, #1a237e, #283593);
+            background: linear-gradient(135deg, #0f1a22, #0a121a);
             padding: 12px 16px;
             display: flex;
             justify-content: space-between;
@@ -68,22 +68,23 @@
         .header-btn:active { transform: scale(0.95); }
         .content { padding: 70px 12px 20px; }
         .card {
-            background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(10px);
+            background: rgba(20, 30, 38, 0.85);
+            backdrop-filter: blur(12px);
             border-radius: 20px;
             padding: 20px;
             margin-bottom: 16px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
         .nav {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: #1a237e;
+            background: #0f1a22;
             display: flex;
             height: 60px;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            border-top: 1px solid rgba(255,255,255,0.08);
             z-index: 99;
         }
         .nav-btn {
@@ -102,7 +103,7 @@
         .nav-btn.active { color: #ff9800; background: rgba(255,152,0,0.1); }
         .nav-btn i { font-size: 20px; margin-bottom: 4px; }
         .btn {
-            background: linear-gradient(135deg, #4caf50, #2e7d32);
+            background: linear-gradient(135deg, #2c5a2e, #1e3a20);
             border: none;
             padding: 14px;
             border-radius: 12px;
@@ -114,52 +115,95 @@
             transition: all 0.2s;
         }
         .btn:active { transform: scale(0.98); }
-        .btn.secondary { background: rgba(255,255,255,0.15); }
-        .btn.warning { background: linear-gradient(135deg, #ff9800, #f57c00); }
-        .btn.danger { background: linear-gradient(135deg, #f44336, #c62828); }
+        .btn.secondary { background: rgba(45, 60, 75, 0.8); }
+        .btn.warning { background: linear-gradient(135deg, #b86b1f, #8e5200); }
+        .btn.danger { background: linear-gradient(135deg, #b33b30, #8e2a1f); }
+        
+        /* PERBAIKAN INPUT, SELECT, TEXTAREA - WARNA GELAP AGAR TERLIHAT */
         input, select, textarea {
             width: 100%;
             padding: 12px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(25, 40, 55, 0.9) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
             border-radius: 12px;
-            color: red;
+            color: #ffffff !important;
             margin-bottom: 12px;
             transition: all 0.2s;
             font-size: 16px;
         }
+        
+        /* DROPDOWN OPTIONS */
+        select option {
+            background: #1e2a36 !important;
+            color: #ffffff !important;
+        }
+        
+        /* HOVER SELECT */
+        select:hover {
+            background: rgba(35, 55, 75, 0.95) !important;
+            border-color: rgba(255, 255, 255, 0.35) !important;
+        }
+        
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #ff9800;
-            background: rgba(255,255,255,0.15);
-            box-shadow: 0 0 0 2px rgba(255,152,0,0.3);
+            border-color: #ff9800 !important;
+            background: rgba(35, 55, 75, 0.95) !important;
+            box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.2);
         }
+        
+        /* INPUT DATE */
+        input[type="date"] {
+            color-scheme: dark;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+        
+        /* AUTOCOMPLETE */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px #1e2a36 inset !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+        
         .info-card {
-            background: linear-gradient(135deg, #ff9800, #f57c00);
+            background: linear-gradient(135deg, #2c3e50, #1e2a36);
             border-radius: 16px;
             padding: 20px;
             text-align: center;
             margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         .info-value { font-size: 32px; font-weight: bold; }
         .stat-card {
-            background: rgba(255,255,255,0.05);
+            background: rgba(25, 35, 45, 0.7);
             border-radius: 12px;
             padding: 12px;
             text-align: center;
+            border: 1px solid rgba(255,255,255,0.05);
         }
         .stat-value { font-size: 20px; font-weight: bold; margin-top: 5px; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        
+        /* ITEM LIST */
         .account-item, .transaction-item, .donatur-item {
             padding: 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
             display: flex;
             align-items: center;
             gap: 12px;
             cursor: pointer;
             transition: background 0.2s;
+            background: rgba(25, 35, 45, 0.5);
+            border-radius: 12px;
+            margin-bottom: 4px;
         }
-        .account-item:hover, .transaction-item:hover, .donatur-item:hover { background: rgba(255,255,255,0.05); }
+        .account-item:hover, .transaction-item:hover, .donatur-item:hover { 
+            background: rgba(45, 60, 75, 0.7);
+        }
         .account-avatar {
             width: 40px;
             height: 40px;
@@ -182,6 +226,8 @@
         .badge.pinjam { background: rgba(255,152,0,0.3); color: #ffb74d; }
         .badge.donasi_uang { background: rgba(76,175,80,0.3); color: #81c784; }
         .badge.donasi_barang { background: rgba(33,150,243,0.3); color: #64b5f6; }
+        
+        /* MODAL */
         .modal {
             position: fixed;
             top: 0;
@@ -197,14 +243,14 @@
             backdrop-filter: blur(8px);
         }
         .modal-content {
-            background: linear-gradient(135deg, #1e2a3a, #16212e);
+            background: linear-gradient(135deg, #1e2a36, #121e28);
             border-radius: 28px;
             max-width: 550px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.08);
         }
         .modal-header {
             padding: 20px 24px;
@@ -238,13 +284,21 @@
             border-radius: 0 0 28px 28px;
         }
         .modal-footer .btn { flex: 1; margin: 0; }
+        
+        /* MODAL INPUT */
         .modal input, .modal select, .modal textarea {
-            background: rgba(255,255,255,0.12);
-            border: 2px solid rgba(255,255,255,0.2);
-            padding: 14px 16px;
-            font-size: 16px;
-            margin-bottom: 16px;
+            background: rgba(25, 45, 65, 0.95) !important;
+            border: 2px solid rgba(255, 255, 255, 0.15) !important;
+            color: #ffffff !important;
         }
+        .modal select option {
+            background: #1e2e3e !important;
+            color: #ffffff !important;
+        }
+        .modal input:focus, .modal select:focus, .modal textarea:focus {
+            border-color: #ff9800 !important;
+        }
+        
         .modal label {
             display: block;
             margin-bottom: 6px;
@@ -269,6 +323,7 @@
             height: 18px;
             margin-bottom: 0;
             cursor: pointer;
+            accent-color: #ff9800;
         }
         .auto-id {
             background: rgba(255,152,0,0.15);
