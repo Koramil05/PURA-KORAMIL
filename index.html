@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="Kas App">
     <meta name="theme-color" content="#1a237e">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
+    <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: linear-gradient(135deg, #1a2a3a 0%, #0f1a22 100%);
@@ -115,11 +115,16 @@
             transition: all 0.2s;
         }
         .btn:active { transform: scale(0.98); }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn:disabled:active { transform: none; }
         .btn.secondary { background: rgba(45, 60, 75, 0.8); }
         .btn.warning { background: linear-gradient(135deg, #b86b1f, #8e5200); }
         .btn.danger { background: linear-gradient(135deg, #b33b30, #8e2a1f); }
         
-        /* PERBAIKAN INPUT, SELECT, TEXTAREA - WARNA GELAP AGAR TERLIHAT */
         input, select, textarea {
             width: 100%;
             padding: 12px;
@@ -131,36 +136,22 @@
             transition: all 0.2s;
             font-size: 16px;
         }
-        
-        /* DROPDOWN OPTIONS */
         select option {
             background: #1e2a36 !important;
             color: #ffffff !important;
         }
-        
-        /* HOVER SELECT */
         select:hover {
             background: rgba(35, 55, 75, 0.95) !important;
             border-color: rgba(255, 255, 255, 0.35) !important;
         }
-        
         input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: #ff9800 !important;
             background: rgba(35, 55, 75, 0.95) !important;
             box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.2);
         }
-        
-        /* INPUT DATE */
-        input[type="date"] {
-            color-scheme: dark;
-        }
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-            cursor: pointer;
-        }
-        
-        /* AUTOCOMPLETE */
+        input[type="date"] { color-scheme: dark; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
         input:-webkit-autofill,
         input:-webkit-autofill:hover,
         input:-webkit-autofill:focus,
@@ -188,7 +179,6 @@
         .stat-value { font-size: 20px; font-weight: bold; margin-top: 5px; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
         
-        /* ITEM LIST */
         .account-item, .transaction-item, .donatur-item {
             padding: 12px;
             border-bottom: 1px solid rgba(255,255,255,0.08);
@@ -201,9 +191,7 @@
             border-radius: 12px;
             margin-bottom: 4px;
         }
-        .account-item:hover, .transaction-item:hover, .donatur-item:hover { 
-            background: rgba(45, 60, 75, 0.7);
-        }
+        .account-item:hover, .transaction-item:hover, .donatur-item:hover { background: rgba(45, 60, 75, 0.7); }
         .account-avatar {
             width: 40px;
             height: 40px;
@@ -227,7 +215,6 @@
         .badge.donasi_uang { background: rgba(76,175,80,0.3); color: #81c784; }
         .badge.donasi_barang { background: rgba(33,150,243,0.3); color: #64b5f6; }
         
-        /* MODAL */
         .modal {
             position: fixed;
             top: 0;
@@ -285,7 +272,6 @@
         }
         .modal-footer .btn { flex: 1; margin: 0; }
         
-        /* MODAL INPUT */
         .modal input, .modal select, .modal textarea {
             background: rgba(25, 45, 65, 0.95) !important;
             border: 2px solid rgba(255, 255, 255, 0.15) !important;
@@ -354,6 +340,10 @@
             cursor: pointer;
             transition: all 0.2s;
         }
+        .icon-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         .icon-btn.edit:hover { background: #ff9800; }
         .icon-btn.delete:hover { background: #f44336; }
         .toast {
@@ -413,6 +403,15 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
+        
+        /* Spinner animation */
+        .fa-spinner {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -439,7 +438,6 @@
 
     <script>
         // ==================== KONFIGURASI BACKEND ====================
-        // GANTI DENGAN URL DEPLOY ANDA
         const API_URL = 'https://script.google.com/macros/s/AKfycbwknfM1BEV_DXWy3v4yApZK2M2VGnLY1TYpM0-BhmKAWJZPkcXsz_eDk8VIz_BQY2S-UQ/exec';
         const TOKEN = 'kas2024';
         
@@ -451,6 +449,29 @@
         let db = null;
         let isOnline = navigator.onLine;
         let isSyncing = false;
+
+        // ==================== FUNGSI DISABLE BUTTON ====================
+        function disableButton(btn, text = 'Menyimpan...') {
+            if (!btn || btn.disabled) return false;
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.style.cursor = 'wait';
+            const originalText = btn.innerHTML;
+            btn.setAttribute('data-original-text', originalText);
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${text}`;
+            return true;
+        }
+
+        function enableButton(btn) {
+            if (!btn) return;
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+            const originalText = btn.getAttribute('data-original-text');
+            if (originalText) {
+                btn.innerHTML = originalText;
+            }
+        }
 
         // ==================== INDEXEDDB FUNCTIONS ====================
         function openDB() {
@@ -717,56 +738,71 @@
             updateDynamicField();
             
             document.getElementById('modalSimpanTransaksi').onclick = async () => {
-                const jenis = jenisSelect.value;
-                const tanggal = document.getElementById('modalTglTransaksi').value;
-                const id_anggota = document.getElementById('modalPilihAnggota').value;
-                const nama = document.getElementById('modalPilihAnggota').selectedOptions[0]?.dataset?.nama || '';
-                const keterangan = document.getElementById('modalKeteranganTransaksi').value;
-                let nominal = 0, nama_barang = '';
+                const btn = document.getElementById('modalSimpanTransaksi');
+                if (btn.disabled) return;
+                disableButton(btn, isEdit ? 'Mengupdate...' : 'Menyimpan...');
                 
-                if (jenis === 'DONASI_BARANG') {
-                    nama_barang = document.getElementById('modalNamaBarang').value;
-                    if (!nama_barang) { showToast('Nama barang harus diisi', true); return; }
-                    nominal = 0; // PASTIKAN NOMINAL 0 UNTUK DONASI BARANG
-                } else {
-                    nominal = parseInt(document.getElementById('modalNominalTransaksi').value.replace(/\D/g, '')) || 0;
-                    if (!nominal) { showToast('Nominal harus diisi', true); return; }
-                    const saldo = await hitungSaldo();
-                    if ((jenis === 'PINJAM' || jenis === 'PENGELUARAN') && nominal > saldo) { showToast('Saldo tidak mencukupi!', true); return; }
+                try {
+                    const jenis = jenisSelect.value;
+                    const tanggal = document.getElementById('modalTglTransaksi').value;
+                    const id_anggota = document.getElementById('modalPilihAnggota').value;
+                    const nama = document.getElementById('modalPilihAnggota').selectedOptions[0]?.dataset?.nama || '';
+                    const keterangan = document.getElementById('modalKeteranganTransaksi').value;
+                    let nominal = 0, nama_barang = '';
+                    
+                    if (jenis === 'DONASI_BARANG') {
+                        nama_barang = document.getElementById('modalNamaBarang').value;
+                        if (!nama_barang) { showToast('Nama barang harus diisi', true); enableButton(btn); return; }
+                        nominal = 0;
+                    } else {
+                        nominal = parseInt(document.getElementById('modalNominalTransaksi').value.replace(/\D/g, '')) || 0;
+                        if (!nominal) { showToast('Nominal harus diisi', true); enableButton(btn); return; }
+                        const saldo = await hitungSaldo();
+                        if ((jenis === 'PINJAM' || jenis === 'PENGELUARAN') && nominal > saldo) { 
+                            showToast('Saldo tidak mencukupi!', true); 
+                            enableButton(btn);
+                            return; 
+                        }
+                    }
+                    
+                    if (isEdit) {
+                        const updatedTransaksi = { ...editData, jenis, tanggal, id_anggota, nama: nama || editData.nama, nominal, nama_barang, keterangan };
+                        await putToStore(STORES.TRANSAKSI, updatedTransaksi);
+                        if (isOnline) {
+                            try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'updateTransaksi', token: TOKEN, id: editData.id, jenis, tanggal, id_anggota, nama: nama || editData.nama, nominal, nama_barang, keterangan }) }); } catch(e) {}
+                        }
+                        showToast('Transaksi berhasil diupdate');
+                    } else {
+                        const newId = await generateId('TRX', STORES.TRANSAKSI);
+                        const newTransaksi = { 
+                            id: newId, 
+                            tanggal, 
+                            jenis, 
+                            id_anggota, 
+                            nama: nama || (id_anggota ? (await getAllFromStore(STORES.ANGGOTA)).find(a => a.id === id_anggota)?.nama : '') || 'Umum', 
+                            nominal, 
+                            nama_barang, 
+                            keterangan, 
+                            created_at: new Date().toISOString() 
+                        };
+                        await addToStore(STORES.TRANSAKSI, newTransaksi);
+                        if (jenis === 'DONASI_UANG' && newTransaksi.nama) {
+                            const donatur = await getFromStore(STORES.DONATUR, newTransaksi.nama);
+                            if (donatur) await putToStore(STORES.DONATUR, { ...donatur, total_donasi_uang: (donatur.total_donasi_uang || 0) + nominal });
+                        }
+                        if (isOnline) {
+                            try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'addTransaksi', token: TOKEN, jenis, tanggal, id_anggota, nama: newTransaksi.nama, nominal, nama_barang, keterangan }) }); } catch(e) {}
+                        }
+                        showToast('Transaksi berhasil!');
+                    }
+                    modal.remove();
+                    await render();
+                } catch (error) {
+                    console.error('Error:', error);
+                    showToast('Terjadi kesalahan, coba lagi', true);
+                } finally {
+                    enableButton(btn);
                 }
-                
-                if (isEdit) {
-                    const updatedTransaksi = { ...editData, jenis, tanggal, id_anggota, nama: nama || editData.nama, nominal, nama_barang, keterangan };
-                    await putToStore(STORES.TRANSAKSI, updatedTransaksi);
-                    if (isOnline) {
-                        try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'updateTransaksi', token: TOKEN, id: editData.id, jenis, tanggal, id_anggota, nama: nama || editData.nama, nominal, nama_barang, keterangan }) }); } catch(e) {}
-                    }
-                    showToast('Transaksi berhasil diupdate');
-                } else {
-                    const newId = await generateId('TRX', STORES.TRANSAKSI);
-                    const newTransaksi = { 
-                        id: newId, 
-                        tanggal, 
-                        jenis, 
-                        id_anggota, 
-                        nama: nama || (id_anggota ? (await getAllFromStore(STORES.ANGGOTA)).find(a => a.id === id_anggota)?.nama : '') || 'Umum', 
-                        nominal, 
-                        nama_barang, 
-                        keterangan, 
-                        created_at: new Date().toISOString() 
-                    };
-                    await addToStore(STORES.TRANSAKSI, newTransaksi);
-                    if (jenis === 'DONASI_UANG' && newTransaksi.nama) {
-                        const donatur = await getFromStore(STORES.DONATUR, newTransaksi.nama);
-                        if (donatur) await putToStore(STORES.DONATUR, { ...donatur, total_donasi_uang: (donatur.total_donasi_uang || 0) + nominal });
-                    }
-                    if (isOnline) {
-                        try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'addTransaksi', token: TOKEN, jenis, tanggal, id_anggota, nama: newTransaksi.nama, nominal, nama_barang, keterangan }) }); } catch(e) {}
-                    }
-                    showToast('Transaksi berhasil!');
-                }
-                modal.remove();
-                await render();
             };
         };
 
@@ -789,22 +825,36 @@
                 </div>
             `;
             document.body.appendChild(modal);
+            
             document.getElementById('modalSimpanAnggota').onclick = async () => {
-                const nama = document.getElementById('modalNamaAnggota').value;
-                const hp = document.getElementById('modalHpAnggota').value;
-                if (!nama || !hp) { showToast('Nama dan No HP wajib diisi', true); return; }
-                const anggotaData = { id: newId, nama, no_hp: hp, alamat: document.getElementById('modalAlamatAnggota').value, status: document.getElementById('modalStatusAnggota').value, tgl_dibuat: new Date().toISOString().split('T')[0] };
-                if (isEdit) {
-                    await putToStore(STORES.ANGGOTA, anggotaData);
-                    if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'updateAnggota', token: TOKEN, ...anggotaData }) }); } catch(e) {} }
-                    showToast('Anggota berhasil diupdate!');
-                } else {
-                    await addToStore(STORES.ANGGOTA, anggotaData);
-                    if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'addAnggota', token: TOKEN, ...anggotaData }) }); } catch(e) {} }
-                    showToast('Anggota ditambahkan: ' + newId);
+                const btn = document.getElementById('modalSimpanAnggota');
+                if (btn.disabled) return;
+                disableButton(btn, isEdit ? 'Mengupdate...' : 'Menyimpan...');
+                
+                try {
+                    const nama = document.getElementById('modalNamaAnggota').value;
+                    const hp = document.getElementById('modalHpAnggota').value;
+                    if (!nama || !hp) { showToast('Nama dan No HP wajib diisi', true); enableButton(btn); return; }
+                    
+                    const anggotaData = { id: newId, nama, no_hp: hp, alamat: document.getElementById('modalAlamatAnggota').value, status: document.getElementById('modalStatusAnggota').value, tgl_dibuat: new Date().toISOString().split('T')[0] };
+                    
+                    if (isEdit) {
+                        await putToStore(STORES.ANGGOTA, anggotaData);
+                        if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'updateAnggota', token: TOKEN, ...anggotaData }) }); } catch(e) {} }
+                        showToast('Anggota berhasil diupdate!');
+                    } else {
+                        await addToStore(STORES.ANGGOTA, anggotaData);
+                        if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'addAnggota', token: TOKEN, ...anggotaData }) }); } catch(e) {} }
+                        showToast('Anggota ditambahkan: ' + newId);
+                    }
+                    modal.remove();
+                    await render();
+                } catch (error) {
+                    console.error('Error:', error);
+                    showToast('Terjadi kesalahan, coba lagi', true);
+                } finally {
+                    enableButton(btn);
                 }
-                modal.remove();
-                await render();
             };
         };
 
@@ -824,23 +874,37 @@
                 </div>
             `;
             document.body.appendChild(modal);
+            
             document.getElementById('modalSimpanDonatur').onclick = async () => {
-                const nama = document.getElementById('modalNamaDonatur').value;
-                if (!nama) { showToast('Nama donatur wajib diisi', true); return; }
-                const donaturData = { nama, alamat: document.getElementById('modalAlamatDonatur').value || '', no_hp: document.getElementById('modalHpDonatur').value || '', total_donasi_uang: isEdit ? (editData.total_donasi_uang || 0) : 0, tgl_dibuat: isEdit ? editData.tgl_dibuat : new Date().toISOString().split('T')[0] };
-                if (isEdit) {
-                    await putToStore(STORES.DONATUR, donaturData);
-                    if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'updateDonatur', token: TOKEN, nama, alamat: donaturData.alamat, no_hp: donaturData.no_hp }) }); } catch(e) {} }
-                    showToast('Donatur berhasil diupdate!');
-                } else {
-                    const existing = await getFromStore(STORES.DONATUR, nama);
-                    if (existing) { showToast('Donatur sudah terdaftar!', true); modal.remove(); return; }
-                    await addToStore(STORES.DONATUR, donaturData);
-                    if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'addDonatur', token: TOKEN, nama, alamat: donaturData.alamat, no_hp: donaturData.no_hp }) }); } catch(e) {} }
-                    showToast('Donatur ditambahkan');
+                const btn = document.getElementById('modalSimpanDonatur');
+                if (btn.disabled) return;
+                disableButton(btn, isEdit ? 'Mengupdate...' : 'Menyimpan...');
+                
+                try {
+                    const nama = document.getElementById('modalNamaDonatur').value;
+                    if (!nama) { showToast('Nama donatur wajib diisi', true); enableButton(btn); return; }
+                    
+                    const donaturData = { nama, alamat: document.getElementById('modalAlamatDonatur').value || '', no_hp: document.getElementById('modalHpDonatur').value || '', total_donasi_uang: isEdit ? (editData.total_donasi_uang || 0) : 0, tgl_dibuat: isEdit ? editData.tgl_dibuat : new Date().toISOString().split('T')[0] };
+                    
+                    if (isEdit) {
+                        await putToStore(STORES.DONATUR, donaturData);
+                        if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'updateDonatur', token: TOKEN, nama, alamat: donaturData.alamat, no_hp: donaturData.no_hp }) }); } catch(e) {} }
+                        showToast('Donatur berhasil diupdate!');
+                    } else {
+                        const existing = await getFromStore(STORES.DONATUR, nama);
+                        if (existing) { showToast('Donatur sudah terdaftar!', true); enableButton(btn); modal.remove(); return; }
+                        await addToStore(STORES.DONATUR, donaturData);
+                        if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'addDonatur', token: TOKEN, nama, alamat: donaturData.alamat, no_hp: donaturData.no_hp }) }); } catch(e) {} }
+                        showToast('Donatur ditambahkan');
+                    }
+                    modal.remove();
+                    await render();
+                } catch (error) {
+                    console.error('Error:', error);
+                    showToast('Terjadi kesalahan, coba lagi', true);
+                } finally {
+                    enableButton(btn);
                 }
-                modal.remove();
-                await render();
             };
         };
 
@@ -927,72 +991,81 @@
             };
             
             document.getElementById('modalSimpanDonasi').onclick = async () => {
-                const donatur = document.getElementById('modalPilihDonatur').value;
-                if (!donatur) { showToast('Pilih donatur', true); return; }
+                const btn = document.getElementById('modalSimpanDonasi');
+                if (btn.disabled) return;
+                disableButton(btn, 'Menyimpan donasi...');
                 
-                const jenisDonasi = document.querySelector('input[name="jenisDonasi"]:checked').value;
-                const tanggal = document.getElementById('modalTglDonasi').value;
-                const keterangan = document.getElementById('modalKetDonasi').value;
-                
-                let nominal = 0;
-                let nama_barang = '';
-                
-                if (jenisDonasi === 'UANG') {
-                    // DONASI UANG
-                    nominal = parseInt(document.getElementById('modalNominalDonasi').value.replace(/\D/g, '')) || 0;
-                    if (!nominal) { showToast('Nominal harus diisi', true); return; }
-                    nama_barang = '';
-                } else {
-                    // DONASI BARANG
-                    nama_barang = document.getElementById('modalNamaBarangDonasi').value;
-                    if (!nama_barang) { showToast('Nama barang harus diisi', true); return; }
-                    nominal = 0; // PASTIKAN NOMINAL 0 UNTUK DONASI BARANG
-                }
-                
-                const newId = await generateId('TRX', STORES.TRANSAKSI);
-                const newTransaksi = { 
-                    id: newId, 
-                    tanggal, 
-                    jenis: jenisDonasi === 'UANG' ? 'DONASI_UANG' : 'DONASI_BARANG', 
-                    id_anggota: '', 
-                    nama: donatur, 
-                    nominal: nominal,
-                    nama_barang: nama_barang,
-                    keterangan: keterangan, 
-                    created_at: new Date().toISOString() 
-                };
-                
-                await addToStore(STORES.TRANSAKSI, newTransaksi);
-                
-                if (jenisDonasi === 'UANG') {
-                    const donaturData = await getFromStore(STORES.DONATUR, donatur);
-                    if (donaturData) {
-                        await putToStore(STORES.DONATUR, { ...donaturData, total_donasi_uang: (donaturData.total_donasi_uang || 0) + nominal });
+                try {
+                    const donatur = document.getElementById('modalPilihDonatur').value;
+                    if (!donatur) { showToast('Pilih donatur', true); enableButton(btn); return; }
+                    
+                    const jenisDonasi = document.querySelector('input[name="jenisDonasi"]:checked').value;
+                    const tanggal = document.getElementById('modalTglDonasi').value;
+                    const keterangan = document.getElementById('modalKetDonasi').value;
+                    
+                    let nominal = 0;
+                    let nama_barang = '';
+                    
+                    if (jenisDonasi === 'UANG') {
+                        nominal = parseInt(document.getElementById('modalNominalDonasi').value.replace(/\D/g, '')) || 0;
+                        if (!nominal) { showToast('Nominal harus diisi', true); enableButton(btn); return; }
+                        nama_barang = '';
+                    } else {
+                        nama_barang = document.getElementById('modalNamaBarangDonasi').value;
+                        if (!nama_barang) { showToast('Nama barang harus diisi', true); enableButton(btn); return; }
+                        nominal = 0;
                     }
+                    
+                    const newId = await generateId('TRX', STORES.TRANSAKSI);
+                    const newTransaksi = { 
+                        id: newId, 
+                        tanggal, 
+                        jenis: jenisDonasi === 'UANG' ? 'DONASI_UANG' : 'DONASI_BARANG', 
+                        id_anggota: '', 
+                        nama: donatur, 
+                        nominal: nominal,
+                        nama_barang: nama_barang,
+                        keterangan: keterangan, 
+                        created_at: new Date().toISOString() 
+                    };
+                    
+                    await addToStore(STORES.TRANSAKSI, newTransaksi);
+                    
+                    if (jenisDonasi === 'UANG') {
+                        const donaturData = await getFromStore(STORES.DONATUR, donatur);
+                        if (donaturData) {
+                            await putToStore(STORES.DONATUR, { ...donaturData, total_donasi_uang: (donaturData.total_donasi_uang || 0) + nominal });
+                        }
+                    }
+                    
+                    if (isOnline) {
+                        try { 
+                            await fetch(API_URL, { 
+                                method: 'POST', 
+                                body: new URLSearchParams({ 
+                                    action: 'addTransaksi', 
+                                    token: TOKEN, 
+                                    jenis: jenisDonasi === 'UANG' ? 'DONASI_UANG' : 'DONASI_BARANG', 
+                                    tanggal, 
+                                    id_anggota: '', 
+                                    nama: donatur, 
+                                    nominal: nominal,
+                                    nama_barang: nama_barang,
+                                    keterangan 
+                                }) 
+                            }); 
+                        } catch(e) { console.error(e); }
+                    }
+                    
+                    showToast(jenisDonasi === 'UANG' ? 'Donasi uang berhasil!' : 'Donasi barang berhasil!');
+                    modal.remove();
+                    await render();
+                } catch (error) {
+                    console.error('Error:', error);
+                    showToast('Terjadi kesalahan, coba lagi', true);
+                } finally {
+                    enableButton(btn);
                 }
-                
-                if (isOnline) {
-                    try { 
-                        await fetch(API_URL, { 
-                            method: 'POST', 
-                            body: new URLSearchParams({ 
-                                action: 'addTransaksi', 
-                                token: TOKEN, 
-                                jenis: jenisDonasi === 'UANG' ? 'DONASI_UANG' : 'DONASI_BARANG', 
-                                tanggal, 
-                                id_anggota: '', 
-                                nama: donatur, 
-                                nominal: nominal,
-                                nama_barang: nama_barang,
-                                keterangan 
-                            }) 
-                        }); 
-                    } catch(e) { console.error(e); }
-                }
-                
-                showToast(jenisDonasi === 'UANG' ? 'Donasi uang berhasil!' : 'Donasi barang berhasil!');
-                modal.remove();
-                await render();
             };
         };
 
