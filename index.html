@@ -10,7 +10,6 @@
     <meta name="theme-color" content="#1a237e">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* CSS sama seperti sebelumnya */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: linear-gradient(135deg, #0a192f 0%, #0d2b3e 100%);
@@ -124,7 +123,7 @@
             background: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.2);
             border-radius: 12px;
-            color: green;
+            color: white;
             margin-bottom: 12px;
             transition: all 0.2s;
             font-size: 16px;
@@ -183,7 +182,6 @@
         .badge.pinjam { background: rgba(255,152,0,0.3); color: #ffb74d; }
         .badge.donasi_uang { background: rgba(76,175,80,0.3); color: #81c784; }
         .badge.donasi_barang { background: rgba(33,150,243,0.3); color: #64b5f6; }
-        
         .modal {
             position: fixed;
             top: 0;
@@ -246,12 +244,6 @@
             padding: 14px 16px;
             font-size: 16px;
             margin-bottom: 16px;
-            transition: all 0.2s;
-        }
-        .modal input:focus, .modal select:focus, .modal textarea:focus {
-            border-color: #ff9800;
-            background: rgba(255,255,255,0.2);
-            box-shadow: 0 0 0 3px rgba(255,152,0,0.2);
         }
         .modal label {
             display: block;
@@ -288,7 +280,7 @@
             justify-content: space-between;
             align-items: center;
         }
-        .auto-id-value { font-size: 22px; font-weight: bold; color: #ff9800; font-family: monospace; letter-spacing: 1px; }
+        .auto-id-value { font-size: 22px; font-weight: bold; color: #ff9800; font-family: monospace; }
         .text-dim { color: rgba(255,255,255,0.6); }
         .text-center { text-align: center; }
         .positive { color: #4caf50; }
@@ -307,10 +299,8 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .icon-btn:hover { background: rgba(255,255,255,0.25); }
         .icon-btn.edit:hover { background: #ff9800; }
         .icon-btn.delete:hover { background: #f44336; }
-        
         .toast {
             position: fixed;
             bottom: 80px;
@@ -329,12 +319,10 @@
             animation: slideUp 0.3s ease;
         }
         .toast.error { background: rgba(244,67,54,0.9); }
-        .toast i { font-size: 16px; }
         @keyframes slideUp {
             from { opacity: 0; transform: translateX(-50%) translateY(20px); }
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
-        
         .donatur-detail {
             background: rgba(255,255,255,0.05);
             border-radius: 12px;
@@ -358,33 +346,17 @@
             border-bottom: 1px solid rgba(255,255,255,0.1);
             font-size: 13px;
         }
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 0.6s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
         @media print {
             .header, .nav, .header-actions, .btn, .signal-indicator, .icon-btn, .modal { display: none !important; }
             .content { padding: 0; margin: 0; }
-            .card { background: white; color: black; border: 1px solid #ddd; page-break-inside: avoid; }
+            .card { background: white; color: black; border: 1px solid #ddd; }
             .info-card { background: #f5f5f5; color: black; }
-            .stat-card { background: #f9f9f9; }
             .positive { color: #2e7d32; }
             .negative { color: #c62828; }
-            .text-dim { color: #666; }
             body { background: white; }
         }
-        
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 3px; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
     </style>
 </head>
@@ -413,7 +385,7 @@
     <script>
         // ==================== KONFIGURASI BACKEND ====================
         // GANTI DENGAN URL DEPLOY ANDA
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwF_FRlRIrFD1zKRtZ9osQ_hnSc0PisUmAHrHWw-aP2Fd2bzYiHo3HSNWS37zDEpdCtjg/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzAwxPi-gbwqBpB8cSvqtsukUf5epclTOaTG5dgTHydT6Ga3Fb-evrcbecvOPa2miZUKA/exec';
         const TOKEN = 'kas2024';
         
         // ==================== KONFIGURASI DATABASE ====================
@@ -425,7 +397,7 @@
         let isOnline = navigator.onLine;
         let isSyncing = false;
 
-        // ==================== INDEXEDDB ====================
+        // ==================== INDEXEDDB FUNCTIONS ====================
         function openDB() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -441,9 +413,6 @@
                     }
                     if (!db.objectStoreNames.contains(STORES.TRANSAKSI)) {
                         db.createObjectStore(STORES.TRANSAKSI, { keyPath: 'id' });
-                    }
-                    if (!db.objectStoreNames.contains('sync_queue')) {
-                        db.createObjectStore('sync_queue', { keyPath: 'id', autoIncrement: true });
                     }
                     if (!db.objectStoreNames.contains('last_sync')) {
                         db.createObjectStore('last_sync', { keyPath: 'type' });
@@ -522,7 +491,6 @@
             });
         }
 
-        // ==================== GENERATE ID ====================
         async function generateId(prefix, storeName) {
             const items = await getAllFromStore(storeName);
             let maxNum = 0;
@@ -535,7 +503,6 @@
             return prefix + String(maxNum + 1).padStart(3, '0');
         }
 
-        // ==================== HITUNG SALDO ====================
         async function hitungSaldo() {
             const transaksi = await getAllFromStore(STORES.TRANSAKSI);
             let saldo = 0;
@@ -547,45 +514,9 @@
             return saldo;
         }
 
-        // ==================== SYNC KE SERVER ====================
-        async function syncToServer() {
-            if (!isOnline || isSyncing) return;
-            isSyncing = true;
-            updateSignalStatus(true, 'Menyinkronisasi...', true);
-            
-            try {
-                const anggota = await getAllFromStore(STORES.ANGGOTA);
-                const donatur = await getAllFromStore(STORES.DONATUR);
-                const transaksi = await getAllFromStore(STORES.TRANSAKSI);
-                
-                const formData = new URLSearchParams({
-                    action: 'syncData',
-                    token: TOKEN,
-                    data: JSON.stringify({ anggota, donatur, transaksi })
-                });
-                
-                const response = await fetch(API_URL, { method: 'POST', body: formData });
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    await setLastSync('full', new Date().toISOString());
-                    showToast(`${result.message || 'Sinkronisasi berhasil'}`);
-                } else {
-                    showToast(result.message || 'Sinkronisasi gagal', true);
-                }
-            } catch (error) {
-                console.error('Sync error:', error);
-                showToast('Gagal sinkronisasi: ' + error.message, true);
-            } finally {
-                isSyncing = false;
-                updateSignalStatus(true, 'Online');
-            }
-        }
-
-        // ==================== SYNC DARI SERVER ====================
+        // ==================== SYNC FUNCTIONS ====================
         async function syncFromServer() {
             if (!isOnline) return;
-            
             try {
                 updateSignalStatus(true, 'Memuat data...', true);
                 
@@ -627,12 +558,43 @@
             }
         }
 
-        // ==================== UPDATE SIGNAL ====================
+        async function syncToServer() {
+            if (!isOnline || isSyncing) return;
+            isSyncing = true;
+            updateSignalStatus(true, 'Menyinkronisasi...', true);
+            try {
+                const anggota = await getAllFromStore(STORES.ANGGOTA);
+                const donatur = await getAllFromStore(STORES.DONATUR);
+                const transaksi = await getAllFromStore(STORES.TRANSAKSI);
+                
+                const formData = new URLSearchParams({
+                    action: 'syncData',
+                    token: TOKEN,
+                    data: JSON.stringify({ anggota, donatur, transaksi })
+                });
+                
+                const response = await fetch(API_URL, { method: 'POST', body: formData });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    await setLastSync('full', new Date().toISOString());
+                    showToast(`${result.message || 'Sinkronisasi berhasil'}`);
+                } else {
+                    showToast(result.message || 'Sinkronisasi gagal', true);
+                }
+            } catch (error) {
+                console.error('Sync error:', error);
+                showToast('Gagal sinkronisasi: ' + error.message, true);
+            } finally {
+                isSyncing = false;
+                updateSignalStatus(true, 'Online');
+            }
+        }
+
         function updateSignalStatus(online, text = null, syncing = false) {
             isOnline = online;
             const dot = document.getElementById('signalDot');
             const textEl = document.getElementById('signalText');
-            
             if (syncing) {
                 dot.classList.remove('offline');
                 dot.classList.add('syncing');
@@ -647,117 +609,11 @@
             }
         }
 
-        // ==================== STATE ====================
-        let state = {
-            tab: 'dashboard',
-            search: ''
-        };
-
-        // ==================== FUNGSI DENGAN SINKRONISASI OTOMATIS ====================
-        
-        // Update transaksi ke server
-        async function syncUpdateTransaksi(transaksiData) {
-            if (!isOnline) {
-                showToast('Offline - Data akan disinkronisasi nanti', true);
-                return false;
-            }
-            
-            try {
-                const formData = new URLSearchParams({
-                    action: 'updateTransaksi',
-                    token: TOKEN,
-                    id: transaksiData.id,
-                    tanggal: transaksiData.tanggal,
-                    jenis: transaksiData.jenis,
-                    id_anggota: transaksiData.id_anggota || '',
-                    nama: transaksiData.nama,
-                    nominal: transaksiData.nominal,
-                    nama_barang: transaksiData.nama_barang || '',
-                    keterangan: transaksiData.keterangan
-                });
-                
-                const response = await fetch(API_URL, { method: 'POST', body: formData });
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    showToast('Transaksi berhasil diupdate di server');
-                    return true;
-                } else {
-                    showToast(result.message || 'Gagal update di server', true);
-                    return false;
-                }
-            } catch (error) {
-                console.error('Update transaksi error:', error);
-                showToast('Gagal terhubung ke server', true);
-                return false;
-            }
-        }
-        
-        // Delete transaksi ke server
-        async function syncDeleteTransaksi(id) {
-            if (!isOnline) {
-                showToast('Offline - Data akan dihapus nanti', true);
-                return false;
-            }
-            
-            try {
-                const formData = new URLSearchParams({
-                    action: 'deleteTransaksi',
-                    token: TOKEN,
-                    id: id
-                });
-                
-                const response = await fetch(API_URL, { method: 'POST', body: formData });
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    showToast('Transaksi berhasil dihapus dari server');
-                    return true;
-                } else {
-                    showToast(result.message || 'Gagal hapus di server', true);
-                    return false;
-                }
-            } catch (error) {
-                console.error('Delete transaksi error:', error);
-                showToast('Gagal terhubung ke server', true);
-                return false;
-            }
-        }
-        
-        // Delete anggota ke server
-        async function syncDeleteAnggota(id) {
-            if (!isOnline) return false;
-            try {
-                const formData = new URLSearchParams({ action: 'deleteAnggota', token: TOKEN, id });
-                const response = await fetch(API_URL, { method: 'POST', body: formData });
-                const result = await response.json();
-                return result.status === 'success';
-            } catch (error) {
-                console.error('Delete anggota error:', error);
-                return false;
-            }
-        }
-        
-        // Delete donatur ke server
-        async function syncDeleteDonatur(nama) {
-            if (!isOnline) return false;
-            try {
-                const formData = new URLSearchParams({ action: 'deleteDonatur', token: TOKEN, nama });
-                const response = await fetch(API_URL, { method: 'POST', body: formData });
-                const result = await response.json();
-                return result.status === 'success';
-            } catch (error) {
-                console.error('Delete donatur error:', error);
-                return false;
-            }
-        }
-
-        // ==================== MODAL POPUP FUNCTIONS ====================
+        // ==================== MODAL FUNCTIONS ====================
         window.showModalTransaksi = async function(editData = null) {
             const modal = document.createElement('div');
             modal.className = 'modal';
             const isEdit = editData !== null;
-            
             const anggota = await getAllFromStore(STORES.ANGGOTA);
             modal.innerHTML = `
                 <div class="modal-content">
@@ -766,28 +622,21 @@
                         <button onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i></button>
                     </div>
                     <div class="modal-body">
-                        <label><i class="fas fa-tag"></i> Jenis Transaksi</label>
+                        <label>Jenis Transaksi</label>
                         <select id="modalJenisTransaksi">
                             <option ${isEdit && editData.jenis === 'SETOR' ? 'selected' : ''} value="SETOR">💰 SETOR (Tambah Saldo)</option>
                             <option ${isEdit && editData.jenis === 'PINJAM' ? 'selected' : ''} value="PINJAM">📤 PINJAM (Kurang Saldo)</option>
                             <option ${isEdit && editData.jenis === 'PENGELUARAN' ? 'selected' : ''} value="PENGELUARAN">🛒 PENGELUARAN (Kurang Saldo)</option>
                             <option ${isEdit && editData.jenis === 'DONASI_UANG' ? 'selected' : ''} value="DONASI_UANG">🤝 DONASI UANG (Tambah Saldo)</option>
-                            <option ${isEdit && editData.jenis === 'DONASI_BARANG' ? 'selected' : ''} value="DONASI_BARANG">📦 DONASI BARANG (Tidak Pengaruh Saldo)</option>
+                            <option ${isEdit && editData.jenis === 'DONASI_BARANG' ? 'selected' : ''} value="DONASI_BARANG">📦 DONASI BARANG</option>
                         </select>
-                        
-                        <label><i class="fas fa-calendar"></i> Tanggal</label>
+                        <label>Tanggal</label>
                         <input type="date" id="modalTglTransaksi" value="${isEdit ? editData.tanggal : new Date().toISOString().split('T')[0]}">
-                        
-                        <label><i class="fas fa-user"></i> Anggota (opsional)</label>
-                        <select id="modalPilihAnggota">
-                            <option value="">Pilih Anggota</option>
-                            ${anggota.map(a => `<option value="${a.id}" data-nama="${a.nama}" ${isEdit && editData.id_anggota === a.id ? 'selected' : ''}>${a.id} - ${a.nama}</option>`).join('')}
-                        </select>
-                        
+                        <label>Anggota (opsional)</label>
+                        <select id="modalPilihAnggota"><option value="">Pilih Anggota</option>${anggota.map(a => `<option value="${a.id}" data-nama="${a.nama}" ${isEdit && editData.id_anggota === a.id ? 'selected' : ''}>${a.id} - ${a.nama}</option>`).join('')}</select>
                         <div id="dynamicField"></div>
-                        
-                        <label><i class="fas fa-pen"></i> Keterangan</label>
-                        <textarea id="modalKeteranganTransaksi" rows="3" placeholder="Masukkan keterangan transaksi...">${isEdit ? (editData.keterangan || '') : ''}</textarea>
+                        <label>Keterangan</label>
+                        <textarea id="modalKeteranganTransaksi" rows="3">${isEdit ? (editData.keterangan || '') : ''}</textarea>
                     </div>
                     <div class="modal-footer">
                         <button class="btn secondary" onclick="this.closest('.modal').remove()">Batal</button>
@@ -799,78 +648,46 @@
             
             const jenisSelect = document.getElementById('modalJenisTransaksi');
             const dynamicField = document.getElementById('dynamicField');
-            
             function updateDynamicField() {
                 const jenis = jenisSelect.value;
                 if (jenis === 'DONASI_BARANG') {
-                    dynamicField.innerHTML = `
-                        <label><i class="fas fa-box"></i> Nama Barang</label>
-                        <input type="text" id="modalNamaBarang" placeholder="Masukkan nama barang yang didonasikan" value="${isEdit ? (editData.nama_barang || '') : ''}">
-                    `;
+                    dynamicField.innerHTML = `<label><i class="fas fa-box"></i> Nama Barang</label><input type="text" id="modalNamaBarang" placeholder="Masukkan nama barang" value="${isEdit ? (editData.nama_barang || '') : ''}">`;
                 } else {
-                    dynamicField.innerHTML = `
-                        <label><i class="fas fa-money-bill-wave"></i> Nominal (Rp)</label>
-                        <input type="text" id="modalNominalTransaksi" placeholder="0" value="${isEdit ? (editData.nominal ? formatNumber(editData.nominal) : '') : ''}" style="font-size: 24px; text-align: center; font-weight: bold;">
-                    `;
+                    dynamicField.innerHTML = `<label><i class="fas fa-money-bill-wave"></i> Nominal (Rp)</label><input type="text" id="modalNominalTransaksi" placeholder="0" value="${isEdit ? (editData.nominal ? editData.nominal : '') : ''}" style="font-size:24px;text-align:center">`;
                     const nominalInput = document.getElementById('modalNominalTransaksi');
-                    if (nominalInput) {
-                        nominalInput.addEventListener('input', (e) => {
-                            let val = e.target.value.replace(/\D/g, '');
-                            e.target.value = val ? formatNumber(val) : '';
-                        });
-                    }
+                    if (nominalInput) nominalInput.addEventListener('input', (e) => { let val = e.target.value.replace(/\D/g, ''); e.target.value = val ? new Intl.NumberFormat('id-ID').format(val) : ''; });
                 }
             }
-            
             jenisSelect.addEventListener('change', updateDynamicField);
             updateDynamicField();
             
             document.getElementById('modalSimpanTransaksi').onclick = async () => {
                 const jenis = jenisSelect.value;
                 const tanggal = document.getElementById('modalTglTransaksi').value;
-                const selectAnggota = document.getElementById('modalPilihAnggota');
-                const id_anggota = selectAnggota.value;
-                const nama = selectAnggota.selectedOptions[0]?.dataset?.nama || '';
+                const id_anggota = document.getElementById('modalPilihAnggota').value;
+                const nama = document.getElementById('modalPilihAnggota').selectedOptions[0]?.dataset?.nama || '';
                 const keterangan = document.getElementById('modalKeteranganTransaksi').value;
-                
-                let nominal = 0;
-                let nama_barang = '';
+                let nominal = 0, nama_barang = '';
                 
                 if (jenis === 'DONASI_BARANG') {
                     nama_barang = document.getElementById('modalNamaBarang').value;
                     if (!nama_barang) { showToast('Nama barang harus diisi', true); return; }
+                    nominal = 0; // PASTIKAN NOMINAL 0 UNTUK DONASI BARANG
                 } else {
                     nominal = parseInt(document.getElementById('modalNominalTransaksi').value.replace(/\D/g, '')) || 0;
                     if (!nominal) { showToast('Nominal harus diisi', true); return; }
                     const saldo = await hitungSaldo();
-                    if ((jenis === 'PINJAM' || jenis === 'PENGELUARAN') && nominal > saldo) { 
-                        showToast('Saldo tidak mencukupi!', true); 
-                        return; 
-                    }
+                    if ((jenis === 'PINJAM' || jenis === 'PENGELUARAN') && nominal > saldo) { showToast('Saldo tidak mencukupi!', true); return; }
                 }
                 
                 if (isEdit) {
-                    // UPDATE EXISTING TRANSACTION
-                    const updatedTransaksi = { 
-                        ...editData, 
-                        jenis, 
-                        tanggal, 
-                        id_anggota, 
-                        nama: nama || editData.nama, 
-                        nominal, 
-                        nama_barang, 
-                        keterangan 
-                    };
-                    
-                    // Update lokal
+                    const updatedTransaksi = { ...editData, jenis, tanggal, id_anggota, nama: nama || editData.nama, nominal, nama_barang, keterangan };
                     await putToStore(STORES.TRANSAKSI, updatedTransaksi);
-                    showToast('Transaksi berhasil diupdate di lokal');
-                    
-                    // Sinkronisasi ke server
-                    await syncUpdateTransaksi(updatedTransaksi);
-                    
+                    if (isOnline) {
+                        try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'updateTransaksi', token: TOKEN, id: editData.id, jenis, tanggal, id_anggota, nama: nama || editData.nama, nominal, nama_barang, keterangan }) }); } catch(e) {}
+                    }
+                    showToast('Transaksi berhasil diupdate');
                 } else {
-                    // NEW TRANSACTION
                     const newId = await generateId('TRX', STORES.TRANSAKSI);
                     const newTransaksi = { 
                         id: newId, 
@@ -879,43 +696,19 @@
                         id_anggota, 
                         nama: nama || (id_anggota ? (await getAllFromStore(STORES.ANGGOTA)).find(a => a.id === id_anggota)?.nama : '') || 'Umum', 
                         nominal, 
-                        nama_barang,
+                        nama_barang, 
                         keterangan, 
                         created_at: new Date().toISOString() 
                     };
-                    
                     await addToStore(STORES.TRANSAKSI, newTransaksi);
-                    
                     if (jenis === 'DONASI_UANG' && newTransaksi.nama) {
                         const donatur = await getFromStore(STORES.DONATUR, newTransaksi.nama);
-                        if (donatur) {
-                            const updatedDonatur = { ...donatur, total_donasi_uang: (donatur.total_donasi_uang || 0) + nominal };
-                            await putToStore(STORES.DONATUR, updatedDonatur);
-                        }
+                        if (donatur) await putToStore(STORES.DONATUR, { ...donatur, total_donasi_uang: (donatur.total_donasi_uang || 0) + nominal });
                     }
-                    
                     if (isOnline) {
-                        try {
-                            const formData = new URLSearchParams({ 
-                                action: 'addTransaksi', 
-                                token: TOKEN, 
-                                jenis, 
-                                tanggal, 
-                                id_anggota, 
-                                nama: newTransaksi.nama, 
-                                nominal, 
-                                nama_barang,
-                                keterangan 
-                            });
-                            await fetch(API_URL, { method: 'POST', body: formData });
-                            showToast('Transaksi berhasil disimpan ke server!');
-                        } catch(e) { 
-                            console.error(e);
-                            showToast('Transaksi disimpan di lokal, akan disinkronisasi nanti');
-                        }
-                    } else {
-                        showToast('Transaksi disimpan di lokal (offline)');
+                        try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'addTransaksi', token: TOKEN, jenis, tanggal, id_anggota, nama: newTransaksi.nama, nominal, nama_barang, keterangan }) }); } catch(e) {}
                     }
+                    showToast('Transaksi berhasil!');
                 }
                 modal.remove();
                 await render();
@@ -926,87 +719,34 @@
             const modal = document.createElement('div');
             modal.className = 'modal';
             const isEdit = editData !== null;
-            
             const newId = !isEdit ? await generateId('AGT', STORES.ANGGOTA) : editData.id;
             modal.innerHTML = `
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h3><i class="fas ${isEdit ? 'fa-user-edit' : 'fa-user-plus'}"></i> ${isEdit ? 'Edit Anggota' : 'Tambah Anggota'}</h3>
-                        <button onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i></button>
-                    </div>
+                    <div class="modal-header"><h3><i class="fas ${isEdit ? 'fa-user-edit' : 'fa-user-plus'}"></i> ${isEdit ? 'Edit Anggota' : 'Tambah Anggota'}</h3><button onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i></button></div>
                     <div class="modal-body">
-                        ${!isEdit ? `
-                            <div class="auto-id">
-                                <div><i class="fas fa-id-card"></i> ID Otomatis</div>
-                                <div class="auto-id-value">${newId}</div>
-                            </div>
-                        ` : `<div style="background:rgba(255,152,0,0.1); padding:12px; border-radius:12px; margin-bottom:16px;"><i class="fas fa-id-card"></i> ID: <strong style="color:#ff9800">${editData.id}</strong></div>`}
-                        
-                        <label><i class="fas fa-user"></i> Nama Lengkap *</label>
-                        <input type="text" id="modalNamaAnggota" placeholder="Masukkan nama lengkap" value="${isEdit ? editData.nama : ''}" autofocus>
-                        
-                        <label><i class="fas fa-phone"></i> No HP *</label>
-                        <input type="tel" id="modalHpAnggota" placeholder="Masukkan nomor HP" value="${isEdit ? (editData.no_hp || '') : ''}">
-                        
-                        <label><i class="fas fa-map-marker-alt"></i> Alamat</label>
-                        <textarea id="modalAlamatAnggota" rows="2" placeholder="Masukkan alamat">${isEdit ? (editData.alamat || '') : ''}</textarea>
-                        
-                        <label><i class="fas fa-toggle-on"></i> Status</label>
-                        <select id="modalStatusAnggota">
-                            <option value="AKTIF" ${isEdit && editData.status === 'AKTIF' ? 'selected' : ''}>AKTIF</option>
-                            <option value="NONAKTIF" ${isEdit && editData.status === 'NONAKTIF' ? 'selected' : ''}>NONAKTIF</option>
-                        </select>
+                        ${!isEdit ? `<div class="auto-id"><div><i class="fas fa-id-card"></i> ID Otomatis</div><div class="auto-id-value">${newId}</div></div>` : `<div style="background:rgba(255,152,0,0.1);padding:12px;border-radius:12px;margin-bottom:16px"><i class="fas fa-id-card"></i> ID: <strong style="color:#ff9800">${editData.id}</strong></div>`}
+                        <label><i class="fas fa-user"></i> Nama Lengkap *</label><input type="text" id="modalNamaAnggota" placeholder="Masukkan nama lengkap" value="${isEdit ? editData.nama : ''}">
+                        <label><i class="fas fa-phone"></i> No HP *</label><input type="tel" id="modalHpAnggota" placeholder="Masukkan nomor HP" value="${isEdit ? (editData.no_hp || '') : ''}">
+                        <label><i class="fas fa-map-marker-alt"></i> Alamat</label><textarea id="modalAlamatAnggota" rows="2" placeholder="Masukkan alamat">${isEdit ? (editData.alamat || '') : ''}</textarea>
+                        <label><i class="fas fa-toggle-on"></i> Status</label><select id="modalStatusAnggota"><option value="AKTIF" ${isEdit && editData.status === 'AKTIF' ? 'selected' : ''}>AKTIF</option><option value="NONAKTIF" ${isEdit && editData.status === 'NONAKTIF' ? 'selected' : ''}>NONAKTIF</option></select>
                     </div>
-                    <div class="modal-footer">
-                        <button class="btn secondary" onclick="this.closest('.modal').remove()">Batal</button>
-                        <button class="btn" id="modalSimpanAnggota">${isEdit ? 'Update' : 'Simpan'}</button>
-                    </div>
+                    <div class="modal-footer"><button class="btn secondary" onclick="this.closest('.modal').remove()">Batal</button><button class="btn" id="modalSimpanAnggota">${isEdit ? 'Update' : 'Simpan'}</button></div>
                 </div>
             `;
             document.body.appendChild(modal);
-            
             document.getElementById('modalSimpanAnggota').onclick = async () => {
                 const nama = document.getElementById('modalNamaAnggota').value;
                 const hp = document.getElementById('modalHpAnggota').value;
                 if (!nama || !hp) { showToast('Nama dan No HP wajib diisi', true); return; }
-                
-                const anggotaData = {
-                    id: newId,
-                    nama: nama,
-                    no_hp: hp,
-                    alamat: document.getElementById('modalAlamatAnggota').value,
-                    status: document.getElementById('modalStatusAnggota').value,
-                    tgl_dibuat: new Date().toISOString().split('T')[0]
-                };
-                
+                const anggotaData = { id: newId, nama, no_hp: hp, alamat: document.getElementById('modalAlamatAnggota').value, status: document.getElementById('modalStatusAnggota').value, tgl_dibuat: new Date().toISOString().split('T')[0] };
                 if (isEdit) {
                     await putToStore(STORES.ANGGOTA, anggotaData);
-                    if (isOnline) {
-                        try {
-                            const formData = new URLSearchParams({ action: 'updateAnggota', token: TOKEN, ...anggotaData });
-                            await fetch(API_URL, { method: 'POST', body: formData });
-                            showToast('Anggota berhasil diupdate di server');
-                        } catch(e) { 
-                            console.error(e);
-                            showToast('Anggota diupdate di lokal, sinkronisasi nanti');
-                        }
-                    } else {
-                        showToast('Anggota diupdate di lokal (offline)');
-                    }
+                    if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'updateAnggota', token: TOKEN, ...anggotaData }) }); } catch(e) {} }
+                    showToast('Anggota berhasil diupdate!');
                 } else {
                     await addToStore(STORES.ANGGOTA, anggotaData);
-                    if (isOnline) {
-                        try {
-                            const formData = new URLSearchParams({ action: 'addAnggota', token: TOKEN, ...anggotaData });
-                            await fetch(API_URL, { method: 'POST', body: formData });
-                            showToast('Anggota ditambahkan: ' + newId);
-                        } catch(e) { 
-                            console.error(e);
-                            showToast('Anggota disimpan di lokal');
-                        }
-                    } else {
-                        showToast('Anggota disimpan di lokal (offline)');
-                    }
+                    if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'addAnggota', token: TOKEN, ...anggotaData }) }); } catch(e) {} }
+                    showToast('Anggota ditambahkan: ' + newId);
                 }
                 modal.remove();
                 await render();
@@ -1017,77 +757,32 @@
             const modal = document.createElement('div');
             modal.className = 'modal';
             const isEdit = editData !== null;
-            
             modal.innerHTML = `
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h3><i class="fas ${isEdit ? 'fa-hand-holding-heart' : 'fa-heart'}"></i> ${isEdit ? 'Edit Donatur' : 'Tambah Donatur'}</h3>
-                        <button onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i></button>
-                    </div>
+                    <div class="modal-header"><h3><i class="fas ${isEdit ? 'fa-hand-holding-heart' : 'fa-heart'}"></i> ${isEdit ? 'Edit Donatur' : 'Tambah Donatur'}</h3><button onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i></button></div>
                     <div class="modal-body">
-                        <label><i class="fas fa-user"></i> Nama Donatur *</label>
-                        <input type="text" id="modalNamaDonatur" placeholder="Masukkan nama donatur" value="${isEdit ? editData.nama : ''}" autofocus>
-                        
-                        <label><i class="fas fa-map-marker-alt"></i> Alamat</label>
-                        <input type="text" id="modalAlamatDonatur" placeholder="Masukkan alamat" value="${isEdit ? (editData.alamat || '') : ''}">
-                        
-                        <label><i class="fas fa-phone"></i> No HP</label>
-                        <input type="tel" id="modalHpDonatur" placeholder="Masukkan nomor HP" value="${isEdit ? (editData.no_hp || '') : ''}">
+                        <label><i class="fas fa-user"></i> Nama Donatur *</label><input type="text" id="modalNamaDonatur" placeholder="Masukkan nama donatur" value="${isEdit ? editData.nama : ''}">
+                        <label><i class="fas fa-map-marker-alt"></i> Alamat</label><input type="text" id="modalAlamatDonatur" placeholder="Masukkan alamat" value="${isEdit ? (editData.alamat || '') : ''}">
+                        <label><i class="fas fa-phone"></i> No HP</label><input type="tel" id="modalHpDonatur" placeholder="Masukkan nomor HP" value="${isEdit ? (editData.no_hp || '') : ''}">
                     </div>
-                    <div class="modal-footer">
-                        <button class="btn secondary" onclick="this.closest('.modal').remove()">Batal</button>
-                        <button class="btn" id="modalSimpanDonatur">${isEdit ? 'Update' : 'Simpan'}</button>
-                    </div>
+                    <div class="modal-footer"><button class="btn secondary" onclick="this.closest('.modal').remove()">Batal</button><button class="btn" id="modalSimpanDonatur">${isEdit ? 'Update' : 'Simpan'}</button></div>
                 </div>
             `;
             document.body.appendChild(modal);
-            
             document.getElementById('modalSimpanDonatur').onclick = async () => {
                 const nama = document.getElementById('modalNamaDonatur').value;
                 if (!nama) { showToast('Nama donatur wajib diisi', true); return; }
-                
-                const donaturData = { 
-                    nama, 
-                    alamat: document.getElementById('modalAlamatDonatur').value || '',
-                    no_hp: document.getElementById('modalHpDonatur').value || '',
-                    total_donasi_uang: isEdit ? (editData.total_donasi_uang || 0) : 0,
-                    tgl_dibuat: isEdit ? editData.tgl_dibuat : new Date().toISOString().split('T')[0]
-                };
-                
+                const donaturData = { nama, alamat: document.getElementById('modalAlamatDonatur').value || '', no_hp: document.getElementById('modalHpDonatur').value || '', total_donasi_uang: isEdit ? (editData.total_donasi_uang || 0) : 0, tgl_dibuat: isEdit ? editData.tgl_dibuat : new Date().toISOString().split('T')[0] };
                 if (isEdit) {
                     await putToStore(STORES.DONATUR, donaturData);
-                    if (isOnline) {
-                        try {
-                            const formData = new URLSearchParams({ action: 'updateDonatur', token: TOKEN, nama, alamat: donaturData.alamat, no_hp: donaturData.no_hp });
-                            await fetch(API_URL, { method: 'POST', body: formData });
-                            showToast('Donatur berhasil diupdate di server');
-                        } catch(e) { 
-                            console.error(e);
-                            showToast('Donatur diupdate di lokal');
-                        }
-                    } else {
-                        showToast('Donatur diupdate di lokal (offline)');
-                    }
+                    if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'updateDonatur', token: TOKEN, nama, alamat: donaturData.alamat, no_hp: donaturData.no_hp }) }); } catch(e) {} }
+                    showToast('Donatur berhasil diupdate!');
                 } else {
                     const existing = await getFromStore(STORES.DONATUR, nama);
-                    if (existing) {
-                        showToast('Donatur sudah terdaftar!', true);
-                        modal.remove();
-                        return;
-                    }
+                    if (existing) { showToast('Donatur sudah terdaftar!', true); modal.remove(); return; }
                     await addToStore(STORES.DONATUR, donaturData);
-                    if (isOnline) {
-                        try {
-                            const formData = new URLSearchParams({ action: 'addDonatur', token: TOKEN, nama, alamat: donaturData.alamat, no_hp: donaturData.no_hp });
-                            await fetch(API_URL, { method: 'POST', body: formData });
-                            showToast('Donatur ditambahkan ke server');
-                        } catch(e) { 
-                            console.error(e);
-                            showToast('Donatur disimpan di lokal');
-                        }
-                    } else {
-                        showToast('Donatur disimpan di lokal (offline)');
-                    }
+                    if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'addDonatur', token: TOKEN, nama, alamat: donaturData.alamat, no_hp: donaturData.no_hp }) }); } catch(e) {} }
+                    showToast('Donatur ditambahkan');
                 }
                 modal.remove();
                 await render();
@@ -1097,14 +792,10 @@
         window.showModalDonasi = async function() {
             const modal = document.createElement('div');
             modal.className = 'modal';
-            
             const donatur = await getAllFromStore(STORES.DONATUR);
             modal.innerHTML = `
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h3><i class="fas fa-hand-holding-heart"></i> Donasi Masuk</h3>
-                        <button onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i></button>
-                    </div>
+                    <div class="modal-header"><h3><i class="fas fa-hand-holding-heart"></i> Donasi Masuk</h3><button onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i></button></div>
                     <div class="modal-body">
                         <label><i class="fas fa-user"></i> Donatur</label>
                         <select id="modalPilihDonatur">
@@ -1112,60 +803,48 @@
                             ${donatur.map(d => `<option value="${d.nama}" data-alamat="${d.alamat || ''}" data-hp="${d.no_hp || ''}">${d.nama}</option>`).join('')}
                             <option value="NEW">+ Tambah Donatur Baru</option>
                         </select>
-                        
-                        <div id="donaturInfo" style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 12px; margin-bottom: 16px; display: none;">
+                        <div id="donaturInfo" style="background:rgba(255,255,255,0.05);border-radius:12px;padding:12px;margin-bottom:16px;display:none">
                             <div><i class="fas fa-map-marker-alt"></i> <span id="donaturAlamat"></span></div>
                             <div><i class="fas fa-phone"></i> <span id="donaturHp"></span></div>
                         </div>
-                        
                         <label><i class="fas fa-calendar"></i> Tanggal</label>
                         <input type="date" id="modalTglDonasi" value="${new Date().toISOString().split('T')[0]}">
-                        
                         <div class="radio-group">
                             <label><input type="radio" name="jenisDonasi" value="UANG" checked> <i class="fas fa-money-bill-wave"></i> Uang</label>
                             <label><input type="radio" name="jenisDonasi" value="BARANG"> <i class="fas fa-box"></i> Barang</label>
                         </div>
-                        
-                        <div id="donasiUangField">
-                            <label><i class="fas fa-money-bill-wave"></i> Nominal (Rp)</label>
-                            <input type="text" id="modalNominalDonasi" placeholder="0" style="font-size: 24px; text-align: center; font-weight: bold;">
-                        </div>
-                        
-                        <div id="donasiBarangField" style="display: none;">
-                            <label><i class="fas fa-box"></i> Nama Barang</label>
-                            <input type="text" id="modalNamaBarangDonasi" placeholder="Masukkan nama barang yang didonasikan">
-                        </div>
-                        
-                        <label><i class="fas fa-pen"></i> Keterangan</label>
-                        <textarea id="modalKetDonasi" rows="3" placeholder="Masukkan keterangan donasi..."></textarea>
+                        <div id="donasiUangField"><label><i class="fas fa-money-bill-wave"></i> Nominal (Rp)</label><input type="text" id="modalNominalDonasi" placeholder="0" style="font-size:24px;text-align:center"></div>
+                        <div id="donasiBarangField" style="display:none"><label><i class="fas fa-box"></i> Nama Barang</label><input type="text" id="modalNamaBarangDonasi" placeholder="Masukkan nama barang (contoh: Beras 5kg, Susu, dll)"></div>
+                        <label><i class="fas fa-pen"></i> Keterangan</label><textarea id="modalKetDonasi" rows="3" placeholder="Keterangan donasi..."></textarea>
                     </div>
-                    <div class="modal-footer">
-                        <button class="btn secondary" onclick="this.closest('.modal').remove()">Batal</button>
-                        <button class="btn" id="modalSimpanDonasi" style="background:#ff9800">Simpan Donasi</button>
-                    </div>
+                    <div class="modal-footer"><button class="btn secondary" onclick="this.closest('.modal').remove()">Batal</button><button class="btn" id="modalSimpanDonasi" style="background:#ff9800">Simpan Donasi</button></div>
                 </div>
             `;
             document.body.appendChild(modal);
             
             const radioUang = document.querySelector('input[value="UANG"]');
             const radioBarang = document.querySelector('input[value="BARANG"]');
-            const donasiUangField = document.getElementById('donasiUangField');
-            const donasiBarangField = document.getElementById('donasiBarangField');
+            const uangField = document.getElementById('donasiUangField');
+            const barangField = document.getElementById('donasiBarangField');
             
-            radioUang.addEventListener('change', () => {
-                donasiUangField.style.display = 'block';
-                donasiBarangField.style.display = 'none';
-            });
-            radioBarang.addEventListener('change', () => {
-                donasiUangField.style.display = 'none';
-                donasiBarangField.style.display = 'block';
-            });
+            radioUang.onchange = () => { 
+                uangField.style.display = 'block'; 
+                barangField.style.display = 'none';
+                document.getElementById('modalNominalDonasi').value = '';
+                if (document.getElementById('modalNamaBarangDonasi')) document.getElementById('modalNamaBarangDonasi').value = '';
+            };
+            radioBarang.onchange = () => { 
+                uangField.style.display = 'none'; 
+                barangField.style.display = 'block';
+                document.getElementById('modalNominalDonasi').value = '';
+                if (document.getElementById('modalNamaBarangDonasi')) document.getElementById('modalNamaBarangDonasi').value = '';
+            };
             
             const nominalInput = document.getElementById('modalNominalDonasi');
             if (nominalInput) {
-                nominalInput.addEventListener('input', (e) => {
-                    let val = e.target.value.replace(/\D/g, '');
-                    e.target.value = val ? formatNumber(val) : '';
+                nominalInput.addEventListener('input', (e) => { 
+                    let val = e.target.value.replace(/\D/g, ''); 
+                    e.target.value = val ? new Intl.NumberFormat('id-ID').format(val) : ''; 
                 });
             }
             
@@ -1174,30 +853,27 @@
             const donaturAlamat = document.getElementById('donaturAlamat');
             const donaturHp = document.getElementById('donaturHp');
             
-            donaturSelect.addEventListener('change', (e) => {
-                if (e.target.value === 'NEW') {
-                    modal.remove();
-                    showModalDonatur();
+            donaturSelect.onchange = (e) => {
+                if (e.target.value === 'NEW') { 
+                    modal.remove(); 
+                    showModalDonatur(); 
                 } else if (e.target.value) {
-                    const selectedOption = e.target.selectedOptions[0];
-                    const alamat = selectedOption.dataset.alamat;
-                    const hp = selectedOption.dataset.hp;
-                    if (alamat || hp) {
-                        donaturAlamat.textContent = alamat || '-';
-                        donaturHp.textContent = hp || '-';
+                    const opt = e.target.selectedOptions[0];
+                    if (opt.dataset.alamat || opt.dataset.hp) {
+                        donaturAlamat.textContent = opt.dataset.alamat || '-';
+                        donaturHp.textContent = opt.dataset.hp || '-';
                         donaturInfo.style.display = 'block';
-                    } else {
-                        donaturInfo.style.display = 'none';
+                    } else { 
+                        donaturInfo.style.display = 'none'; 
                     }
-                } else {
-                    donaturInfo.style.display = 'none';
+                } else { 
+                    donaturInfo.style.display = 'none'; 
                 }
-            });
+            };
             
             document.getElementById('modalSimpanDonasi').onclick = async () => {
-                const donaturSelect = document.getElementById('modalPilihDonatur');
-                const donatur = donaturSelect.value;
-                if (!donatur || donatur === '') { showToast('Pilih donatur', true); return; }
+                const donatur = document.getElementById('modalPilihDonatur').value;
+                if (!donatur) { showToast('Pilih donatur', true); return; }
                 
                 const jenisDonasi = document.querySelector('input[name="jenisDonasi"]:checked').value;
                 const tanggal = document.getElementById('modalTglDonasi').value;
@@ -1207,24 +883,28 @@
                 let nama_barang = '';
                 
                 if (jenisDonasi === 'UANG') {
+                    // DONASI UANG
                     nominal = parseInt(document.getElementById('modalNominalDonasi').value.replace(/\D/g, '')) || 0;
                     if (!nominal) { showToast('Nominal harus diisi', true); return; }
+                    nama_barang = '';
                 } else {
+                    // DONASI BARANG
                     nama_barang = document.getElementById('modalNamaBarangDonasi').value;
                     if (!nama_barang) { showToast('Nama barang harus diisi', true); return; }
+                    nominal = 0; // PASTIKAN NOMINAL 0 UNTUK DONASI BARANG
                 }
                 
                 const newId = await generateId('TRX', STORES.TRANSAKSI);
-                const newTransaksi = {
-                    id: newId,
-                    tanggal: tanggal,
-                    jenis: jenisDonasi === 'UANG' ? 'DONASI_UANG' : 'DONASI_BARANG',
-                    id_anggota: '',
-                    nama: donatur,
+                const newTransaksi = { 
+                    id: newId, 
+                    tanggal, 
+                    jenis: jenisDonasi === 'UANG' ? 'DONASI_UANG' : 'DONASI_BARANG', 
+                    id_anggota: '', 
+                    nama: donatur, 
                     nominal: nominal,
                     nama_barang: nama_barang,
-                    keterangan: keterangan,
-                    created_at: new Date().toISOString()
+                    keterangan: keterangan, 
+                    created_at: new Date().toISOString() 
                 };
                 
                 await addToStore(STORES.TRANSAKSI, newTransaksi);
@@ -1232,44 +912,39 @@
                 if (jenisDonasi === 'UANG') {
                     const donaturData = await getFromStore(STORES.DONATUR, donatur);
                     if (donaturData) {
-                        const updatedDonatur = { ...donaturData, total_donasi_uang: (donaturData.total_donasi_uang || 0) + nominal };
-                        await putToStore(STORES.DONATUR, updatedDonatur);
+                        await putToStore(STORES.DONATUR, { ...donaturData, total_donasi_uang: (donaturData.total_donasi_uang || 0) + nominal });
                     }
                 }
                 
                 if (isOnline) {
-                    try {
-                        const formData = new URLSearchParams({ 
-                            action: 'addTransaksi', 
-                            token: TOKEN, 
-                            jenis: jenisDonasi === 'UANG' ? 'DONASI_UANG' : 'DONASI_BARANG',
-                            tanggal, 
-                            id_anggota: '', 
-                            nama: donatur, 
-                            nominal, 
-                            nama_barang,
-                            keterangan 
-                        });
-                        await fetch(API_URL, { method: 'POST', body: formData });
-                        showToast('Donasi berhasil disimpan ke server!');
-                    } catch(e) { 
-                        console.error(e);
-                        showToast('Donasi disimpan di lokal, akan disinkronisasi nanti');
-                    }
-                } else {
-                    showToast('Donasi disimpan di lokal (offline)');
+                    try { 
+                        await fetch(API_URL, { 
+                            method: 'POST', 
+                            body: new URLSearchParams({ 
+                                action: 'addTransaksi', 
+                                token: TOKEN, 
+                                jenis: jenisDonasi === 'UANG' ? 'DONASI_UANG' : 'DONASI_BARANG', 
+                                tanggal, 
+                                id_anggota: '', 
+                                nama: donatur, 
+                                nominal: nominal,
+                                nama_barang: nama_barang,
+                                keterangan 
+                            }) 
+                        }); 
+                    } catch(e) { console.error(e); }
                 }
                 
+                showToast(jenisDonasi === 'UANG' ? 'Donasi uang berhasil!' : 'Donasi barang berhasil!');
                 modal.remove();
                 await render();
             };
         };
 
-        // DELETE FUNCTIONS WITH SYNC
         window.deleteAnggota = async function(id, nama) {
             if (confirm(`Hapus anggota "${nama}"?`)) {
                 await deleteFromStore(STORES.ANGGOTA, id);
-                await syncDeleteAnggota(id);
+                if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'deleteAnggota', token: TOKEN, id }) }); } catch(e) {} }
                 showToast('Anggota dihapus');
                 await render();
             }
@@ -1278,7 +953,7 @@
         window.deleteDonatur = async function(nama) {
             if (confirm(`Hapus donatur "${nama}"?`)) {
                 await deleteFromStore(STORES.DONATUR, nama);
-                await syncDeleteDonatur(nama);
+                if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'deleteDonatur', token: TOKEN, nama }) }); } catch(e) {} }
                 showToast('Donatur dihapus');
                 await render();
             }
@@ -1287,7 +962,8 @@
         window.deleteTransaksi = async function(id) {
             if (confirm('Hapus transaksi ini?')) {
                 await deleteFromStore(STORES.TRANSAKSI, id);
-                await syncDeleteTransaksi(id);
+                if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'deleteTransaksi', token: TOKEN, id }) }); } catch(e) {} }
+                showToast('Transaksi dihapus');
                 await render();
             }
         };
@@ -1295,49 +971,19 @@
         window.detailDonatur = async function(nama) {
             const donatur = (await getAllFromStore(STORES.DONATUR)).find(d => d.nama === nama);
             if (!donatur) return;
-            
             const transaksi = (await getAllFromStore(STORES.TRANSAKSI)).filter(t => t.nama === nama);
-            const donasiUang = transaksi.filter(t => t.jenis === 'DONASI_UANG');
+            const totalUang = transaksi.filter(t => t.jenis === 'DONASI_UANG').reduce((s,t) => s + t.nominal, 0);
             const donasiBarang = transaksi.filter(t => t.jenis === 'DONASI_BARANG');
-            const totalUang = donasiUang.reduce((s,t) => s + t.nominal, 0);
-            
             const modal = document.createElement('div');
             modal.className = 'modal';
             modal.innerHTML = `
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h3><i class="fas fa-hand-holding-heart"></i> ${donatur.nama}</h3>
-                        <button onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i></button>
-                    </div>
+                    <div class="modal-header"><h3><i class="fas fa-hand-holding-heart"></i> ${donatur.nama}</h3><button onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i></button></div>
                     <div class="modal-body">
-                        <div class="donatur-detail">
-                            <div class="donatur-info">
-                                <div><i class="fas fa-map-marker-alt"></i></div><div>${donatur.alamat || '-'}</div>
-                                <div><i class="fas fa-phone"></i></div><div>${donatur.no_hp || '-'}</div>
-                                <div><i class="fas fa-money-bill-wave"></i></div><div><strong class="positive">Total Donasi Uang: ${formatRupiah(totalUang)}</strong></div>
-                            </div>
-                        </div>
-                        
-                        <h4 style="margin-top: 20px;"><i class="fas fa-history"></i> Riwayat Donasi</h4>
-                        <div class="donasi-list">
-                            ${transaksi.length === 0 ? 
-                                '<div class="text-dim text-center">Belum ada donasi</div>' : 
-                                transaksi.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).map(t => `
-                                    <div class="donasi-item">
-                                        <div class="flex-between">
-                                            <div>
-                                                <span class="badge ${t.jenis === 'DONASI_UANG' ? 'donasi_uang' : 'donasi_barang'}">${t.jenis === 'DONASI_UANG' ? '💰 Uang' : '📦 Barang'}</span>
-                                                <span class="text-dim">${t.tanggal}</span>
-                                            </div>
-                                            <span class="${t.jenis === 'DONASI_UANG' ? 'positive' : 'donasi-barang'}">
-                                                ${t.jenis === 'DONASI_UANG' ? formatRupiah(t.nominal) : t.nama_barang}
-                                            </span>
-                                        </div>
-                                        <div class="text-dim" style="font-size: 11px;">${t.keterangan || '-'}</div>
-                                    </div>
-                                `).join('')
-                            }
-                        </div>
+                        <div class="donatur-detail"><div class="donatur-info"><div><i class="fas fa-map-marker-alt"></i></div><div>${donatur.alamat || '-'}</div><div><i class="fas fa-phone"></i></div><div>${donatur.no_hp || '-'}</div><div><i class="fas fa-money-bill-wave"></i></div><div><strong class="positive">Total Donasi Uang: ${formatRupiah(totalUang)}</strong></div></div></div>
+                        ${donasiBarang.length > 0 ? `<div style="margin-top:12px"><strong><i class="fas fa-box"></i> Donasi Barang:</strong><br>${donasiBarang.map(b => `<span class="badge donasi_barang">${b.nama_barang}</span> `).join('')}</div>` : ''}
+                        <h4 style="margin-top:16px"><i class="fas fa-history"></i> Riwayat Donasi</h4>
+                        <div class="donasi-list">${transaksi.length === 0 ? '<div class="text-dim text-center">Belum ada donasi</div>' : transaksi.sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal)).map(t=>`<div class="donasi-item"><div class="flex-between"><div><span class="badge ${t.jenis === 'DONASI_UANG' ? 'donasi_uang' : 'donasi_barang'}">${t.jenis === 'DONASI_UANG' ? '💰 Uang' : '📦 Barang'}</span> <span class="text-dim">${t.tanggal}</span></div><span>${t.jenis === 'DONASI_UANG' ? formatRupiah(t.nominal) : t.nama_barang}</span></div><div class="text-dim">${t.keterangan || '-'}</div></div>`).join('')}</div>
                     </div>
                 </div>
             `;
@@ -1347,41 +993,12 @@
         window.detailAnggota = async function(id) {
             const anggota = (await getAllFromStore(STORES.ANGGOTA)).find(a => a.id === id);
             if (!anggota) return;
-            const transaksi = (await getAllFromStore(STORES.TRANSAKSI)).filter(t => t.id_anggota === id || t.nama === anggota.nama);
+            const transaksi = (await getAllFromStore(STORES.TRANSAKSI)).filter(t => t.id_anggota === id);
             const totalSetor = transaksi.filter(t => t.jenis === 'SETOR').reduce((s,t) => s + t.nominal, 0);
             const totalPinjam = transaksi.filter(t => t.jenis === 'PINJAM').reduce((s,t) => s + t.nominal, 0);
-            const saldo = totalSetor - totalPinjam;
-            
             const modal = document.createElement('div');
             modal.className = 'modal';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header"><h3><i class="fas fa-user"></i> ${anggota.nama}</h3><button onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i></button></div>
-                    <div class="modal-body">
-                        <div class="grid-2" style="margin-bottom:16px">
-                            <div><i class="fas fa-id-card"></i> <strong>ID:</strong><br><span style="color:#ff9800">${anggota.id}</span></div>
-                            <div><i class="fas fa-phone"></i> <strong>No HP:</strong><br>${anggota.no_hp || '-'}</div>
-                            <div><i class="fas fa-map-marker-alt"></i> <strong>Alamat:</strong><br>${anggota.alamat || '-'}</div>
-                            <div><i class="fas fa-toggle-on"></i> <strong>Status:</strong><br><span class="badge">${anggota.status || 'AKTIF'}</span></div>
-                        </div>
-                        <hr style="margin:12px 0;border-color:rgba(255,255,255,0.1)">
-                        <div class="grid-2">
-                            <div class="stat-card"><div>Total Setor</div><div class="positive">${formatRupiah(totalSetor)}</div></div>
-                            <div class="stat-card"><div>Total Pinjam</div><div class="negative">${formatRupiah(totalPinjam)}</div></div>
-                        </div>
-                        <div class="stat-card" style="background:#283593;margin-top:10px"><div>Saldo Akhir</div><div class="${saldo >= 0 ? 'positive' : 'negative'}">${formatRupiah(saldo)}</div></div>
-                        <h4 style="margin-top:16px">📋 Riwayat Transaksi</h4>
-                        ${transaksi.length === 0 ? '<div class="text-dim text-center">Belum ada transaksi</div>' : 
-                            transaksi.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).slice(0,10).map(t => `
-                                <div class="flex-between" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.1)">
-                                    <div><span class="badge">${t.jenis}</span><div class="text-dim">${t.tanggal}</div><div class="text-dim">${t.keterangan || ''}</div></div>
-                                    <span class="${t.jenis === 'SETOR' ? 'positive' : 'negative'}">${formatRupiah(t.nominal)}</span>
-                                </div>
-                            `).join('')
-                        }
-                    </div>
-                </div>
-            `;
+            modal.innerHTML = `<div class="modal-content"><div class="modal-header"><h3><i class="fas fa-user"></i> ${anggota.nama}</h3><button onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i></button></div><div class="modal-body"><div class="grid-2" style="margin-bottom:16px"><div><i class="fas fa-id-card"></i> <strong>ID:</strong><br><span style="color:#ff9800">${anggota.id}</span></div><div><i class="fas fa-phone"></i> <strong>No HP:</strong><br>${anggota.no_hp || '-'}</div><div><i class="fas fa-map-marker-alt"></i> <strong>Alamat:</strong><br>${anggota.alamat || '-'}</div><div><i class="fas fa-toggle-on"></i> <strong>Status:</strong><br><span class="badge">${anggota.status || 'AKTIF'}</span></div></div><hr style="margin:12px 0"><div class="grid-2"><div class="stat-card"><div>Total Setor</div><div class="positive">${formatRupiah(totalSetor)}</div></div><div class="stat-card"><div>Total Pinjam</div><div class="negative">${formatRupiah(totalPinjam)}</div></div></div><div class="stat-card" style="background:#283593;margin-top:10px"><div>Saldo Akhir</div><div class="${totalSetor-totalPinjam>=0?'positive':'negative'}">${formatRupiah(totalSetor-totalPinjam)}</div></div><h4 style="margin-top:16px">📋 Riwayat Transaksi</h4>${transaksi.length===0?'<div class="text-dim text-center">Belum ada transaksi</div>':transaksi.sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal)).slice(0,10).map(t=>`<div class="flex-between" style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.1)"><div><span class="badge">${t.jenis}</span><div class="text-dim">${t.tanggal}</div><div class="text-dim">${t.keterangan||''}</div></div><span>${formatRupiah(t.nominal)}</span></div>`).join('')}</div></div>`;
             document.body.appendChild(modal);
         };
 
@@ -1392,105 +1009,16 @@
             const saldo = await hitungSaldo();
             const totalMasuk = transaksi.filter(t => t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG').reduce((s,t) => s + t.nominal, 0);
             const totalKeluar = transaksi.filter(t => t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN').reduce((s,t) => s + t.nominal, 0);
-            const totalDonasiUang = transaksi.filter(t => t.jenis === 'DONASI_UANG').reduce((s,t) => s + t.nominal, 0);
             const donasiBarang = transaksi.filter(t => t.jenis === 'DONASI_BARANG');
-            
             const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Laporan Keuangan</title>
-                    <meta charset="UTF-8">
-                    <style>
-                        * { margin: 0; padding: 0; box-sizing: border-box; }
-                        body { font-family: 'Times New Roman', Times, serif; padding: 30px; background: white; color: black; }
-                        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1a237e; padding-bottom: 20px; }
-                        .header h1 { color: #1a237e; }
-                        .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
-                        .summary-card { background: #f5f5f5; padding: 15px; border-radius: 8px; text-align: center; border-left: 4px solid #4caf50; }
-                        .summary-card .value { font-size: 20px; font-weight: bold; color: #1a237e; }
-                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                        th { background: #1a237e; color: white; padding: 10px; text-align: left; }
-                        td { padding: 8px; border-bottom: 1px solid #ddd; }
-                        .text-right { text-align: right; }
-                        .positive { color: #2e7d32; }
-                        .negative { color: #c62828; }
-                        .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 20px; }
-                        h2 { font-size: 16px; margin: 20px 0 10px; color: #1a237e; border-left: 3px solid #ff9800; padding-left: 10px; }
-                        .badge { display: inline-block; padding: 2px 6px; border-radius: 12px; font-size: 10px; background: #e8f5e8; color: #2e7d32; }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <h1>📊 LAPORAN KEUANGAN</h1>
-                        <p>Aplikasi Kas | Token: ${TOKEN} | Dicetak: ${new Date().toLocaleDateString('id-ID')}</p>
-                    </div>
-                    <div class="summary">
-                        <div class="summary-card"><h3>💰 Saldo Kas</h3><div class="value">${formatRupiah(saldo)}</div></div>
-                        <div class="summary-card"><h3>💚 Total Pemasukan</h3><div class="value positive">${formatRupiah(totalMasuk)}</div></div>
-                        <div class="summary-card"><h3>❤️ Total Pengeluaran</h3><div class="value negative">${formatRupiah(totalKeluar)}</div></div>
-                        <div class="summary-card"><h3>👥 Anggota</h3><div class="value">${anggota.length}</div><div>Aktif: ${anggota.filter(a => a.status === 'AKTIF').length}</div></div>
-                    </div>
-                    
-                    <h2>🤝 RINGKASAN DONASI</h2>
-                    <div class="summary" style="grid-template-columns: repeat(2, 1fr);">
-                        <div class="summary-card"><h3>💰 Donasi Uang</h3><div class="value positive">${formatRupiah(totalDonasiUang)}</div></div>
-                        <div class="summary-card"><h3>📦 Donasi Barang</h3><div class="value">${donasiBarang.length} item</div></div>
-                    </div>
-                    ${donasiBarang.length > 0 ? `
-                        <h2>📦 DAFTAR DONASI BARANG</h2>
-                        <table>
-                            <thead><tr><th>No</th><th>Tanggal</th><th>Donatur</th><th>Nama Barang</th><th>Keterangan</th></tr></thead>
-                            <tbody>
-                                ${donasiBarang.map((d, i) => `
-                                    <tr>
-                                        <td>${i+1}</td>
-                                        <td>${d.tanggal}</td>
-                                        <td>${d.nama}</td>
-                                        <td>${d.nama_barang}</td>
-                                        <td>${d.keterangan || '-'}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    ` : ''}
-                    
-                    <h2>📋 DAFTAR TRANSAKSI</h2>
-                    <table>
-                        <thead>
-                            <tr><th>No</th><th>Tanggal</th><th>Jenis</th><th>Nama</th><th class="text-right">Nominal/Barang</th><th>Keterangan</th></tr>
-                        </thead>
-                        <tbody>
-                            ${transaksi.sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal)).map((t,i)=>`
-                                <tr>
-                                    <td>${i+1}</td>
-                                    <td>${t.tanggal}</td>
-                                    <td><span class="badge">${t.jenis === 'DONASI_UANG' ? 'DONASI UANG' : (t.jenis === 'DONASI_BARANG' ? 'DONASI BARANG' : t.jenis)}</span></td>
-                                    <td>${t.nama||t.id_anggota||'-'}</td>
-                                    <td class="text-right ${t.jenis === 'DONASI_BARANG' ? 'donasi-barang' : (t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG' ? 'positive' : 'negative')}">
-                                        ${t.jenis === 'DONASI_BARANG' ? `📦 ${t.nama_barang}` : formatRupiah(t.nominal)}
-                                    </td>
-                                    <td>${t.keterangan||'-'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                        <tfoot>
-                            <tr><td colspan="4"><strong>TOTAL PEMASUKAN (Uang)</strong></td><td class="text-right"><strong>${formatRupiah(totalMasuk)}</strong></td><td></td></tr>
-                            <tr><td colspan="4"><strong>TOTAL PENGELUARAN</strong></td><td class="text-right"><strong>${formatRupiah(totalKeluar)}</strong></td><td></td></tr>
-                            <tr><td colspan="4"><strong>SALDO AKHIR</strong></td><td class="text-right"><strong>${formatRupiah(saldo)}</strong></td><td></td></tr>
-                        </tfoot>
-                    </table>
-                    
-                    <div class="footer"><p>Dicetak dari Aplikasi Kas - Manajemen Keuangan</p></div>
-                </body>
-                </html>
-            `);
+            printWindow.document.write(`<!DOCTYPE html><html><head><title>Laporan Keuangan</title><meta charset="UTF-8"><style>body{font-family:'Times New Roman',serif;padding:30px}.header{text-align:center;border-bottom:2px solid #1a237e;padding-bottom:20px;margin-bottom:30px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:30px}.summary-card{background:#f5f5f5;padding:15px;border-radius:8px;text-align:center;border-left:4px solid #4caf50}.summary-card .value{font-size:20px;font-weight:bold;color:#1a237e}table{width:100%;border-collapse:collapse;margin:20px 0}th{background:#1a237e;color:white;padding:10px;text-align:left}td{padding:8px;border-bottom:1px solid #ddd}.text-right{text-align:right}.positive{color:#2e7d32}.negative{color:#c62828}.footer{margin-top:40px;text-align:center;font-size:10px;color:#999;border-top:1px solid #ddd;padding-top:20px}.badge{display:inline-block;padding:2px 6px;border-radius:12px;font-size:10px;background:#e8f5e8;color:#2e7d32}</style></head><body><div class="header"><h1>📊 LAPORAN KEUANGAN</h1><p>Aplikasi Kas | Dicetak: ${new Date().toLocaleDateString('id-ID')}</p></div><div class="summary"><div class="summary-card"><h3>💰 Saldo Kas</h3><div class="value">${formatRupiah(saldo)}</div></div><div class="summary-card"><h3>💚 Total Pemasukan</h3><div class="value positive">${formatRupiah(totalMasuk)}</div></div><div class="summary-card"><h3>❤️ Total Pengeluaran</h3><div class="value negative">${formatRupiah(totalKeluar)}</div></div><div class="summary-card"><h3>👥 Anggota</h3><div class="value">${anggota.length}</div><div>Aktif: ${anggota.filter(a=>a.status==='AKTIF').length}</div></div></div><h2>📋 DAFTAR TRANSAKSI</h2>${transaksi.length===0?'<p>Belum ada transaksi</p>':`<table><thead><tr><th>No</th><th>Tanggal</th><th>Jenis</th><th>Nama</th><th class="text-right">Nominal/Barang</th><th>Keterangan</th></tr></thead><tbody>${transaksi.sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal)).map((t,i)=>`<tr><td>${i+1}</td><td>${t.tanggal}</td><td><span class="badge">${t.jenis==='DONASI_UANG'?'DONASI UANG':(t.jenis==='DONASI_BARANG'?'DONASI BARANG':t.jenis)}</span></td><td>${t.nama||t.id_anggota||'-'}</td><td class="text-right">${t.jenis==='DONASI_BARANG'?t.nama_barang:formatRupiah(t.nominal)}</td><td>${t.keterangan||'-'}</td></tr>`).join('')}</tbody><tfoot><tr><td colspan="4"><strong>TOTAL PEMASUKAN</strong></td><td class="text-right"><strong>${formatRupiah(totalMasuk)}</strong></td><td></td></tr><tr><td colspan="4"><strong>TOTAL PENGELUARAN</strong></td><td class="text-right"><strong>${formatRupiah(totalKeluar)}</strong></td><td></td></tr><tr><td colspan="4"><strong>SALDO AKHIR</strong></td><td class="text-right"><strong>${formatRupiah(saldo)}</strong></td><td></td></tr></tfoot></table>`}${donasiBarang.length>0?`<h2>📦 DAFTAR DONASI BARANG</h2><table><thead><tr><th>No</th><th>Tanggal</th><th>Donatur</th><th>Nama Barang</th><th>Keterangan</th></tr></thead><tbody>${donasiBarang.map((d,i)=>`<tr><td>${i+1}</td><td>${d.tanggal}</td><td>${d.nama}</td><td>${d.nama_barang}</td><td>${d.keterangan||'-'}</td></tr>`).join('')}</tbody></table>`:''}<div class="footer"><p>Dicetak dari Aplikasi Kas - Manajemen Keuangan</p></div></body></html>`);
             printWindow.document.close();
             printWindow.print();
         };
 
         // ==================== RENDER FUNCTIONS ====================
+        let state = { tab: 'dashboard', search: '' };
+
         async function renderDashboard() {
             const anggota = await getAllFromStore(STORES.ANGGOTA);
             const transaksi = await getAllFromStore(STORES.TRANSAKSI);
@@ -1500,10 +1028,6 @@
             const totalKeluar = transaksi.filter(t => t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN').reduce((s,t) => s + t.nominal, 0);
             const totalDonasiUang = transaksi.filter(t => t.jenis === 'DONASI_UANG').reduce((s,t) => s + t.nominal, 0);
             const totalDonasiBarang = transaksi.filter(t => t.jenis === 'DONASI_BARANG').length;
-            const bulanIni = new Date().toISOString().slice(0,7);
-            const pemasukanBulanIni = transaksi.filter(t => (t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG') && t.tanggal?.startsWith(bulanIni)).reduce((s,t) => s + t.nominal, 0);
-            const anggotaAktif = anggota.filter(a => a.status === 'AKTIF').length;
-            
             return `
                 <div class="card">
                     <div class="info-card"><div>💰 Saldo Kas</div><div class="info-value">${formatRupiah(saldo)}</div></div>
@@ -1511,43 +1035,30 @@
                         <div class="stat-card"><div>💚 Total Pemasukan</div><div class="stat-value positive">${formatRupiah(totalMasuk)}</div></div>
                         <div class="stat-card"><div>❤️ Total Pengeluaran</div><div class="stat-value negative">${formatRupiah(totalKeluar)}</div></div>
                     </div>
-                    <div class="grid-2" style="margin-top:12px">
+                    <div class="grid-2">
                         <div class="stat-card"><div>🤝 Donasi Uang</div><div class="positive">${formatRupiah(totalDonasiUang)}</div></div>
                         <div class="stat-card"><div>📦 Donasi Barang</div><div class="stat-value">${totalDonasiBarang} item</div></div>
                     </div>
-                    <div class="grid-2" style="margin-top:12px">
-                        <div class="stat-card"><div>📅 Pemasukan Bulan Ini</div><div class="positive">${formatRupiah(pemasukanBulanIni)}</div></div>
-                        <div class="stat-card"><div>👥 Anggota Aktif</div><div class="stat-value">${anggotaAktif}</div></div>
-                    </div>
-                    <div class="grid-2" style="margin-top:8px">
+                    <div class="grid-2">
                         <div class="stat-card"><div>👥 Total Anggota</div><div class="stat-value">${anggota.length}</div></div>
                         <div class="stat-card"><div>🤝 Total Donatur</div><div class="stat-value">${donatur.length}</div></div>
                     </div>
-                    <div class="grid-2" style="margin-top:16px">
+                    <div class="grid-2">
                         <button class="btn secondary" onclick="showModalTransaksi()">💰 Setor/Pinjam</button>
                         <button class="btn warning" onclick="showModalDonasi()">🤝 Donasi</button>
                     </div>
                 </div>
                 <div class="card">
                     <h3>📋 Transaksi Terbaru</h3>
-                    ${transaksi.length === 0 ? 
-                        `<div class="empty-state"><i class="fas fa-receipt"></i><div>Belum ada transaksi</div><div class="text-dim">Klik tombol di atas untuk memulai</div></div>` : 
-                        transaksi.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).slice(0,10).map(t => `
-                            <div class="transaction-item">
-                                <div style="flex:1">
-                                    <span class="badge ${t.jenis === 'PENGELUARAN' ? 'pengeluaran' : (t.jenis === 'PINJAM' ? 'pinjam' : (t.jenis === 'DONASI_UANG' ? 'donasi_uang' : (t.jenis === 'DONASI_BARANG' ? 'donasi_barang' : '')))}">${t.jenis === 'DONASI_UANG' ? 'DONASI UANG' : (t.jenis === 'DONASI_BARANG' ? 'DONASI BARANG' : t.jenis)}</span>
-                                    <div class="text-dim" style="font-size:11px">${t.tanggal}</div>
-                                    <div><b>${t.nama || t.id_anggota || '-'}</b> <span class="text-dim">${t.keterangan ? '- ' + t.keterangan : ''}</span></div>
-                                    ${t.jenis === 'DONASI_BARANG' ? `<div class="text-dim"><i class="fas fa-box"></i> ${t.nama_barang}</div>` : ''}
-                                </div>
-                                <div class="action-buttons">
-                                    <span class="${t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG' ? 'positive' : 'negative'}">${t.jenis === 'DONASI_BARANG' ? t.nama_barang : formatRupiah(t.nominal)}</span>
-                                    <button class="icon-btn edit" onclick="event.stopPropagation(); showModalTransaksi(${JSON.stringify(t).replace(/"/g, '&quot;')})"><i class="fas fa-edit"></i></button>
-                                    <button class="icon-btn delete" onclick="event.stopPropagation(); deleteTransaksi('${t.id}')"><i class="fas fa-trash"></i></button>
-                                </div>
-                            </div>
-                        `).join('')
-                    }
+                    ${transaksi.length === 0 ? '<div class="empty-state"><i class="fas fa-receipt"></i><div>Belum ada transaksi</div></div>' : transaksi.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).slice(0,10).map(t => {
+                        let tampilanNilai = '';
+                        if (t.jenis === 'DONASI_BARANG') {
+                            tampilanNilai = `<span class="donasi-barang"><i class="fas fa-box"></i> ${t.nama_barang}</span>`;
+                        } else {
+                            tampilanNilai = `<span class="${t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG' ? 'positive' : 'negative'}">${formatRupiah(t.nominal)}</span>`;
+                        }
+                        return `<div class="transaction-item"><div style="flex:1"><span class="badge ${t.jenis === 'PENGELUARAN' ? 'pengeluaran' : (t.jenis === 'PINJAM' ? 'pinjam' : (t.jenis === 'DONASI_UANG' ? 'donasi_uang' : (t.jenis === 'DONASI_BARANG' ? 'donasi_barang' : '')))}">${t.jenis === 'DONASI_UANG' ? 'DONASI UANG' : (t.jenis === 'DONASI_BARANG' ? 'DONASI BARANG' : t.jenis)}</span><div class="text-dim" style="font-size:11px">${t.tanggal}</div><div><b>${t.nama || t.id_anggota || '-'}</b> <span class="text-dim">${t.keterangan ? '- ' + t.keterangan : ''}</span></div>${t.jenis === 'DONASI_BARANG' ? `<div class="text-dim"><i class="fas fa-box"></i> ${t.nama_barang}</div>` : ''}</div><div class="action-buttons">${tampilanNilai}<button class="icon-btn edit" onclick="event.stopPropagation(); showModalTransaksi(${JSON.stringify(t).replace(/"/g, '&quot;')})"><i class="fas fa-edit"></i></button><button class="icon-btn delete" onclick="event.stopPropagation(); deleteTransaksi('${t.id}')"><i class="fas fa-trash"></i></button></div></div>`;
+                    }).join('')}
                 </div>
             `;
         }
@@ -1555,113 +1066,32 @@
         async function renderTransaksi() {
             const saldo = await hitungSaldo();
             const transaksi = await getAllFromStore(STORES.TRANSAKSI);
-            
-            return `
-                <div class="card">
-                    <h3>📝 Transaksi</h3>
-                    <div class="info-card" style="background:#283593"><div>💰 Saldo Saat Ini</div><div class="info-value">${formatRupiah(saldo)}</div></div>
-                    <div class="grid-2" style="margin-bottom:16px">
-                        <button class="btn warning" onclick="showModalTransaksi()"><i class="fas fa-plus-circle"></i> Transaksi Baru</button>
-                        <button class="btn secondary" onclick="showModalDonasi()" style="background:#ff9800"><i class="fas fa-hand-holding-heart"></i> Donasi Baru</button>
-                    </div>
-                </div>
-                <div class="card">
-                    <h3>📋 Riwayat Transaksi</h3>
-                    <div id="riwayatTransaksi" style="max-height:500px; overflow-y:auto">
-                        ${transaksi.length === 0 ? 
-                            `<div class="empty-state"><i class="fas fa-receipt"></i><div>Belum ada transaksi</div></div>` :
-                            transaksi.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).map(t => `
-                                <div class="transaction-item">
-                                    <div style="flex:1">
-                                        <span class="badge ${t.jenis === 'PENGELUARAN' ? 'pengeluaran' : (t.jenis === 'PINJAM' ? 'pinjam' : (t.jenis === 'DONASI_UANG' ? 'donasi_uang' : (t.jenis === 'DONASI_BARANG' ? 'donasi_barang' : '')))}">${t.jenis === 'DONASI_UANG' ? 'DONASI UANG' : (t.jenis === 'DONASI_BARANG' ? 'DONASI BARANG' : t.jenis)}</span>
-                                        <div class="text-dim" style="font-size:11px">${t.tanggal}</div>
-                                        <div><b>${t.nama || t.id_anggota || '-'}</b> <span class="text-dim">${t.keterangan ? '- ' + t.keterangan : ''}</span></div>
-                                        ${t.jenis === 'DONASI_BARANG' ? `<div class="text-dim"><i class="fas fa-box"></i> ${t.nama_barang}</div>` : ''}
-                                    </div>
-                                    <div class="action-buttons">
-                                        <span class="${t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG' ? 'positive' : 'negative'}">${t.jenis === 'DONASI_BARANG' ? t.nama_barang : formatRupiah(t.nominal)}</span>
-                                        <button class="icon-btn edit" onclick="event.stopPropagation(); showModalTransaksi(${JSON.stringify(t).replace(/"/g, '&quot;')})"><i class="fas fa-edit"></i></button>
-                                        <button class="icon-btn delete" onclick="event.stopPropagation(); deleteTransaksi('${t.id}')"><i class="fas fa-trash"></i></button>
-                                    </div>
-                                </div>
-                            `).join('')
-                        }
-                    </div>
-                </div>
-            `;
+            return `<div class="card"><h3>📝 Transaksi</h3><div class="info-card" style="background:#283593"><div>💰 Saldo Saat Ini</div><div class="info-value">${formatRupiah(saldo)}</div></div><div class="grid-2"><button class="btn warning" onclick="showModalTransaksi()"><i class="fas fa-plus-circle"></i> Transaksi Baru</button><button class="btn secondary" onclick="showModalDonasi()" style="background:#ff9800"><i class="fas fa-hand-holding-heart"></i> Donasi Baru</button></div></div><div class="card"><h3>📋 Riwayat Transaksi</h3><div id="riwayatTransaksi">${transaksi.length === 0 ? '<div class="empty-state"><i class="fas fa-receipt"></i><div>Belum ada transaksi</div></div>' : transaksi.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).map(t => {
+                let tampilanNilai = '';
+                if (t.jenis === 'DONASI_BARANG') {
+                    tampilanNilai = `<span class="donasi-barang"><i class="fas fa-box"></i> ${t.nama_barang}</span>`;
+                } else {
+                    tampilanNilai = `<span class="${t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG' ? 'positive' : 'negative'}">${formatRupiah(t.nominal)}</span>`;
+                }
+                return `<div class="transaction-item"><div style="flex:1"><span class="badge ${t.jenis === 'PENGELUARAN' ? 'pengeluaran' : (t.jenis === 'PINJAM' ? 'pinjam' : (t.jenis === 'DONASI_UANG' ? 'donasi_uang' : (t.jenis === 'DONASI_BARANG' ? 'donasi_barang' : '')))}">${t.jenis === 'DONASI_UANG' ? 'DONASI UANG' : (t.jenis === 'DONASI_BARANG' ? 'DONASI BARANG' : t.jenis)}</span><div class="text-dim" style="font-size:11px">${t.tanggal}</div><div><b>${t.nama || t.id_anggota || '-'}</b> <span class="text-dim">${t.keterangan ? '- ' + t.keterangan : ''}</span></div>${t.jenis === 'DONASI_BARANG' ? `<div class="text-dim"><i class="fas fa-box"></i> ${t.nama_barang}</div>` : ''}</div><div class="action-buttons">${tampilanNilai}<button class="icon-btn edit" onclick="showModalTransaksi(${JSON.stringify(t).replace(/"/g, '&quot;')})"><i class="fas fa-edit"></i></button><button class="icon-btn delete" onclick="deleteTransaksi('${t.id}')"><i class="fas fa-trash"></i></button></div></div>`;
+            }).join('')}</div></div>`;
         }
 
         async function renderAnggota() {
             let anggota = await getAllFromStore(STORES.ANGGOTA);
             if (state.search) anggota = anggota.filter(a => a.nama.toLowerCase().includes(state.search.toLowerCase()) || a.id.includes(state.search));
-            return `
-                <div class="card">
-                    <div class="flex-between"><h3>👥 Anggota</h3><button class="btn secondary" style="width:auto;padding:8px 16px" onclick="showModalAnggota()">+ Tambah</button></div>
-                    <input type="text" id="cariAnggota" placeholder="Cari ID atau nama..." value="${state.search}" style="margin-top:12px">
-                    <div style="margin-top:12px">
-                        ${anggota.length === 0 ? 
-                            `<div class="empty-state"><i class="fas fa-users"></i><div>Belum ada anggota</div><div class="text-dim">Klik tombol tambah</div></div>` :
-                            anggota.map(a => `
-                                <div class="account-item">
-                                    <div class="account-avatar">${a.nama.charAt(0).toUpperCase()}</div>
-                                    <div style="flex:1" onclick="detailAnggota('${a.id}')">
-                                        <div><b>${a.nama}</b></div>
-                                        <div class="text-dim">ID: ${a.id} | ${a.no_hp || '-'}</div>
-                                        <div class="text-dim"><i class="fas fa-map-marker-alt"></i> ${a.alamat || '-'}</div>
-                                    </div>
-                                    <div class="action-buttons">
-                                        <span class="badge ${a.status === 'NONAKTIF' ? 'nonaktif' : ''}">${a.status || 'AKTIF'}</span>
-                                        <button class="icon-btn edit" onclick="event.stopPropagation(); showModalAnggota(${JSON.stringify(a).replace(/"/g, '&quot;')})"><i class="fas fa-edit"></i></button>
-                                        <button class="icon-btn delete" onclick="event.stopPropagation(); deleteAnggota('${a.id}', '${a.nama}')"><i class="fas fa-trash"></i></button>
-                                    </div>
-                                </div>
-                            `).join('')
-                        }
-                    </div>
-                </div>
-            `;
+            return `<div class="card"><div class="flex-between"><h3>👥 Anggota</h3><button class="btn secondary" style="width:auto;padding:8px 16px" onclick="showModalAnggota()">+ Tambah</button></div><input type="text" id="cariAnggota" placeholder="Cari ID atau nama..." value="${state.search}"><div>${anggota.length===0?'<div class="empty-state"><i class="fas fa-users"></i><div>Belum ada anggota</div></div>':anggota.map(a=>`<div class="account-item"><div class="account-avatar">${a.nama.charAt(0)}</div><div style="flex:1" onclick="detailAnggota('${a.id}')"><div><b>${a.nama}</b></div><div class="text-dim">${a.id} | ${a.no_hp||'-'}</div><div class="text-dim"><i class="fas fa-map-marker-alt"></i> ${a.alamat||'-'}</div></div><div class="action-buttons"><span class="badge ${a.status==='NONAKTIF'?'nonaktif':''}">${a.status||'AKTIF'}</span><button class="icon-btn edit" onclick="event.stopPropagation(); showModalAnggota(${JSON.stringify(a).replace(/"/g,'&quot;')})"><i class="fas fa-edit"></i></button><button class="icon-btn delete" onclick="event.stopPropagation(); deleteAnggota('${a.id}','${a.nama}')"><i class="fas fa-trash"></i></button></div></div>`).join('')}</div></div>`;
         }
 
         async function renderDonatur() {
             const donatur = await getAllFromStore(STORES.DONATUR);
             const transaksi = await getAllFromStore(STORES.TRANSAKSI);
-            
             const donaturWithDonasi = donatur.map(d => {
                 const donasiUang = transaksi.filter(t => t.jenis === 'DONASI_UANG' && t.nama === d.nama).reduce((s,t) => s + t.nominal, 0);
                 const donasiBarang = transaksi.filter(t => t.jenis === 'DONASI_BARANG' && t.nama === d.nama);
                 return { ...d, donasiUang, donasiBarang };
             });
-            
-            return `
-                <div class="card">
-                    <div class="flex-between"><h3>🤝 Donatur</h3><button class="btn secondary" style="width:auto;padding:8px 16px" onclick="showModalDonatur()">+ Tambah</button></div>
-                    <button class="btn warning" onclick="showModalDonasi()" style="margin-top:12px; background:#ff9800"><i class="fas fa-hand-holding-heart"></i> Catat Donasi</button>
-                </div>
-                <div class="card">
-                    <h3>📋 Daftar Donatur</h3>
-                    ${donaturWithDonasi.length === 0 ? 
-                        `<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><div>Belum ada donatur</div></div>` : 
-                        donaturWithDonasi.map(d => `
-                            <div class="donatur-item" onclick="detailDonatur('${d.nama}')">
-                                <div class="account-avatar" style="background:#2196f3">${d.nama.charAt(0).toUpperCase()}</div>
-                                <div style="flex:1">
-                                    <div><b>${d.nama}</b></div>
-                                    <div class="text-dim"><i class="fas fa-map-marker-alt"></i> ${d.alamat || '-'} | <i class="fas fa-phone"></i> ${d.no_hp || '-'}</div>
-                                    <div>
-                                        ${d.donasiUang > 0 ? `<span class="positive"><i class="fas fa-money-bill-wave"></i> ${formatRupiah(d.donasiUang)}</span>` : ''}
-                                        ${d.donasiBarang.length > 0 ? `<span class="donasi-barang"><i class="fas fa-box"></i> ${d.donasiBarang.length} item</span>` : ''}
-                                        ${d.donasiUang === 0 && d.donasiBarang.length === 0 ? '<span class="text-dim">Belum ada donasi</span>' : ''}
-                                    </div>
-                                </div>
-                                <div class="action-buttons">
-                                    <button class="icon-btn edit" onclick="event.stopPropagation(); showModalDonatur(${JSON.stringify(d).replace(/"/g, '&quot;')})"><i class="fas fa-edit"></i></button>
-                                    <button class="icon-btn delete" onclick="event.stopPropagation(); deleteDonatur('${d.nama}')"><i class="fas fa-trash"></i></button>
-                                </div>
-                            </div>
-                        `).join('')
-                    }
-                </div>
-            `;
+            return `<div class="card"><div class="flex-between"><h3>🤝 Donatur</h3><button class="btn secondary" style="width:auto;padding:8px 16px" onclick="showModalDonatur()">+ Tambah</button></div><button class="btn warning" onclick="showModalDonasi()" style="margin-top:12px;background:#ff9800"><i class="fas fa-hand-holding-heart"></i> Catat Donasi</button></div><div class="card"><h3>📋 Daftar Donatur</h3>${donaturWithDonasi.length===0?'<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><div>Belum ada donatur</div></div>':donaturWithDonasi.map(d=>`<div class="donatur-item" onclick="detailDonatur('${d.nama}')"><div class="account-avatar" style="background:#2196f3">${d.nama.charAt(0)}</div><div style="flex:1"><div><b>${d.nama}</b></div><div class="text-dim"><i class="fas fa-map-marker-alt"></i> ${d.alamat||'-'} | <i class="fas fa-phone"></i> ${d.no_hp||'-'}</div><div>${d.donasiUang>0?`<span class="positive"><i class="fas fa-money-bill-wave"></i> ${formatRupiah(d.donasiUang)}</span>`:''}${d.donasiBarang.length>0?`<span class="donasi-barang" style="margin-left:8px"><i class="fas fa-box"></i> ${d.donasiBarang.map(b=>b.nama_barang).join(', ')}</span>`:''}${d.donasiUang===0&&d.donasiBarang.length===0?'<span class="text-dim">Belum ada donasi</span>':''}</div></div><div class="action-buttons"><button class="icon-btn edit" onclick="event.stopPropagation(); showModalDonatur(${JSON.stringify(d).replace(/"/g,'&quot;')})"><i class="fas fa-edit"></i></button><button class="icon-btn delete" onclick="event.stopPropagation(); deleteDonatur('${d.nama}')"><i class="fas fa-trash"></i></button></div></div>`).join('')}</div>`;
         }
 
         async function renderLaporan() {
@@ -1673,104 +1103,7 @@
             const totalKeluar = transaksi.filter(t => t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN').reduce((s,t) => s + t.nominal, 0);
             const totalDonasiUang = transaksi.filter(t => t.jenis === 'DONASI_UANG').reduce((s,t) => s + t.nominal, 0);
             const donasiBarang = transaksi.filter(t => t.jenis === 'DONASI_BARANG');
-            
-            return `
-                <div class="card">
-                    <div class="flex-between"><h3>📊 Laporan Keuangan</h3><button class="btn secondary" style="width:auto;padding:8px 16px" onclick="cetakLaporanLengkap()"><i class="fas fa-print"></i> Cetak Laporan</button></div>
-                    
-                    <div style="margin: 20px 0">
-                        <h4>📈 Ringkasan Global</h4>
-                        <div class="grid-2" style="margin-top:12px">
-                            <div class="stat-card"><div>💰 Saldo Kas</div><div class="positive">${formatRupiah(saldo)}</div></div>
-                            <div class="stat-card"><div>💚 Total Pemasukan</div><div class="positive">${formatRupiah(totalMasuk)}</div></div>
-                            <div class="stat-card"><div>❤️ Total Pengeluaran</div><div class="negative">${formatRupiah(totalKeluar)}</div></div>
-                            <div class="stat-card"><div>📊 Selisih</div><div class="${(totalMasuk - totalKeluar) >= 0 ? 'positive' : 'negative'}">${formatRupiah(totalMasuk - totalKeluar)}</div></div>
-                        </div>
-                    </div>
-                    
-                    <div style="margin: 20px 0">
-                        <h4>🤝 Ringkasan Donasi</h4>
-                        <div class="grid-2" style="margin-top:12px">
-                            <div class="stat-card"><div>💰 Total Donasi Uang</div><div class="positive">${formatRupiah(totalDonasiUang)}</div></div>
-                            <div class="stat-card"><div>📦 Total Donasi Barang</div><div class="stat-value">${donasiBarang.length} item</div></div>
-                        </div>
-                        ${donasiBarang.length > 0 ? `
-                            <div style="margin-top: 12px;">
-                                <h5>Daftar Donasi Barang:</h5>
-                                ${donasiBarang.map(d => `
-                                    <div class="text-dim" style="padding: 4px 0;"><i class="fas fa-box"></i> ${d.nama_barang} - dari ${d.nama} (${d.tanggal})</div>
-                                `).join('')}
-                            </div>
-                        ` : ''}
-                    </div>
-                    
-                    <div style="margin: 20px 0">
-                        <h4>👥 Statistik Anggota & Donatur</h4>
-                        <div class="grid-2" style="margin-top:12px">
-                            <div class="stat-card"><div>👥 Total Anggota</div><div class="stat-value">${anggota.length}</div><div class="text-dim">Aktif: ${anggota.filter(a => a.status === 'AKTIF').length}</div></div>
-                            <div class="stat-card"><div>🤝 Total Donatur</div><div class="stat-value">${donatur.length}</div></div>
-                            <div class="stat-card"><div>📋 Total Transaksi</div><div class="stat-value">${transaksi.length}</div></div>
-                            <div class="stat-card"><div>📅 Transaksi Bulan Ini</div><div class="stat-value">${transaksi.filter(t => t.tanggal?.startsWith(new Date().toISOString().slice(0,7))).length}</div></div>
-                        </div>
-                    </div>
-                    
-                    <div style="margin: 20px 0">
-                        <h4>📋 Daftar Transaksi Lengkap</h4>
-                        <div style="overflow-x: auto;">
-                            <table style="width:100%; border-collapse: collapse; font-size:12px;">
-                                <thead>
-                                    <tr style="background: rgba(255,255,255,0.1); border-bottom: 2px solid rgba(255,255,255,0.2);">
-                                        <th style="padding: 10px; text-align: left;">No</th>
-                                        <th style="padding: 10px; text-align: left;">Tanggal</th>
-                                        <th style="padding: 10px; text-align: left;">Jenis</th>
-                                        <th style="padding: 10px; text-align: left;">Nama</th>
-                                        <th style="padding: 10px; text-align: right;">Nominal/Barang</th>
-                                        <th style="padding: 10px; text-align: left;">Keterangan</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${transaksi.length === 0 ? 
-                                        `<tr><td colspan="6" style="padding: 20px; text-align: center;">Belum ada transaksi</td></tr>` :
-                                        transaksi.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).map((t, i) => `
-                                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                                <td style="padding: 8px;">${i+1}</td>
-                                                <td style="padding: 8px;">${t.tanggal}</td>
-                                                <td style="padding: 8px;"><span class="badge">${t.jenis === 'DONASI_UANG' ? 'DONASI UANG' : (t.jenis === 'DONASI_BARANG' ? 'DONASI BARANG' : t.jenis)}</span></td>
-                                                <td style="padding: 8px;">${t.nama || t.id_anggota || '-'}</td>
-                                                <td style="padding: 8px; text-align: right; ${t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG' ? 'color: #4caf50' : (t.jenis === 'DONASI_BARANG' ? 'color: #2196f3' : 'color: #ef5350')}">
-                                                    ${t.jenis === 'DONASI_BARANG' ? `<i class="fas fa-box"></i> ${t.nama_barang}` : formatRupiah(t.nominal)}
-                                                </td>
-                                                <td style="padding: 8px;">${t.keterangan || '-'}</td>
-                                            </tr>
-                                        `).join('')
-                                    }
-                                </tbody>
-                                <tfoot>
-                                    <tr style="background: rgba(255,255,255,0.05); font-weight: bold;">
-                                        <td colspan="4" style="padding: 10px; text-align: right;">TOTAL PEMASUKAN (Uang):</td>
-                                        <td style="padding: 10px; text-align: right;">${formatRupiah(totalMasuk)}</td>
-                                        <td style="padding: 10px;"></td>
-                                    </tr>
-                                    <tr style="background: rgba(255,255,255,0.05); font-weight: bold;">
-                                        <td colspan="4" style="padding: 10px; text-align: right;">TOTAL PENGELUARAN:</td>
-                                        <td style="padding: 10px; text-align: right;">${formatRupiah(totalKeluar)}</td>
-                                        <td style="padding: 10px;"></td>
-                                    </tr>
-                                    <tr style="background: rgba(76,175,80,0.1); font-weight: bold;">
-                                        <td colspan="4" style="padding: 10px; text-align: right;">SALDO AKHIR:</td>
-                                        <td style="padding: 10px; text-align: right; color: #4caf50;">${formatRupiah(saldo)}</td>
-                                        <td style="padding: 10px;"></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; color: rgba(255,255,255,0.5); font-size: 11px;">
-                        <i class="fas fa-print"></i> Dicetak dari Aplikasi Kas | ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} | Token: ${TOKEN}
-                    </div>
-                </div>
-            `;
+            return `<div class="card"><div class="flex-between"><h3>📊 Laporan Keuangan</h3><button class="btn secondary" onclick="cetakLaporanLengkap()"><i class="fas fa-print"></i> Cetak Laporan</button></div><div><h4>📈 Ringkasan Global</h4><div class="grid-2"><div class="stat-card"><div>💰 Saldo Kas</div><div class="positive">${formatRupiah(saldo)}</div></div><div class="stat-card"><div>💚 Total Pemasukan</div><div class="positive">${formatRupiah(totalMasuk)}</div></div><div class="stat-card"><div>❤️ Total Pengeluaran</div><div class="negative">${formatRupiah(totalKeluar)}</div></div><div class="stat-card"><div>📊 Selisih</div><div>${formatRupiah(totalMasuk-totalKeluar)}</div></div></div></div><div><h4>🤝 Ringkasan Donasi</h4><div class="grid-2"><div class="stat-card"><div>💰 Donasi Uang</div><div class="positive">${formatRupiah(totalDonasiUang)}</div></div><div class="stat-card"><div>📦 Donasi Barang</div><div class="stat-value">${donasiBarang.length} item</div></div></div>${donasiBarang.length>0?`<div><h5>Daftar Donasi Barang:</h5>${donasiBarang.map(d=>`<div class="text-dim"><i class="fas fa-box"></i> ${d.nama_barang} - ${d.nama} (${d.tanggal})</div>`).join('')}</div>`:''}</div><div><h4>👥 Statistik</h4><div class="grid-2"><div class="stat-card"><div>👥 Anggota</div><div class="stat-value">${anggota.length}</div><div>Aktif: ${anggota.filter(a=>a.status==='AKTIF').length}</div></div><div class="stat-card"><div>🤝 Donatur</div><div class="stat-value">${donatur.length}</div></div><div class="stat-card"><div>📋 Transaksi</div><div class="stat-value">${transaksi.length}</div></div><div class="stat-card"><div>📅 Transaksi Bulan Ini</div><div class="stat-value">${transaksi.filter(t=>t.tanggal?.startsWith(new Date().toISOString().slice(0,7))).length}</div></div></div></div></div>`;
         }
 
         async function render() {
@@ -1784,90 +1117,25 @@
         }
 
         function attachEvents() {
-            const refreshBtn = document.getElementById('refreshBtn');
-            const syncBtn = document.getElementById('syncBtn');
-            const printBtn = document.getElementById('printBtn');
-            
-            if (refreshBtn) {
-                refreshBtn.onclick = async () => { 
-                    await render(); 
-                    showToast('Data dimuat ulang'); 
-                };
-            }
-            
-            if (syncBtn) {
-                syncBtn.onclick = async () => { 
-                    await syncToServer(); 
-                };
-            }
-            
-            if (printBtn) {
-                printBtn.onclick = async () => { 
-                    if (state.tab === 'laporan') cetakLaporanLengkap(); 
-                    else { 
-                        state.tab = 'laporan'; 
-                        await render(); 
-                        setTimeout(() => cetakLaporanLengkap(), 500); 
-                    } 
-                };
-            }
-            
-            const cariAnggota = document.getElementById('cariAnggota');
-            if (cariAnggota) {
-                cariAnggota.oninput = (e) => { 
-                    state.search = e.target.value; 
-                    render(); 
-                };
-            }
+            document.getElementById('refreshBtn')?.addEventListener('click', async () => { await render(); showToast('Data dimuat ulang'); });
+            document.getElementById('syncBtn')?.addEventListener('click', async () => { await syncToServer(); });
+            document.getElementById('printBtn')?.addEventListener('click', async () => { if (state.tab === 'laporan') cetakLaporanLengkap(); else { state.tab = 'laporan'; await render(); setTimeout(() => cetakLaporanLengkap(), 500); } });
+            document.getElementById('cariAnggota')?.addEventListener('input', (e) => { state.search = e.target.value; render(); });
         }
 
         function initNetworkMonitor() {
-            window.addEventListener('online', async () => { 
-                updateSignalStatus(true, 'Online'); 
-                showToast('Kembali online, menyinkronisasi...'); 
-                await syncToServer(); 
-                await render(); 
-            });
-            window.addEventListener('offline', () => { 
-                updateSignalStatus(false, 'Offline'); 
-                showToast('Mode offline - Data disimpan lokal', true); 
-            });
+            window.addEventListener('online', async () => { updateSignalStatus(true, 'Online'); showToast('Kembali online'); await syncToServer(); await render(); });
+            window.addEventListener('offline', () => { updateSignalStatus(false, 'Offline'); showToast('Mode offline', true); });
         }
 
-        function formatRupiah(n) { 
-            return 'Rp ' + (n || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); 
-        }
-        
-        function formatNumber(n) { 
-            return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); 
-        }
-        
-        function showToast(msg, err = false) {
-            const t = document.createElement('div'); 
-            t.className = 'toast' + (err ? ' error' : ''); 
-            t.innerHTML = `<i class="fas ${err ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`;
-            document.body.appendChild(t); 
-            setTimeout(() => t.remove(), 3000);
-        }
+        function formatRupiah(n) { return 'Rp ' + (n || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+        function showToast(msg, err = false) { const t = document.createElement('div'); t.className = 'toast' + (err ? ' error' : ''); t.innerHTML = `<i class="fas ${err ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
 
-        // Navigation
         document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', () => { 
-                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); 
-                btn.classList.add('active'); 
-                state.tab = btn.dataset.tab; 
-                render(); 
-            });
+            btn.addEventListener('click', () => { document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); state.tab = btn.dataset.tab; render(); });
         });
-        
-        // Initialize
-        (async function init() { 
-            await openDB(); 
-            updateSignalStatus(navigator.onLine, navigator.onLine ? 'Online' : 'Offline'); 
-            initNetworkMonitor(); 
-            await render(); 
-            if (navigator.onLine) await syncFromServer();
-        })();
+
+        (async function init() { await openDB(); updateSignalStatus(navigator.onLine, navigator.onLine ? 'Online' : 'Offline'); initNetworkMonitor(); await render(); if (navigator.onLine) await syncFromServer(); })();
     </script>
 </body>
 </html>
