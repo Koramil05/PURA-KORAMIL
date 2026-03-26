@@ -10,6 +10,7 @@
     <meta name="theme-color" content="#1a237e">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* CSS sama seperti sebelumnya */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: linear-gradient(135deg, #0a192f 0%, #0d2b3e 100%);
@@ -117,8 +118,6 @@
         .btn.secondary { background: rgba(255,255,255,0.15); }
         .btn.warning { background: linear-gradient(135deg, #ff9800, #f57c00); }
         .btn.danger { background: linear-gradient(135deg, #f44336, #c62828); }
-        .btn-uang { background: linear-gradient(135deg, #4caf50, #2e7d32); }
-        .btn-barang { background: linear-gradient(135deg, #2196f3, #1976d2); }
         input, select, textarea {
             width: 100%;
             padding: 12px;
@@ -185,7 +184,6 @@
         .badge.donasi_uang { background: rgba(76,175,80,0.3); color: #81c784; }
         .badge.donasi_barang { background: rgba(33,150,243,0.3); color: #64b5f6; }
         
-        /* Modal Popup Style */
         .modal {
             position: fixed;
             top: 0;
@@ -313,7 +311,6 @@
         .icon-btn.edit:hover { background: #ff9800; }
         .icon-btn.delete:hover { background: #f44336; }
         
-        /* Toast Notification */
         .toast {
             position: fixed;
             bottom: 80px;
@@ -338,7 +335,6 @@
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
         
-        /* Donatur detail */
         .donatur-detail {
             background: rgba(255,255,255,0.05);
             border-radius: 12px;
@@ -362,21 +358,6 @@
             border-bottom: 1px solid rgba(255,255,255,0.1);
             font-size: 13px;
         }
-        .donasi-uang { color: #4caf50; }
-        .donasi-barang { color: #2196f3; }
-        
-        @media print {
-            .header, .nav, .header-actions, .btn, .signal-indicator, .icon-btn, .modal { display: none !important; }
-            .content { padding: 0; margin: 0; }
-            .card { background: white; color: black; border: 1px solid #ddd; page-break-inside: avoid; }
-            .info-card { background: #f5f5f5; color: black; }
-            .stat-card { background: #f9f9f9; }
-            .positive { color: #2e7d32; }
-            .negative { color: #c62828; }
-            .text-dim { color: #666; }
-            body { background: white; }
-        }
-        
         .loading {
             display: inline-block;
             width: 20px;
@@ -390,10 +371,21 @@
             to { transform: rotate(360deg); }
         }
         
+        @media print {
+            .header, .nav, .header-actions, .btn, .signal-indicator, .icon-btn, .modal { display: none !important; }
+            .content { padding: 0; margin: 0; }
+            .card { background: white; color: black; border: 1px solid #ddd; page-break-inside: avoid; }
+            .info-card { background: #f5f5f5; color: black; }
+            .stat-card { background: #f9f9f9; }
+            .positive { color: #2e7d32; }
+            .negative { color: #c62828; }
+            .text-dim { color: #666; }
+            body { background: white; }
+        }
+        
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 3px; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.5); }
     </style>
 </head>
 <body>
@@ -421,7 +413,7 @@
     <script>
         // ==================== KONFIGURASI BACKEND ====================
         // GANTI DENGAN URL DEPLOY ANDA
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwF_FRlRIrFD1zKRtZ9osQ_hnSc0PisUmAHrHWw-aP2Fd2bzYiHo3HSNWS37zDEpdCtjg/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwWw4IBCdzWBvOtH4Pcr2sA4sE2UVetay4lLsx3ZLn9_GWsFohB8GfjZkvl_UDMz982/exec';
         const TOKEN = 'kas2024';
         
         // ==================== KONFIGURASI DATABASE ====================
@@ -661,6 +653,105 @@
             search: ''
         };
 
+        // ==================== FUNGSI DENGAN SINKRONISASI OTOMATIS ====================
+        
+        // Update transaksi ke server
+        async function syncUpdateTransaksi(transaksiData) {
+            if (!isOnline) {
+                showToast('Offline - Data akan disinkronisasi nanti', true);
+                return false;
+            }
+            
+            try {
+                const formData = new URLSearchParams({
+                    action: 'updateTransaksi',
+                    token: TOKEN,
+                    id: transaksiData.id,
+                    tanggal: transaksiData.tanggal,
+                    jenis: transaksiData.jenis,
+                    id_anggota: transaksiData.id_anggota || '',
+                    nama: transaksiData.nama,
+                    nominal: transaksiData.nominal,
+                    nama_barang: transaksiData.nama_barang || '',
+                    keterangan: transaksiData.keterangan
+                });
+                
+                const response = await fetch(API_URL, { method: 'POST', body: formData });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showToast('Transaksi berhasil diupdate di server');
+                    return true;
+                } else {
+                    showToast(result.message || 'Gagal update di server', true);
+                    return false;
+                }
+            } catch (error) {
+                console.error('Update transaksi error:', error);
+                showToast('Gagal terhubung ke server', true);
+                return false;
+            }
+        }
+        
+        // Delete transaksi ke server
+        async function syncDeleteTransaksi(id) {
+            if (!isOnline) {
+                showToast('Offline - Data akan dihapus nanti', true);
+                return false;
+            }
+            
+            try {
+                const formData = new URLSearchParams({
+                    action: 'deleteTransaksi',
+                    token: TOKEN,
+                    id: id
+                });
+                
+                const response = await fetch(API_URL, { method: 'POST', body: formData });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showToast('Transaksi berhasil dihapus dari server');
+                    return true;
+                } else {
+                    showToast(result.message || 'Gagal hapus di server', true);
+                    return false;
+                }
+            } catch (error) {
+                console.error('Delete transaksi error:', error);
+                showToast('Gagal terhubung ke server', true);
+                return false;
+            }
+        }
+        
+        // Delete anggota ke server
+        async function syncDeleteAnggota(id) {
+            if (!isOnline) return false;
+            try {
+                const formData = new URLSearchParams({ action: 'deleteAnggota', token: TOKEN, id });
+                const response = await fetch(API_URL, { method: 'POST', body: formData });
+                const result = await response.json();
+                return result.status === 'success';
+            } catch (error) {
+                console.error('Delete anggota error:', error);
+                return false;
+            }
+        }
+        
+        // Delete donatur ke server
+        async function syncDeleteDonatur(nama) {
+            if (!isOnline) return false;
+            try {
+                const formData = new URLSearchParams({ action: 'deleteDonatur', token: TOKEN, nama });
+                const response = await fetch(API_URL, { method: 'POST', body: formData });
+                const result = await response.json();
+                return result.status === 'success';
+            } catch (error) {
+                console.error('Delete donatur error:', error);
+                return false;
+            }
+        }
+
         // ==================== MODAL POPUP FUNCTIONS ====================
         window.showModalTransaksi = async function(editData = null) {
             const modal = document.createElement('div');
@@ -759,10 +850,27 @@
                 }
                 
                 if (isEdit) {
-                    const updatedTransaksi = { ...editData, jenis, tanggal, id_anggota, nama: nama || editData.nama, nominal, nama_barang, keterangan };
+                    // UPDATE EXISTING TRANSACTION
+                    const updatedTransaksi = { 
+                        ...editData, 
+                        jenis, 
+                        tanggal, 
+                        id_anggota, 
+                        nama: nama || editData.nama, 
+                        nominal, 
+                        nama_barang, 
+                        keterangan 
+                    };
+                    
+                    // Update lokal
                     await putToStore(STORES.TRANSAKSI, updatedTransaksi);
-                    showToast('Transaksi berhasil diupdate!');
+                    showToast('Transaksi berhasil diupdate di lokal');
+                    
+                    // Sinkronisasi ke server
+                    await syncUpdateTransaksi(updatedTransaksi);
+                    
                 } else {
+                    // NEW TRANSACTION
                     const newId = await generateId('TRX', STORES.TRANSAKSI);
                     const newTransaksi = { 
                         id: newId, 
@@ -775,6 +883,7 @@
                         keterangan, 
                         created_at: new Date().toISOString() 
                     };
+                    
                     await addToStore(STORES.TRANSAKSI, newTransaksi);
                     
                     if (jenis === 'DONASI_UANG' && newTransaksi.nama) {
@@ -799,9 +908,14 @@
                                 keterangan 
                             });
                             await fetch(API_URL, { method: 'POST', body: formData });
-                        } catch(e) { console.error(e); }
+                            showToast('Transaksi berhasil disimpan ke server!');
+                        } catch(e) { 
+                            console.error(e);
+                            showToast('Transaksi disimpan di lokal, akan disinkronisasi nanti');
+                        }
+                    } else {
+                        showToast('Transaksi disimpan di lokal (offline)');
                     }
-                    showToast('Transaksi berhasil!');
                 }
                 modal.remove();
                 await render();
@@ -867,16 +981,32 @@
                 
                 if (isEdit) {
                     await putToStore(STORES.ANGGOTA, anggotaData);
-                    showToast('Anggota berhasil diupdate!');
+                    if (isOnline) {
+                        try {
+                            const formData = new URLSearchParams({ action: 'updateAnggota', token: TOKEN, ...anggotaData });
+                            await fetch(API_URL, { method: 'POST', body: formData });
+                            showToast('Anggota berhasil diupdate di server');
+                        } catch(e) { 
+                            console.error(e);
+                            showToast('Anggota diupdate di lokal, sinkronisasi nanti');
+                        }
+                    } else {
+                        showToast('Anggota diupdate di lokal (offline)');
+                    }
                 } else {
                     await addToStore(STORES.ANGGOTA, anggotaData);
                     if (isOnline) {
                         try {
                             const formData = new URLSearchParams({ action: 'addAnggota', token: TOKEN, ...anggotaData });
                             await fetch(API_URL, { method: 'POST', body: formData });
-                        } catch(e) { console.error(e); }
+                            showToast('Anggota ditambahkan: ' + newId);
+                        } catch(e) { 
+                            console.error(e);
+                            showToast('Anggota disimpan di lokal');
+                        }
+                    } else {
+                        showToast('Anggota disimpan di lokal (offline)');
                     }
-                    showToast('Anggota ditambahkan: ' + newId);
                 }
                 modal.remove();
                 await render();
@@ -930,9 +1060,14 @@
                         try {
                             const formData = new URLSearchParams({ action: 'updateDonatur', token: TOKEN, nama, alamat: donaturData.alamat, no_hp: donaturData.no_hp });
                             await fetch(API_URL, { method: 'POST', body: formData });
-                        } catch(e) { console.error(e); }
+                            showToast('Donatur berhasil diupdate di server');
+                        } catch(e) { 
+                            console.error(e);
+                            showToast('Donatur diupdate di lokal');
+                        }
+                    } else {
+                        showToast('Donatur diupdate di lokal (offline)');
                     }
-                    showToast('Donatur berhasil diupdate!');
                 } else {
                     const existing = await getFromStore(STORES.DONATUR, nama);
                     if (existing) {
@@ -945,9 +1080,14 @@
                         try {
                             const formData = new URLSearchParams({ action: 'addDonatur', token: TOKEN, nama, alamat: donaturData.alamat, no_hp: donaturData.no_hp });
                             await fetch(API_URL, { method: 'POST', body: formData });
-                        } catch(e) { console.error(e); }
+                            showToast('Donatur ditambahkan ke server');
+                        } catch(e) { 
+                            console.error(e);
+                            showToast('Donatur disimpan di lokal');
+                        }
+                    } else {
+                        showToast('Donatur disimpan di lokal (offline)');
                     }
-                    showToast('Donatur ditambahkan');
                 }
                 modal.remove();
                 await render();
@@ -1111,24 +1251,25 @@
                             keterangan 
                         });
                         await fetch(API_URL, { method: 'POST', body: formData });
-                    } catch(e) { console.error(e); }
+                        showToast('Donasi berhasil disimpan ke server!');
+                    } catch(e) { 
+                        console.error(e);
+                        showToast('Donasi disimpan di lokal, akan disinkronisasi nanti');
+                    }
+                } else {
+                    showToast('Donasi disimpan di lokal (offline)');
                 }
                 
-                showToast('Donasi berhasil!');
                 modal.remove();
                 await render();
             };
         };
 
+        // DELETE FUNCTIONS WITH SYNC
         window.deleteAnggota = async function(id, nama) {
             if (confirm(`Hapus anggota "${nama}"?`)) {
                 await deleteFromStore(STORES.ANGGOTA, id);
-                if (isOnline) {
-                    try {
-                        const formData = new URLSearchParams({ action: 'deleteAnggota', token: TOKEN, id });
-                        await fetch(API_URL, { method: 'POST', body: formData });
-                    } catch(e) { console.error(e); }
-                }
+                await syncDeleteAnggota(id);
                 showToast('Anggota dihapus');
                 await render();
             }
@@ -1137,12 +1278,7 @@
         window.deleteDonatur = async function(nama) {
             if (confirm(`Hapus donatur "${nama}"?`)) {
                 await deleteFromStore(STORES.DONATUR, nama);
-                if (isOnline) {
-                    try {
-                        const formData = new URLSearchParams({ action: 'deleteDonatur', token: TOKEN, nama });
-                        await fetch(API_URL, { method: 'POST', body: formData });
-                    } catch(e) { console.error(e); }
-                }
+                await syncDeleteDonatur(nama);
                 showToast('Donatur dihapus');
                 await render();
             }
@@ -1151,7 +1287,7 @@
         window.deleteTransaksi = async function(id) {
             if (confirm('Hapus transaksi ini?')) {
                 await deleteFromStore(STORES.TRANSAKSI, id);
-                showToast('Transaksi dihapus (lokal)');
+                await syncDeleteTransaksi(id);
                 await render();
             }
         };
