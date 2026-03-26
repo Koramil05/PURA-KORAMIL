@@ -51,6 +51,8 @@
             transition: all 0.3s;
         }
         .signal-dot.offline { background: #f44336; box-shadow: 0 0 5px #f44336; }
+        .signal-dot.syncing { background: #ff9800; box-shadow: 0 0 5px #ff9800; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         .signal-text { font-size: 10px; font-weight: 500; }
         .header-btn {
             background: rgba(255,255,255,0.15);
@@ -63,6 +65,7 @@
             transition: all 0.2s;
         }
         .header-btn:hover { background: rgba(255,255,255,0.25); }
+        .header-btn:active { transform: scale(0.95); }
         .content { padding: 70px 12px 20px; }
         .card {
             background: rgba(255,255,255,0.08);
@@ -81,6 +84,7 @@
             display: flex;
             height: 60px;
             border-top: 1px solid rgba(255,255,255,0.1);
+            z-index: 99;
         }
         .nav-btn {
             flex: 1;
@@ -144,6 +148,7 @@
             padding: 12px;
             text-align: center;
         }
+        .stat-value { font-size: 20px; font-weight: bold; margin-top: 5px; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
         .account-item, .transaction-item {
             padding: 12px;
@@ -175,8 +180,9 @@
         .badge.nonaktif { background: rgba(244,67,54,0.3); color: #ef5350; }
         .badge.pengeluaran { background: rgba(156,39,176,0.3); color: #ce93d8; }
         .badge.pinjam { background: rgba(255,152,0,0.3); color: #ffb74d; }
+        .badge.donasi { background: rgba(33,150,243,0.3); color: #64b5f6; }
         
-        /* Modal Popup Style - Lebih besar dan nyaman */
+        /* Modal Popup Style */
         .modal {
             position: fixed;
             top: 0;
@@ -264,22 +270,11 @@
             align-items: center;
         }
         .auto-id-value { font-size: 22px; font-weight: bold; color: #ff9800; font-family: monospace; letter-spacing: 1px; }
-        .btn-generate {
-            background: #ff9800;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 30px;
-            color: white;
-            font-size: 12px;
-            cursor: pointer;
-            font-weight: bold;
-        }
         .text-dim { color: rgba(255,255,255,0.6); }
         .text-center { text-align: center; }
         .positive { color: #4caf50; }
         .negative { color: #ef5350; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .sync-status { font-size: 10px; margin-top: 4px; color: rgba(255,255,255,0.5); }
         .empty-state { text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.5); }
         .empty-state i { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
         .action-buttons { display: flex; gap: 8px; align-items: center; }
@@ -297,8 +292,33 @@
         .icon-btn.edit:hover { background: #ff9800; }
         .icon-btn.delete:hover { background: #f44336; }
         
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 14px;
+            z-index: 1100;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+            animation: slideUp 0.3s ease;
+        }
+        .toast.error { background: rgba(244,67,54,0.9); }
+        .toast i { font-size: 16px; }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        
         @media print {
-            .header, .nav, .header-actions, .btn, .signal-indicator, .icon-btn { display: none !important; }
+            .header, .nav, .header-actions, .btn, .signal-indicator, .icon-btn, .modal { display: none !important; }
             .content { padding: 0; margin: 0; }
             .card { background: white; color: black; border: 1px solid #ddd; page-break-inside: avoid; }
             .info-card { background: #f5f5f5; color: black; }
@@ -308,6 +328,26 @@
             .text-dim { color: #666; }
             body { background: white; }
         }
+        
+        /* Loading spinner */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.5); }
     </style>
 </head>
 <body>
@@ -318,8 +358,9 @@
                 <div class="signal-dot" id="signalDot"></div>
                 <span class="signal-text" id="signalText">Online</span>
             </div>
-            <button class="header-btn" id="printBtn"><i class="fas fa-print"></i></button>
-            <button class="header-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i></button>
+            <button class="header-btn" id="syncBtn" title="Sinkronisasi"><i class="fas fa-cloud-upload-alt"></i></button>
+            <button class="header-btn" id="printBtn" title="Cetak Laporan"><i class="fas fa-print"></i></button>
+            <button class="header-btn" id="refreshBtn" title="Refresh"><i class="fas fa-sync-alt"></i></button>
         </div>
     </div>
     <div class="content" id="content"></div>
@@ -333,17 +374,18 @@
 
     <script>
         // ==================== KONFIGURASI BACKEND ====================
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwWw4IBCdzWBvOtH4Pcr2sA4sE2UVetay4lLsx3ZLn9_GWsFohB8GfjZkvl_UDMz982/exec';
+        // GANTI DENGAN URL DEPLOY ANDA
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwF_FRlRIrFD1zKRtZ9osQ_hnSc0PisUmAHrHWw-aP2Fd2bzYiHo3HSNWS37zDEpdCtjg/exec';
         const TOKEN = 'kas2024';
         
         // ==================== KONFIGURASI DATABASE ====================
         const DB_NAME = 'KasAppDB';
-        const DB_VERSION = 1;
+        const DB_VERSION = 2;
         const STORES = { ANGGOTA: 'anggota', DONATUR: 'donatur', TRANSAKSI: 'transaksi' };
         
         let db = null;
         let isOnline = navigator.onLine;
-        let syncQueue = [];
+        let isSyncing = false;
 
         // ==================== INDEXEDDB ====================
         function openDB() {
@@ -353,10 +395,21 @@
                 request.onsuccess = () => { db = request.result; resolve(db); };
                 request.onupgradeneeded = (event) => {
                     const db = event.target.result;
-                    if (!db.objectStoreNames.contains(STORES.ANGGOTA)) db.createObjectStore(STORES.ANGGOTA, { keyPath: 'id' });
-                    if (!db.objectStoreNames.contains(STORES.DONATUR)) db.createObjectStore(STORES.DONATUR, { keyPath: 'nama' });
-                    if (!db.objectStoreNames.contains(STORES.TRANSAKSI)) db.createObjectStore(STORES.TRANSAKSI, { keyPath: 'id' });
-                    if (!db.objectStoreNames.contains('sync_queue')) db.createObjectStore('sync_queue', { keyPath: 'id', autoIncrement: true });
+                    if (!db.objectStoreNames.contains(STORES.ANGGOTA)) {
+                        db.createObjectStore(STORES.ANGGOTA, { keyPath: 'id' });
+                    }
+                    if (!db.objectStoreNames.contains(STORES.DONATUR)) {
+                        db.createObjectStore(STORES.DONATUR, { keyPath: 'nama' });
+                    }
+                    if (!db.objectStoreNames.contains(STORES.TRANSAKSI)) {
+                        db.createObjectStore(STORES.TRANSAKSI, { keyPath: 'id' });
+                    }
+                    if (!db.objectStoreNames.contains('sync_queue')) {
+                        db.createObjectStore('sync_queue', { keyPath: 'id', autoIncrement: true });
+                    }
+                    if (!db.objectStoreNames.contains('last_sync')) {
+                        db.createObjectStore('last_sync', { keyPath: 'type' });
+                    }
                 };
             });
         }
@@ -366,6 +419,16 @@
                 const transaction = db.transaction([storeName], 'readonly');
                 const store = transaction.objectStore(storeName);
                 const request = store.getAll();
+                request.onsuccess = () => resolve(request.result || []);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function getFromStore(storeName, key) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.get(key);
                 request.onsuccess = () => resolve(request.result);
                 request.onerror = () => reject(request.error);
             });
@@ -401,11 +464,21 @@
             });
         }
 
+        async function clearStore(storeName) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.clear();
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
         async function addToSyncQueue(data) {
             return new Promise((resolve, reject) => {
                 const transaction = db.transaction(['sync_queue'], 'readwrite');
                 const store = transaction.objectStore('sync_queue');
-                const request = store.add({ ...data, timestamp: new Date().toISOString() });
+                const request = store.add({ ...data, timestamp: new Date().toISOString(), retry: 0 });
                 request.onsuccess = () => resolve();
                 request.onerror = () => reject(request.error);
             });
@@ -416,7 +489,37 @@
                 const transaction = db.transaction(['sync_queue'], 'readonly');
                 const store = transaction.objectStore('sync_queue');
                 const request = store.getAll();
-                request.onsuccess = () => resolve(request.result);
+                request.onsuccess = () => resolve(request.result || []);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function removeFromSyncQueue(id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['sync_queue'], 'readwrite');
+                const store = transaction.objectStore('sync_queue');
+                const request = store.delete(id);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function setLastSync(type, timestamp) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['last_sync'], 'readwrite');
+                const store = transaction.objectStore('last_sync');
+                const request = store.put({ type, timestamp });
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function getLastSync(type) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['last_sync'], 'readonly');
+                const store = transaction.objectStore('last_sync');
+                const request = store.get(type);
+                request.onsuccess = () => resolve(request.result?.timestamp || null);
                 request.onerror = () => reject(request.error);
             });
         }
@@ -438,6 +541,7 @@
         async function hitungSaldo() {
             const transaksi = await getAllFromStore(STORES.TRANSAKSI);
             let saldo = 0;
+            transaksi.sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal));
             transaksi.forEach(t => {
                 if (t.jenis === 'SETOR' || t.jenis === 'DONASI') saldo += t.nominal;
                 else if (t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN') saldo -= t.nominal;
@@ -447,37 +551,113 @@
 
         // ==================== SYNC KE SERVER ====================
         async function syncToServer() {
-            if (!isOnline) return;
-            const queue = await getSyncQueue();
-            if (queue.length === 0) return;
-            updateSignalStatus(true, 'Menyinkronisasi...');
-            for (const item of queue) {
-                try {
-                    const formData = new URLSearchParams({ action: item.action, token: TOKEN, ...item.data });
-                    const response = await fetch(API_URL, { method: 'POST', body: formData });
-                    const result = await response.json();
-                    if (result.status === 'success') await deleteFromStore('sync_queue', item.id);
-                } catch (error) { console.error('Sync error:', error); }
+            if (!isOnline || isSyncing) return;
+            isSyncing = true;
+            updateSignalStatus(true, 'Menyinkronisasi...', true);
+            
+            try {
+                // Ambil semua data lokal
+                const anggota = await getAllFromStore(STORES.ANGGOTA);
+                const donatur = await getAllFromStore(STORES.DONATUR);
+                const transaksi = await getAllFromStore(STORES.TRANSAKSI);
+                
+                // Kirim semua data ke server
+                const formData = new URLSearchParams({
+                    action: 'syncData',
+                    token: TOKEN,
+                    data: JSON.stringify({ anggota, donatur, transaksi })
+                });
+                
+                const response = await fetch(API_URL, { method: 'POST', body: formData });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    await setLastSync('full', new Date().toISOString());
+                    showToast(`${result.message || 'Sinkronisasi berhasil'}`);
+                } else {
+                    showToast(result.message || 'Sinkronisasi gagal', true);
+                }
+            } catch (error) {
+                console.error('Sync error:', error);
+                showToast('Gagal sinkronisasi: ' + error.message, true);
+            } finally {
+                isSyncing = false;
+                updateSignalStatus(true, 'Online');
             }
-            updateSignalStatus(true, 'Online');
-            showToast('Data tersinkronisasi');
+        }
+
+        // ==================== SYNC DARI SERVER ====================
+        async function syncFromServer() {
+            if (!isOnline) return;
+            
+            try {
+                updateSignalStatus(true, 'Memuat data...', true);
+                
+                // Ambil data anggota
+                let response = await fetch(`${API_URL}?action=getAnggota&token=${TOKEN}`);
+                let result = await response.json();
+                if (result.status === 'success' && result.data.length > 0) {
+                    await clearStore(STORES.ANGGOTA);
+                    for (const item of result.data) {
+                        await addToStore(STORES.ANGGOTA, item);
+                    }
+                }
+                
+                // Ambil data donatur
+                response = await fetch(`${API_URL}?action=getDonatur&token=${TOKEN}`);
+                result = await response.json();
+                if (result.status === 'success' && result.data.length > 0) {
+                    await clearStore(STORES.DONATUR);
+                    for (const item of result.data) {
+                        await addToStore(STORES.DONATUR, item);
+                    }
+                }
+                
+                // Ambil data transaksi
+                response = await fetch(`${API_URL}?action=getTransaksi&token=${TOKEN}`);
+                result = await response.json();
+                if (result.status === 'success' && result.data.length > 0) {
+                    await clearStore(STORES.TRANSAKSI);
+                    for (const item of result.data) {
+                        await addToStore(STORES.TRANSAKSI, item);
+                    }
+                }
+                
+                await setLastSync('full', new Date().toISOString());
+                showToast('Data berhasil dimuat dari server');
+                await render();
+            } catch (error) {
+                console.error('Load from server error:', error);
+                showToast('Gagal memuat data dari server', true);
+            } finally {
+                updateSignalStatus(true, 'Online');
+            }
         }
 
         // ==================== UPDATE SIGNAL ====================
-        function updateSignalStatus(online, text = null) {
+        function updateSignalStatus(online, text = null, syncing = false) {
             isOnline = online;
             const dot = document.getElementById('signalDot');
             const textEl = document.getElementById('signalText');
-            if (online) { dot.classList.remove('offline'); textEl.textContent = text || 'Online'; }
-            else { dot.classList.add('offline'); textEl.textContent = text || 'Offline'; }
+            
+            if (syncing) {
+                dot.classList.remove('offline');
+                dot.classList.add('syncing');
+                textEl.textContent = text || 'Sinkronisasi...';
+            } else if (online) {
+                dot.classList.remove('offline', 'syncing');
+                textEl.textContent = text || 'Online';
+            } else {
+                dot.classList.remove('syncing');
+                dot.classList.add('offline');
+                textEl.textContent = text || 'Offline';
+            }
         }
 
         // ==================== STATE ====================
         let state = {
             tab: 'dashboard',
-            search: '',
-            transaksiForm: { jenis: 'SETOR', nominal: 0, id_anggota: '', tanggal: new Date().toISOString().split('T')[0], keterangan: '' },
-            donasiForm: { donatur: '', nominal: 0, tanggal: new Date().toISOString().split('T')[0], keterangan: '' }
+            search: ''
         };
 
         // ==================== MODAL POPUP FUNCTIONS ====================
@@ -485,9 +665,9 @@
             const modal = document.createElement('div');
             modal.className = 'modal';
             const isEdit = editData !== null;
-            const anggotaList = (async () => await getAllFromStore(STORES.ANGGOTA))();
             
-            anggotaList.then(anggota => {
+            (async () => {
+                const anggota = await getAllFromStore(STORES.ANGGOTA);
                 modal.innerHTML = `
                     <div class="modal-content">
                         <div class="modal-header">
@@ -497,9 +677,10 @@
                         <div class="modal-body">
                             <label><i class="fas fa-tag"></i> Jenis Transaksi</label>
                             <select id="modalJenisTransaksi">
-                                <option ${isEdit ? (editData.jenis === 'SETOR' ? 'selected' : '') : 'selected'} value="SETOR">💰 SETOR (Tambah Saldo)</option>
-                                <option ${isEdit ? (editData.jenis === 'PINJAM' ? 'selected' : '') : ''} value="PINJAM">📤 PINJAM (Kurang Saldo)</option>
-                                <option ${isEdit ? (editData.jenis === 'PENGELUARAN' ? 'selected' : '') : ''} value="PENGELUARAN">🛒 PENGELUARAN (Kurang Saldo)</option>
+                                <option ${isEdit && editData.jenis === 'SETOR' ? 'selected' : ''} value="SETOR">💰 SETOR (Tambah Saldo)</option>
+                                <option ${isEdit && editData.jenis === 'PINJAM' ? 'selected' : ''} value="PINJAM">📤 PINJAM (Kurang Saldo)</option>
+                                <option ${isEdit && editData.jenis === 'PENGELUARAN' ? 'selected' : ''} value="PENGELUARAN">🛒 PENGELUARAN (Kurang Saldo)</option>
+                                <option ${isEdit && editData.jenis === 'DONASI' ? 'selected' : ''} value="DONASI">🤝 DONASI (Tambah Saldo)</option>
                             </select>
                             
                             <label><i class="fas fa-calendar"></i> Tanggal</label>
@@ -525,7 +706,6 @@
                 `;
                 document.body.appendChild(modal);
                 
-                // Format nominal input
                 const nominalInput = document.getElementById('modalNominalTransaksi');
                 nominalInput.addEventListener('input', (e) => {
                     let val = e.target.value.replace(/\D/g, '');
@@ -543,26 +723,51 @@
                     
                     if (!nominal) { showToast('Nominal harus diisi', true); return; }
                     const saldo = await hitungSaldo();
-                    if ((jenis === 'PINJAM' || jenis === 'PENGELUARAN') && nominal > saldo) { showToast('Saldo tidak mencukupi!', true); return; }
+                    if ((jenis === 'PINJAM' || jenis === 'PENGELUARAN') && nominal > saldo) { 
+                        showToast('Saldo tidak mencukupi!', true); 
+                        return; 
+                    }
                     
                     if (isEdit) {
-                        // Update transaksi
-                        const updatedTransaksi = { ...editData, jenis, tanggal, id_anggota, nama: nama || (id_anggota ? (await getAllFromStore(STORES.ANGGOTA)).find(a => a.id === id_anggota)?.nama : '') || 'Umum', nominal, keterangan };
+                        const updatedTransaksi = { ...editData, jenis, tanggal, id_anggota, nama: nama || editData.nama, nominal, keterangan };
                         await putToStore(STORES.TRANSAKSI, updatedTransaksi);
                         showToast('Transaksi berhasil diupdate!');
                     } else {
                         const newId = await generateId('TRX', STORES.TRANSAKSI);
-                        const newTransaksi = { id: newId, tanggal, jenis, id_anggota, nama: nama || (id_anggota ? (await getAllFromStore(STORES.ANGGOTA)).find(a => a.id === id_anggota)?.nama : '') || 'Umum', nominal, keterangan, created_at: new Date().toISOString() };
+                        const newTransaksi = { 
+                            id: newId, 
+                            tanggal, 
+                            jenis, 
+                            id_anggota, 
+                            nama: nama || (id_anggota ? (await getAllFromStore(STORES.ANGGOTA)).find(a => a.id === id_anggota)?.nama : '') || 'Umum', 
+                            nominal, 
+                            keterangan, 
+                            created_at: new Date().toISOString() 
+                        };
                         await addToStore(STORES.TRANSAKSI, newTransaksi);
+                        
+                        // Kirim ke server jika online
                         if (isOnline) {
-                            try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'addTransaksi', token: TOKEN, jenis, tanggal, id_anggota, nama: newTransaksi.nama, nominal, keterangan }) }); } catch(e) {}
-                        } else { await addToSyncQueue({ action: 'addTransaksi', data: { jenis, tanggal, id_anggota, nama: newTransaksi.nama, nominal, keterangan } }); }
+                            try {
+                                const formData = new URLSearchParams({ 
+                                    action: 'addTransaksi', 
+                                    token: TOKEN, 
+                                    jenis, 
+                                    tanggal, 
+                                    id_anggota, 
+                                    nama: newTransaksi.nama, 
+                                    nominal, 
+                                    keterangan 
+                                });
+                                await fetch(API_URL, { method: 'POST', body: formData });
+                            } catch(e) { console.error(e); }
+                        }
                         showToast('Transaksi berhasil!');
                     }
                     modal.remove();
                     await render();
                 };
-            });
+            })();
         }
 
         function showModalAnggota(editData = null) {
@@ -620,7 +825,7 @@
                         no_hp: hp,
                         alamat: document.getElementById('modalAlamatAnggota').value,
                         status: document.getElementById('modalStatusAnggota').value,
-                        created_at: new Date().toISOString()
+                        tgl_dibuat: new Date().toISOString().split('T')[0]
                     };
                     
                     if (isEdit) {
@@ -629,8 +834,11 @@
                     } else {
                         await addToStore(STORES.ANGGOTA, anggotaData);
                         if (isOnline) {
-                            try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'addAnggota', token: TOKEN, ...anggotaData }) }); } catch(e) {}
-                        } else { await addToSyncQueue({ action: 'addAnggota', data: anggotaData }); }
+                            try {
+                                const formData = new URLSearchParams({ action: 'addAnggota', token: TOKEN, ...anggotaData });
+                                await fetch(API_URL, { method: 'POST', body: formData });
+                            } catch(e) { console.error(e); }
+                        }
                         showToast('Anggota ditambahkan: ' + newId);
                     }
                     modal.remove();
@@ -669,16 +877,30 @@
                 const nama = document.getElementById('modalNamaDonatur').value;
                 if (!nama) { showToast('Nama donatur wajib diisi', true); return; }
                 
-                const donaturData = { nama, kontak: document.getElementById('modalKontakDonatur').value, created_at: new Date().toISOString() };
+                const donaturData = { 
+                    nama, 
+                    kontak: document.getElementById('modalKontakDonatur').value, 
+                    tgl_dibuat: new Date().toISOString().split('T')[0] 
+                };
                 
                 if (isEdit) {
                     await putToStore(STORES.DONATUR, donaturData);
                     showToast('Donatur berhasil diupdate!');
                 } else {
+                    // Cek duplikat
+                    const existing = await getFromStore(STORES.DONATUR, nama);
+                    if (existing) {
+                        showToast('Donatur sudah terdaftar!', true);
+                        modal.remove();
+                        return;
+                    }
                     await addToStore(STORES.DONATUR, donaturData);
                     if (isOnline) {
-                        try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'addDonatur', token: TOKEN, nama, kontak: donaturData.kontak }) }); } catch(e) {}
-                    } else { await addToSyncQueue({ action: 'addDonatur', data: { nama, kontak: donaturData.kontak } }); }
+                        try {
+                            const formData = new URLSearchParams({ action: 'addDonatur', token: TOKEN, nama, kontak: donaturData.kontak });
+                            await fetch(API_URL, { method: 'POST', body: formData });
+                        } catch(e) { console.error(e); }
+                    }
                     showToast('Donatur ditambahkan');
                 }
                 modal.remove();
@@ -757,8 +979,20 @@
                     
                     await addToStore(STORES.TRANSAKSI, newTransaksi);
                     if (isOnline) {
-                        try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'addTransaksi', token: TOKEN, jenis: 'DONASI', tanggal: newTransaksi.tanggal, id_anggota: '', nama: donatur, nominal, keterangan: newTransaksi.keterangan }) }); } catch(e) {}
-                    } else { await addToSyncQueue({ action: 'addTransaksi', data: { jenis: 'DONASI', tanggal: newTransaksi.tanggal, id_anggota: '', nama: donatur, nominal, keterangan: newTransaksi.keterangan } }); }
+                        try {
+                            const formData = new URLSearchParams({ 
+                                action: 'addTransaksi', 
+                                token: TOKEN, 
+                                jenis: 'DONASI', 
+                                tanggal: newTransaksi.tanggal, 
+                                id_anggota: '', 
+                                nama: donatur, 
+                                nominal, 
+                                keterangan: newTransaksi.keterangan 
+                            });
+                            await fetch(API_URL, { method: 'POST', body: formData });
+                        } catch(e) { console.error(e); }
+                    }
                     
                     showToast('Donasi berhasil!');
                     modal.remove();
@@ -770,6 +1004,12 @@
         async function deleteAnggota(id, nama) {
             if (confirm(`Hapus anggota "${nama}"?`)) {
                 await deleteFromStore(STORES.ANGGOTA, id);
+                if (isOnline) {
+                    try {
+                        const formData = new URLSearchParams({ action: 'deleteAnggota', token: TOKEN, id });
+                        await fetch(API_URL, { method: 'POST', body: formData });
+                    } catch(e) { console.error(e); }
+                }
                 showToast('Anggota dihapus');
                 await render();
             }
@@ -778,7 +1018,8 @@
         async function deleteDonatur(nama) {
             if (confirm(`Hapus donatur "${nama}"?`)) {
                 await deleteFromStore(STORES.DONATUR, nama);
-                showToast('Donatur dihapus');
+                // Note: Server tidak memiliki API deleteDonatur, jadi hanya lokal
+                showToast('Donatur dihapus (lokal)');
                 await render();
             }
         }
@@ -786,12 +1027,13 @@
         async function deleteTransaksi(id) {
             if (confirm('Hapus transaksi ini?')) {
                 await deleteFromStore(STORES.TRANSAKSI, id);
-                showToast('Transaksi dihapus');
+                // Note: Server tidak memiliki API deleteTransaksi
+                showToast('Transaksi dihapus (lokal)');
                 await render();
             }
         }
 
-        // ==================== RENDER FUNCTIONS (SAMA SEPERTI SEBELUMNYA) ====================
+        // ==================== RENDER FUNCTIONS ====================
         async function render() {
             const content = document.getElementById('content');
             if (state.tab === 'dashboard') content.innerHTML = await renderDashboard();
@@ -817,7 +1059,7 @@
                 <div class="card">
                     <div class="info-card"><div>💰 Saldo Kas</div><div class="info-value">${formatRupiah(saldo)}</div></div>
                     <div class="grid-2">
-                        <div class="stat-card"><div>💚 Total Pemasukan</div><div class="stat-value">${formatRupiah(totalMasuk)}</div></div>
+                        <div class="stat-card"><div>💚 Total Pemasukan</div><div class="stat-value positive">${formatRupiah(totalMasuk)}</div></div>
                         <div class="stat-card"><div>❤️ Total Pengeluaran</div><div class="stat-value negative">${formatRupiah(totalKeluar)}</div></div>
                     </div>
                     <div class="grid-2" style="margin-top:12px">
@@ -830,17 +1072,17 @@
                     </div>
                     <div class="grid-2" style="margin-top:16px">
                         <button class="btn secondary" onclick="showModalTransaksi()">💰 Setor/Pinjam</button>
-                        <button class="btn secondary" onclick="showModalDonasi()">🤝 Donasi</button>
+                        <button class="btn warning" onclick="showModalDonasi()">🤝 Donasi</button>
                     </div>
                 </div>
                 <div class="card">
                     <h3>📋 Transaksi Terbaru</h3>
                     ${transaksi.length === 0 ? 
                         `<div class="empty-state"><i class="fas fa-receipt"></i><div>Belum ada transaksi</div><div class="text-dim">Klik tombol di atas untuk memulai</div></div>` : 
-                        transaksi.slice(0,10).map(t => `
+                        transaksi.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).slice(0,10).map(t => `
                             <div class="transaction-item">
                                 <div style="flex:1">
-                                    <span class="badge ${t.jenis === 'PENGELUARAN' ? 'pengeluaran' : (t.jenis === 'PINJAM' ? 'pinjam' : '')}">${t.jenis}</span>
+                                    <span class="badge ${t.jenis === 'PENGELUARAN' ? 'pengeluaran' : (t.jenis === 'PINJAM' ? 'pinjam' : (t.jenis === 'DONASI' ? 'donasi' : ''))}">${t.jenis}</span>
                                     <div class="text-dim" style="font-size:11px">${t.tanggal}</div>
                                     <div><b>${t.nama || t.id_anggota || '-'}</b> <span class="text-dim">${t.keterangan ? '- ' + t.keterangan : ''}</span></div>
                                 </div>
@@ -858,16 +1100,38 @@
 
         async function renderTransaksi() {
             const saldo = await hitungSaldo();
+            const transaksi = await getAllFromStore(STORES.TRANSAKSI);
+            
             return `
                 <div class="card">
                     <h3>📝 Transaksi</h3>
                     <div class="info-card" style="background:#283593"><div>💰 Saldo Saat Ini</div><div class="info-value">${formatRupiah(saldo)}</div></div>
-                    <button class="btn warning" onclick="showModalTransaksi()" style="margin-bottom:16px"><i class="fas fa-plus-circle"></i> + Transaksi Baru</button>
-                    <button class="btn secondary" onclick="showModalDonasi()" style="background:#ff9800"><i class="fas fa-hand-holding-heart"></i> + Donasi Baru</button>
+                    <div class="grid-2" style="margin-bottom:16px">
+                        <button class="btn warning" onclick="showModalTransaksi()"><i class="fas fa-plus-circle"></i> Transaksi Baru</button>
+                        <button class="btn secondary" onclick="showModalDonasi()" style="background:#ff9800"><i class="fas fa-hand-holding-heart"></i> Donasi Baru</button>
+                    </div>
                 </div>
                 <div class="card">
                     <h3>📋 Riwayat Transaksi</h3>
-                    <div id="riwayatTransaksi" style="max-height:400px; overflow-y:auto"></div>
+                    <div id="riwayatTransaksi" style="max-height:500px; overflow-y:auto">
+                        ${transaksi.length === 0 ? 
+                            `<div class="empty-state"><i class="fas fa-receipt"></i><div>Belum ada transaksi</div></div>` :
+                            transaksi.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).map(t => `
+                                <div class="transaction-item">
+                                    <div style="flex:1">
+                                        <span class="badge ${t.jenis === 'PENGELUARAN' ? 'pengeluaran' : (t.jenis === 'PINJAM' ? 'pinjam' : (t.jenis === 'DONASI' ? 'donasi' : ''))}">${t.jenis}</span>
+                                        <div class="text-dim" style="font-size:11px">${t.tanggal}</div>
+                                        <div><b>${t.nama || t.id_anggota || '-'}</b> <span class="text-dim">${t.keterangan ? '- ' + t.keterangan : ''}</span></div>
+                                    </div>
+                                    <div class="action-buttons">
+                                        <span class="${t.jenis === 'SETOR' || t.jenis === 'DONASI' ? 'positive' : 'negative'}">${formatRupiah(t.nominal)}</span>
+                                        <button class="icon-btn edit" onclick="event.stopPropagation(); showModalTransaksi(${JSON.stringify(t).replace(/"/g, '&quot;')})"><i class="fas fa-edit"></i></button>
+                                        <button class="icon-btn delete" onclick="event.stopPropagation(); deleteTransaksi('${t.id}')"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                </div>
+                            `).join('')
+                        }
+                    </div>
                 </div>
             `;
         }
@@ -879,22 +1143,25 @@
                 <div class="card">
                     <div class="flex-between"><h3>👥 Anggota</h3><button class="btn secondary" style="width:auto;padding:8px 16px" onclick="showModalAnggota()">+ Tambah</button></div>
                     <input type="text" id="cariAnggota" placeholder="Cari ID atau nama..." value="${state.search}" style="margin-top:12px">
-                    <div>${anggota.length === 0 ? `<div class="empty-state"><i class="fas fa-users"></i><div>Belum ada anggota</div><div class="text-dim">Klik tombol tambah</div></div>` :
-                        anggota.map(a => `
-                            <div class="account-item">
-                                <div class="account-avatar">${a.nama.charAt(0).toUpperCase()}</div>
-                                <div style="flex:1" onclick="detailAnggota('${a.id}')">
-                                    <div><b>${a.nama}</b></div>
-                                    <div class="text-dim">ID: ${a.id} | ${a.no_hp || '-'}</div>
+                    <div style="margin-top:12px">
+                        ${anggota.length === 0 ? 
+                            `<div class="empty-state"><i class="fas fa-users"></i><div>Belum ada anggota</div><div class="text-dim">Klik tombol tambah</div></div>` :
+                            anggota.map(a => `
+                                <div class="account-item">
+                                    <div class="account-avatar">${a.nama.charAt(0).toUpperCase()}</div>
+                                    <div style="flex:1" onclick="detailAnggota('${a.id}')">
+                                        <div><b>${a.nama}</b></div>
+                                        <div class="text-dim">ID: ${a.id} | ${a.no_hp || '-'}</div>
+                                    </div>
+                                    <div class="action-buttons">
+                                        <span class="badge ${a.status === 'NONAKTIF' ? 'nonaktif' : ''}">${a.status || 'AKTIF'}</span>
+                                        <button class="icon-btn edit" onclick="event.stopPropagation(); showModalAnggota(${JSON.stringify(a).replace(/"/g, '&quot;')})"><i class="fas fa-edit"></i></button>
+                                        <button class="icon-btn delete" onclick="event.stopPropagation(); deleteAnggota('${a.id}', '${a.nama}')"><i class="fas fa-trash"></i></button>
+                                    </div>
                                 </div>
-                                <div class="action-buttons">
-                                    <span class="badge ${a.status === 'NONAKTIF' ? 'nonaktif' : ''}">${a.status || 'AKTIF'}</span>
-                                    <button class="icon-btn edit" onclick="event.stopPropagation(); showModalAnggota(${JSON.stringify(a).replace(/"/g, '&quot;')})"><i class="fas fa-edit"></i></button>
-                                    <button class="icon-btn delete" onclick="event.stopPropagation(); deleteAnggota('${a.id}', '${a.nama}')"><i class="fas fa-trash"></i></button>
-                                </div>
-                            </div>
-                        `).join('')
-                    }</div>
+                            `).join('')
+                        }
+                    </div>
                 </div>
             `;
         }
@@ -906,15 +1173,21 @@
                     <div class="flex-between"><h3>🤝 Donatur</h3><button class="btn secondary" style="width:auto;padding:8px 16px" onclick="showModalDonatur()">+ Tambah</button></div>
                     <button class="btn warning" onclick="showModalDonasi()" style="margin-top:12px; background:#ff9800"><i class="fas fa-hand-holding-heart"></i> Catat Donasi</button>
                 </div>
-                <div class="card"><h3>📋 Daftar Donatur</h3>${donatur.length === 0 ? `<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><div>Belum ada donatur</div></div>` : donatur.map(d => `
-                    <div class="flex-between" style="padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.1)">
-                        <div><i class="fas fa-user"></i> <strong>${d.nama}</strong><div class="text-dim">${d.kontak || '-'}</div></div>
-                        <div class="action-buttons">
-                            <button class="icon-btn edit" onclick="showModalDonatur(${JSON.stringify(d).replace(/"/g, '&quot;')})"><i class="fas fa-edit"></i></button>
-                            <button class="icon-btn delete" onclick="deleteDonatur('${d.nama}')"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                `).join('')}</div>
+                <div class="card">
+                    <h3>📋 Daftar Donatur</h3>
+                    ${donatur.length === 0 ? 
+                        `<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><div>Belum ada donatur</div></div>` : 
+                        donatur.map(d => `
+                            <div class="flex-between" style="padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.1)">
+                                <div><i class="fas fa-user"></i> <strong>${d.nama}</strong><div class="text-dim">${d.kontak || '-'}</div></div>
+                                <div class="action-buttons">
+                                    <button class="icon-btn edit" onclick="showModalDonatur(${JSON.stringify(d).replace(/"/g, '&quot;')})"><i class="fas fa-edit"></i></button>
+                                    <button class="icon-btn delete" onclick="deleteDonatur('${d.nama}')"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                        `).join('')
+                    }
+                </div>
             `;
         }
 
@@ -1035,7 +1308,7 @@
                         <div class="stat-card" style="background:#283593;margin-top:10px"><div>Saldo Akhir</div><div class="${saldo >= 0 ? 'positive' : 'negative'}">${formatRupiah(saldo)}</div></div>
                         <h4 style="margin-top:16px">📋 Riwayat Transaksi</h4>
                         ${transaksi.length === 0 ? '<div class="text-dim text-center">Belum ada transaksi</div>' : 
-                            transaksi.slice(0,10).map(t => `
+                            transaksi.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).slice(0,10).map(t => `
                                 <div class="flex-between" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.1)">
                                     <div><span class="badge">${t.jenis}</span><div class="text-dim">${t.tanggal}</div><div class="text-dim">${t.keterangan || ''}</div></div>
                                     <span class="${t.jenis === 'SETOR' ? 'positive' : 'negative'}">${formatRupiah(t.nominal)}</span>
@@ -1060,28 +1333,33 @@
             printWindow.document.write(`
                 <!DOCTYPE html>
                 <html>
-                <head><title>Laporan Keuangan</title><meta charset="UTF-8">
-                <style>
-                    * { margin: 0; padding: 0; box-sizing: border-box; }
-                    body { font-family: 'Times New Roman', Times, serif; padding: 30px; background: white; color: black; }
-                    .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1a237e; padding-bottom: 20px; }
-                    .header h1 { color: #1a237e; }
-                    .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
-                    .summary-card { background: #f5f5f5; padding: 15px; border-radius: 8px; text-align: center; border-left: 4px solid #4caf50; }
-                    .summary-card .value { font-size: 20px; font-weight: bold; color: #1a237e; }
-                    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                    th { background: #1a237e; color: white; padding: 10px; text-align: left; }
-                    td { padding: 8px; border-bottom: 1px solid #ddd; }
-                    .text-right { text-align: right; }
-                    .positive { color: #2e7d32; }
-                    .negative { color: #c62828; }
-                    .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 20px; }
-                    h2 { font-size: 16px; margin: 20px 0 10px; color: #1a237e; border-left: 3px solid #ff9800; padding-left: 10px; }
-                    .badge { display: inline-block; padding: 2px 6px; border-radius: 12px; font-size: 10px; background: #e8f5e8; color: #2e7d32; }
-                </style>
+                <head>
+                    <title>Laporan Keuangan</title>
+                    <meta charset="UTF-8">
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { font-family: 'Times New Roman', Times, serif; padding: 30px; background: white; color: black; }
+                        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1a237e; padding-bottom: 20px; }
+                        .header h1 { color: #1a237e; }
+                        .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+                        .summary-card { background: #f5f5f5; padding: 15px; border-radius: 8px; text-align: center; border-left: 4px solid #4caf50; }
+                        .summary-card .value { font-size: 20px; font-weight: bold; color: #1a237e; }
+                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        th { background: #1a237e; color: white; padding: 10px; text-align: left; }
+                        td { padding: 8px; border-bottom: 1px solid #ddd; }
+                        .text-right { text-align: right; }
+                        .positive { color: #2e7d32; }
+                        .negative { color: #c62828; }
+                        .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 20px; }
+                        h2 { font-size: 16px; margin: 20px 0 10px; color: #1a237e; border-left: 3px solid #ff9800; padding-left: 10px; }
+                        .badge { display: inline-block; padding: 2px 6px; border-radius: 12px; font-size: 10px; background: #e8f5e8; color: #2e7d32; }
+                    </style>
                 </head>
                 <body>
-                    <div class="header"><h1>📊 LAPORAN KEUANGAN</h1><p>Aplikasi Kas | Token: ${TOKEN} | Dicetak: ${new Date().toLocaleDateString('id-ID')}</p></div>
+                    <div class="header">
+                        <h1>📊 LAPORAN KEUANGAN</h1>
+                        <p>Aplikasi Kas | Token: ${TOKEN} | Dicetak: ${new Date().toLocaleDateString('id-ID')}</p>
+                    </div>
                     <div class="summary">
                         <div class="summary-card"><h3>💰 Saldo Kas</h3><div class="value">${formatRupiah(saldo)}</div></div>
                         <div class="summary-card"><h3>💚 Total Pemasukan</h3><div class="value positive">${formatRupiah(totalMasuk)}</div></div>
@@ -1089,55 +1367,92 @@
                         <div class="summary-card"><h3>👥 Anggota</h3><div class="value">${anggota.length}</div><div>Aktif: ${anggota.filter(a => a.status === 'AKTIF').length}</div></div>
                     </div>
                     <h2>📋 DAFTAR TRANSAKSI</h2>
-                    <table><thead><tr><th>No</th><th>Tanggal</th><th>Jenis</th><th>Nama</th><th class="text-right">Nominal</th><th>Keterangan</th></tr></thead>
-                    <tbody>${transaksi.sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal)).map((t,i)=>`<tr><td>${i+1}</td><td>${t.tanggal}</td><td><span class="badge">${t.jenis}</span></td><td>${t.nama||t.id_anggota||'-'}</td><td class="text-right">${formatRupiah(t.nominal)}</td><td>${t.keterangan||'-'}</td></tr>`).join('')}</tbody>
-                    <tfoot><tr><td colspan="4"><strong>TOTAL PEMASUKAN</strong></td><td class="text-right"><strong>${formatRupiah(totalMasuk)}</strong></td><td></td></tr><tr><td colspan="4"><strong>TOTAL PENGELUARAN</strong></td><td class="text-right"><strong>${formatRupiah(totalKeluar)}</strong></td><td></td></tr><tr><td colspan="4"><strong>SALDO AKHIR</strong></td><td class="text-right"><strong>${formatRupiah(saldo)}</strong></td><td></td></tr></tfoot></table>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th><th>Tanggal</th><th>Jenis</th><th>Nama</th><th class="text-right">Nominal</th><th>Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${transaksi.sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal)).map((t,i)=>`
+                                <tr>
+                                    <td>${i+1}</td>
+                                    <td>${t.tanggal}</td>
+                                    <td><span class="badge">${t.jenis}</span></td>
+                                    <td>${t.nama||t.id_anggota||'-'}</td>
+                                    <td class="text-right">${formatRupiah(t.nominal)}</td>
+                                    <td>${t.keterangan||'-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr><td colspan="4"><strong>TOTAL PEMASUKAN</strong></td><td class="text-right"><strong>${formatRupiah(totalMasuk)}</strong></td><td></td></tr>
+                            <tr><td colspan="4"><strong>TOTAL PENGELUARAN</strong></td><td class="text-right"><strong>${formatRupiah(totalKeluar)}</strong></td><td></td></tr>
+                            <tr><td colspan="4"><strong>SALDO AKHIR</strong></td><td class="text-right"><strong>${formatRupiah(saldo)}</strong></td><td></td></tr>
+                        </tfoot>
+                    </table>
                     <div class="footer"><p>Dicetak dari Aplikasi Kas - Manajemen Keuangan</p></div>
-                </body></html>
+                </body>
+                </html>
             `);
             printWindow.document.close();
             printWindow.print();
         };
 
         function attachEvents() {
-            document.getElementById('refreshBtn')?.addEventListener('click', async () => { await render(); showToast('Data dimuat ulang'); });
-            document.getElementById('printBtn')?.addEventListener('click', async () => { if (state.tab === 'laporan') cetakLaporanLengkap(); else { state.tab = 'laporan'; await render(); setTimeout(() => cetakLaporanLengkap(), 500); } });
+            document.getElementById('refreshBtn')?.addEventListener('click', async () => { 
+                await render(); 
+                showToast('Data dimuat ulang'); 
+            });
             
-            if (state.tab === 'transaksi') {
-                (async () => {
-                    const transaksi = await getAllFromStore(STORES.TRANSAKSI);
-                    const riwayatDiv = document.getElementById('riwayatTransaksi');
-                    if (riwayatDiv) {
-                        riwayatDiv.innerHTML = transaksi.slice(0,30).map(t => `
-                            <div class="transaction-item">
-                                <div style="flex:1">
-                                    <span class="badge ${t.jenis === 'PENGELUARAN' ? 'pengeluaran' : (t.jenis === 'PINJAM' ? 'pinjam' : '')}">${t.jenis}</span>
-                                    <div class="text-dim">${t.tanggal}</div>
-                                    <div><b>${t.nama || t.id_anggota || '-'}</b> <span class="text-dim">${t.keterangan ? '- ' + t.keterangan : ''}</span></div>
-                                </div>
-                                <div class="action-buttons">
-                                    <span class="${t.jenis === 'SETOR' || t.jenis === 'DONASI' ? 'positive' : 'negative'}">${formatRupiah(t.nominal)}</span>
-                                    <button class="icon-btn edit" onclick="event.stopPropagation(); showModalTransaksi(${JSON.stringify(t).replace(/"/g, '&quot;')})"><i class="fas fa-edit"></i></button>
-                                    <button class="icon-btn delete" onclick="event.stopPropagation(); deleteTransaksi('${t.id}')"><i class="fas fa-trash"></i></button>
-                                </div>
-                            </div>
-                        `).join('');
-                    }
-                })();
+            document.getElementById('syncBtn')?.addEventListener('click', async () => { 
+                await syncToServer(); 
+            });
+            
+            document.getElementById('printBtn')?.addEventListener('click', async () => { 
+                if (state.tab === 'laporan') cetakLaporanLengkap(); 
+                else { 
+                    state.tab = 'laporan'; 
+                    await render(); 
+                    setTimeout(() => cetakLaporanLengkap(), 500); 
+                } 
+            });
+            
+            if (state.tab === 'anggota') {
+                document.getElementById('cariAnggota')?.addEventListener('input', (e) => { 
+                    state.search = e.target.value; 
+                    render(); 
+                });
             }
-            if (state.tab === 'anggota') document.getElementById('cariAnggota')?.addEventListener('input', (e) => { state.search = e.target.value; render(); });
         }
 
         function initNetworkMonitor() {
-            window.addEventListener('online', async () => { updateSignalStatus(true, 'Online'); showToast('Kembali online, menyinkronisasi...'); await syncToServer(); await render(); });
-            window.addEventListener('offline', () => { updateSignalStatus(false, 'Offline'); showToast('Mode offline - Data disimpan lokal', true); });
+            window.addEventListener('online', async () => { 
+                updateSignalStatus(true, 'Online'); 
+                showToast('Kembali online, menyinkronisasi...'); 
+                await syncToServer(); 
+                await render(); 
+            });
+            window.addEventListener('offline', () => { 
+                updateSignalStatus(false, 'Offline'); 
+                showToast('Mode offline - Data disimpan lokal', true); 
+            });
         }
 
-        function formatRupiah(n) { return 'Rp ' + (n||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
-        function formatNumber(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+        function formatRupiah(n) { 
+            return 'Rp ' + (n || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); 
+        }
+        
+        function formatNumber(n) { 
+            return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); 
+        }
+        
         function showToast(msg, err = false) {
-            const t = document.createElement('div'); t.className = 'toast' + (err ? ' error' : ''); t.innerHTML = `<i class="fas ${err ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`;
-            document.body.appendChild(t); setTimeout(() => t.remove(), 3000);
+            const t = document.createElement('div'); 
+            t.className = 'toast' + (err ? ' error' : ''); 
+            t.innerHTML = `<i class="fas ${err ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`;
+            document.body.appendChild(t); 
+            setTimeout(() => t.remove(), 3000);
         }
 
         // Expose functions ke global
@@ -1151,11 +1466,24 @@
         window.detailAnggota = detailAnggota;
         window.cetakLaporanLengkap = cetakLaporanLengkap;
 
+        // Navigation
         document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', () => { document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); state.tab = btn.dataset.tab; render(); });
+            btn.addEventListener('click', () => { 
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); 
+                btn.classList.add('active'); 
+                state.tab = btn.dataset.tab; 
+                render(); 
+            });
         });
         
-        (async function init() { await openDB(); updateSignalStatus(navigator.onLine, navigator.onLine ? 'Online' : 'Offline'); initNetworkMonitor(); await render(); if (navigator.onLine) await syncToServer(); })();
+        // Initialize
+        (async function init() { 
+            await openDB(); 
+            updateSignalStatus(navigator.onLine, navigator.onLine ? 'Online' : 'Offline'); 
+            initNetworkMonitor(); 
+            await render(); 
+            if (navigator.onLine) await syncFromServer();
+        })();
     </script>
 </body>
 </html>
