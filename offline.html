@@ -5,8 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Offline - Aplikasi Kas</title>
     <meta name="theme-color" content="#1a237e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Kas App">
+    
+    <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="https://raw.githubusercontent.com/Koramil05/PURA05/main/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://raw.githubusercontent.com/Koramil05/PURA05/main/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/Koramil05/PURA05/main/apple-touch-icon.png">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -90,8 +97,17 @@
             margin-bottom: 14px;
         }
         .info-item:last-child { margin-bottom: 0; }
-        .info-item i { width: 28px; color: #ff9800; font-size: 18px; text-align: center; }
-        .info-item span { font-size: 13px; color: rgba(255,255,255,0.85); line-height: 1.4; }
+        .info-item i {
+            width: 28px;
+            color: #ff9800;
+            font-size: 18px;
+            text-align: center;
+        }
+        .info-item span {
+            font-size: 13px;
+            color: rgba(255,255,255,0.85);
+            line-height: 1.4;
+        }
         .btn-group {
             display: flex;
             gap: 12px;
@@ -173,36 +189,64 @@
             <i class="fas fa-wifi icon"></i>
         </div>
         <h1>Mode Offline</h1>
-        <div class="subtitle">Aplikasi Kas Pura</div>
+        <div class="subtitle">Aplikasi Kas</div>
         <p>Koneksi internet tidak tersedia. Anda tetap dapat mengakses data yang sudah tersimpan di perangkat.</p>
         
         <div class="info-box">
-            <div class="info-item"><i class="fas fa-database"></i><span>Data tersimpan secara lokal di perangkat Anda</span></div>
-            <div class="info-item"><i class="fas fa-sync-alt"></i><span>Akan sinkronisasi otomatis saat koneksi pulih</span></div>
-            <div class="info-item"><i class="fas fa-mobile-alt"></i><span>Aplikasi tetap dapat digunakan tanpa internet</span></div>
+            <div class="info-item">
+                <i class="fas fa-database"></i>
+                <span>Data tersimpan secara lokal di perangkat Anda</span>
+            </div>
+            <div class="info-item">
+                <i class="fas fa-sync-alt"></i>
+                <span>Akan sinkronisasi otomatis saat koneksi pulih</span>
+            </div>
+            <div class="info-item">
+                <i class="fas fa-mobile-alt"></i>
+                <span>Aplikasi tetap dapat digunakan tanpa internet</span>
+            </div>
         </div>
         
         <div class="cached-section" id="cachedData">
-            <div class="cached-title"><i class="fas fa-chart-line"></i> Data Tersimpan</div>
-            <div class="data-stats">
-                <div class="stat-item"><span class="stat-value" id="cachedAnggota">-</span><span class="stat-label">Anggota</span></div>
-                <div class="stat-item"><span class="stat-value" id="cachedDonatur">-</span><span class="stat-label">Donatur</span></div>
-                <div class="stat-item"><span class="stat-value" id="cachedTransaksi">-</span><span class="stat-label">Transaksi</span></div>
+            <div class="cached-title">
+                <i class="fas fa-chart-line"></i> Data Tersimpan
             </div>
-            <div class="last-sync" id="lastSync"><i class="fas fa-clock"></i> <span>Memuat data tersimpan...</span></div>
+            <div class="data-stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="cachedAnggota">-</span>
+                    <span class="stat-label">Anggota</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="cachedDonatur">-</span>
+                    <span class="stat-label">Donatur</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="cachedTransaksi">-</span>
+                    <span class="stat-label">Transaksi</span>
+                </div>
+            </div>
+            <div class="last-sync" id="lastSync">
+                <i class="fas fa-clock"></i> <span>Memuat data tersimpan...</span>
+            </div>
         </div>
         
         <div class="btn-group">
-            <button class="btn btn-primary" onclick="tryReconnect()"><i class="fas fa-sync-alt"></i> Coba Lagi</button>
-            <button class="btn btn-secondary" onclick="goToApp()"><i class="fas fa-home"></i> Buka Aplikasi</button>
+            <button class="btn btn-primary" onclick="tryReconnect()">
+                <i class="fas fa-sync-alt"></i> Coba Lagi
+            </button>
+            <button class="btn btn-secondary" onclick="goToApp()">
+                <i class="fas fa-home"></i> Buka Aplikasi
+            </button>
         </div>
     </div>
 
     <script>
+        // ==================== KONFIGURASI ====================
         const DB_NAME = 'KasAppDB';
         const STORES = { ANGGOTA: 'anggota', DONATUR: 'donatur', TRANSAKSI: 'transaksi' };
         let db = null;
         
+        // ==================== INDEXEDDB FUNCTIONS ====================
         function openDB() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open(DB_NAME, 3);
@@ -264,8 +308,15 @@
                 document.getElementById('cachedAnggota').textContent = anggota.length;
                 document.getElementById('cachedDonatur').textContent = donatur.length;
                 document.getElementById('cachedTransaksi').textContent = transaksi.length;
-                document.getElementById('lastSync').innerHTML = `<i class="fas fa-clock"></i> Sinkron terakhir: ${formatTanggal(lastSync)}`;
+                
+                const lastSyncElement = document.getElementById('lastSync');
+                if (lastSync) {
+                    lastSyncElement.innerHTML = `<i class="fas fa-clock"></i> Sinkron terakhir: ${formatTanggal(lastSync)}`;
+                } else {
+                    lastSyncElement.innerHTML = '<i class="fas fa-clock"></i> Belum pernah sinkron';
+                }
             } catch (error) {
+                console.error('Error loading cached stats:', error);
                 document.getElementById('cachedAnggota').textContent = '0';
                 document.getElementById('cachedDonatur').textContent = '0';
                 document.getElementById('cachedTransaksi').textContent = '0';
@@ -273,18 +324,82 @@
             }
         }
         
-        function tryReconnect() { if (navigator.onLine) window.location.href = '/'; else { showToast('Masih offline, coba lagi nanti', true); } }
-        function goToApp() { window.location.href = '/'; }
-        function showToast(msg, isError = false) {
-            const toast = document.createElement('div');
-            toast.style.cssText = `position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:${isError ? 'rgba(244,67,54,0.95)' : 'rgba(0,0,0,0.9)'};color:white;padding:12px 24px;border-radius:50px;font-size:14px;z-index:2000;backdrop-filter:blur(10px);animation:slideUp 0.3s ease;white-space:nowrap;`;
-            toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i> ${msg}`;
-            document.body.appendChild(toast);
-            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(-50%) translateY(20px)'; setTimeout(() => toast.remove(), 300); }, 3000);
+        // ==================== FUNGSI NAVIGASI ====================
+        function tryReconnect() {
+            if (navigator.onLine) {
+                window.location.href = '/';
+            } else {
+                showToast('Masih offline, coba lagi nanti', true);
+                setTimeout(() => window.location.reload(), 2000);
+            }
         }
         
-        window.addEventListener('online', () => { window.location.href = '/'; });
-        (async function init() { await loadCachedStats(); })();
+        function goToApp() {
+            window.location.href = '/';
+        }
+        
+        function showToast(msg, isError = false) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 30px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${isError ? 'rgba(244,67,54,0.95)' : 'rgba(0,0,0,0.9)'};
+                color: white;
+                padding: 12px 24px;
+                border-radius: 50px;
+                font-size: 14px;
+                z-index: 2000;
+                backdrop-filter: blur(10px);
+                animation: slideUp 0.3s ease;
+                white-space: nowrap;
+            `;
+            toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i> ${msg}`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // Tambahkan style untuk animasi toast
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideUp {
+                from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+                to { opacity: 1; transform: translateX(-50%) translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // ==================== MONITOR KONEKSI ====================
+        window.addEventListener('online', () => {
+            showToast('Koneksi pulih, mengalihkan...');
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 500);
+        });
+        
+        // ==================== CEK KONEKSI AWAL ====================
+        function checkInitialConnection() {
+            if (navigator.onLine) {
+                fetch('/')
+                    .then(() => {
+                        window.location.href = '/';
+                    })
+                    .catch(() => {
+                        console.log('Server tidak merespon, tetap di halaman offline');
+                    });
+            }
+        }
+        
+        // ==================== INIT ====================
+        (async function init() {
+            await loadCachedStats();
+            setTimeout(checkInitialConnection, 2000);
+        })();
     </script>
 </body>
 </html>
