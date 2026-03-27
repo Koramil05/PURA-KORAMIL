@@ -1,25 +1,30 @@
 {
-  "name": "Kas Pura - Koramil Sukasada",
-  "short_name": "Kas Pura",
-  "description": "Aplikasi manajemen keuangan kas pura Koramil Sukasada dengan dukungan offline dan online.",
-  "start_url": "/PURA-KORAMIL/",
-  "scope": "/PURA-KORAMIL/",
-  "display": "standalone",
-  "background_color": "#0a192f",
-  "theme_color": "#1a237e",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "https://raw.githubusercontent.com/Koramil05/PURA05/main/android-chrome-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "https://raw.githubusercontent.com/Koramil05/PURA05/main/android-chrome-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ]
+    "name": "Aplikasi Kas",
+    "short_name": "Kas App",
+    "description": "Aplikasi Manajemen Keuangan Koramil Sukasada",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#1a237e",
+    "theme_color": "#1a237e",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "https://raw.githubusercontent.com/Koramil05/PURA05/main/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "https://raw.githubusercontent.com/Koramil05/PURA05/main/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "https://raw.githubusercontent.com/Koramil05/PURA05/main/apple-touch-icon.png",
+            "sizes": "180x180",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
 }
