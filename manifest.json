@@ -1,7 +1,7 @@
 {
     "name": "Aplikasi Kas",
     "short_name": "Kas App",
-    "description": "Aplikasi Manajemen Keuangan Koramil Sukasada",
+    "description": "Aplikasi Manajemen Keuangan",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#1a237e",
@@ -17,12 +17,6 @@
         {
             "src": "https://raw.githubusercontent.com/Koramil05/PURA05/main/android-chrome-512x512.png",
             "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "https://raw.githubusercontent.com/Koramil05/PURA05/main/apple-touch-icon.png",
-            "sizes": "180x180",
             "type": "image/png",
             "purpose": "any maskable"
         }
