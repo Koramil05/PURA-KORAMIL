@@ -1130,6 +1130,7 @@
             document.body.appendChild(modal);
         };
 
+        // ==================== FUNGSI CETAK LAPORAN LENGKAP ====================
         window.cetakLaporanLengkap = async function() {
             const anggota = await getAllFromStore(STORES.ANGGOTA);
             const donatur = await getAllFromStore(STORES.DONATUR);
@@ -1137,9 +1138,318 @@
             const saldo = await hitungSaldo();
             const totalMasuk = transaksi.filter(t => t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG').reduce((s,t) => s + t.nominal, 0);
             const totalKeluar = transaksi.filter(t => t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN').reduce((s,t) => s + t.nominal, 0);
+            const totalSetor = transaksi.filter(t => t.jenis === 'SETOR').reduce((s,t) => s + t.nominal, 0);
+            const totalPinjam = transaksi.filter(t => t.jenis === 'PINJAM').reduce((s,t) => s + t.nominal, 0);
+            const totalPengeluaran = transaksi.filter(t => t.jenis === 'PENGELUARAN').reduce((s,t) => s + t.nominal, 0);
+            const totalDonasiUang = transaksi.filter(t => t.jenis === 'DONASI_UANG').reduce((s,t) => s + t.nominal, 0);
             const donasiBarang = transaksi.filter(t => t.jenis === 'DONASI_BARANG');
+            
             const printWindow = window.open('', '_blank');
-            printWindow.document.write(`<!DOCTYPE html><html><head><title>Laporan Keuangan</title><meta charset="UTF-8"><style>body{font-family:'Times New Roman',serif;padding:30px}.header{text-align:center;border-bottom:2px solid #1a237e;padding-bottom:20px;margin-bottom:30px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:30px}.summary-card{background:#f5f5f5;padding:15px;border-radius:8px;text-align:center;border-left:4px solid #4caf50}.summary-card .value{font-size:20px;font-weight:bold;color:#1a237e}table{width:100%;border-collapse:collapse;margin:20px 0}th{background:#1a237e;color:white;padding:10px;text-align:left}td{padding:8px;border-bottom:1px solid #ddd}.text-right{text-align:right}.positive{color:#2e7d32}.negative{color:#c62828}.footer{margin-top:40px;text-align:center;font-size:10px;color:#999;border-top:1px solid #ddd;padding-top:20px}.badge{display:inline-block;padding:2px 6px;border-radius:12px;font-size:10px;background:#e8f5e8;color:#2e7d32}</style></head><body><div class="header"><h1>📊 LAPORAN KEUANGAN</h1><p>Aplikasi Kas | Dicetak: ${new Date().toLocaleDateString('id-ID')}</p></div><div class="summary"><div class="summary-card"><h3>💰 Saldo Kas</h3><div class="value">${formatRupiah(saldo)}</div></div><div class="summary-card"><h3>💚 Total Pemasukan</h3><div class="value positive">${formatRupiah(totalMasuk)}</div></div><div class="summary-card"><h3>❤️ Total Pengeluaran</h3><div class="value negative">${formatRupiah(totalKeluar)}</div></div><div class="summary-card"><h3>👥 Anggota</h3><div class="value">${anggota.length}</div><div>Aktif: ${anggota.filter(a=>a.status==='AKTIF').length}</div></div></div><h2>📋 DAFTAR TRANSAKSI</h2>${transaksi.length===0?'<p>Belum ada transaksi</p>':`<table><thead><tr><th>No</th><th>Tanggal</th><th>Jenis</th><th>Nama</th><th class="text-right">Nominal/Barang</th><th>Keterangan</th></tr></thead><tbody>${transaksi.sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal)).map((t,i)=>`<tr><td>${i+1}</td><td>${t.tanggal}</td><td><span class="badge">${t.jenis==='DONASI_UANG'?'DONASI UANG':(t.jenis==='DONASI_BARANG'?'DONASI BARANG':t.jenis)}</span></td><td>${t.nama||t.id_anggota||'-'}</td><td class="text-right">${t.jenis==='DONASI_BARANG'?t.nama_barang:formatRupiah(t.nominal)}</td><td>${t.keterangan||'-'}</td></tr>`).join('')}</tbody><tfoot><tr><td colspan="4"><strong>TOTAL PEMASUKAN</strong></td><td class="text-right"><strong>${formatRupiah(totalMasuk)}</strong></td><td></td></tr><tr><td colspan="4"><strong>TOTAL PENGELUARAN</strong></td><td class="text-right"><strong>${formatRupiah(totalKeluar)}</strong></td><td></td></tr><tr><td colspan="4"><strong>SALDO AKHIR</strong></td><td class="text-right"><strong>${formatRupiah(saldo)}</strong></td><td></td></tr></tfoot></table>`}${donasiBarang.length>0?`<h2>📦 DAFTAR DONASI BARANG</h2><table><thead><tr><th>No</th><th>Tanggal</th><th>Donatur</th><th>Nama Barang</th><th>Keterangan</th></tr></thead><tbody>${donasiBarang.map((d,i)=>`<tr><td>${i+1}</td><td>${d.tanggal}</td><td>${d.nama}</td><td>${d.nama_barang}</td><td>${d.keterangan||'-'}</td></tr>`).join('')}</tbody></table>`:''}<div class="footer"><p>Dicetak dari Aplikasi Kas - Manajemen Keuangan</p></div></body></html>`);
+            
+            const formatRupiahPrint = (n) => {
+                return 'Rp ' + (n || 0).toLocaleString('id-ID');
+            };
+            
+            const formatTanggalPrint = (dateStr) => {
+                if (!dateStr) return '-';
+                try {
+                    const d = new Date(dateStr);
+                    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+                } catch {
+                    return '-';
+                }
+            };
+            
+            printWindow.document.write(`<!DOCTYPE html>
+<html>
+<head>
+    <title>Laporan Kas - Aplikasi Kas</title>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            padding: 20px;
+            background: white;
+            color: black;
+            line-height: 1.4;
+            font-size: 11pt;
+        }
+        .kop {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #1a237e;
+            padding-bottom: 15px;
+        }
+        .kop h1 {
+            font-size: 20pt;
+            color: #1a237e;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        .kop h3 {
+            font-size: 14pt;
+            font-weight: normal;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .kop p {
+            font-size: 11pt;
+            color: #666;
+        }
+        .info-box {
+            border: 1px solid #000;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            background: #f9f9f9;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .info-label {
+            font-weight: bold;
+            width: 150px;
+        }
+        .summary-section {
+            margin-bottom: 25px;
+            border: 1px solid #000;
+        }
+        .summary-header {
+            background: #1a237e;
+            color: white;
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 12pt;
+        }
+        .summary-content {
+            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .summary-item {
+            border-bottom: 1px dotted #999;
+            padding: 8px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .summary-item.total {
+            border-top: 2px solid #000;
+            border-bottom: none;
+            margin-top: 10px;
+            padding-top: 10px;
+            font-weight: bold;
+            grid-column: span 2;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 10pt;
+        }
+        th {
+            background: #1a237e;
+            color: white;
+            padding: 10px 8px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+        td {
+            padding: 8px;
+            border: 1px solid #333;
+            vertical-align: top;
+        }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .positive { color: #006600; font-weight: bold; }
+        .negative { color: #cc0000; font-weight: bold; }
+        .neutral { color: #ff9800; font-weight: bold; }
+        .footer {
+            margin-top: 50px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .signature {
+            width: 250px;
+            text-align: center;
+        }
+        .signature-line {
+            margin-top: 40px;
+            border-top: 1px solid #000;
+            padding-top: 5px;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+        .donatur-section, .anggota-section {
+            margin-top: 30px;
+        }
+        .donatur-section h3, .anggota-section h3 {
+            background: #1a237e;
+            color: white;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+            font-size: 12pt;
+        }
+        @media print {
+            body { padding: 10px; }
+            .page-break { page-break-before: always; }
+        }
+    </style>
+</head>
+<body>
+    <div class="kop">
+        <h1>LAPORAN KAS</h1>
+        <h3>Aplikasi Manajemen Keuangan</h3>
+        <p>Periode: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+        <p>Dicetak: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+    </div>
+
+    <div class="info-box">
+        <div class="info-row"><span class="info-label">Saldo Global</span><span>: ${formatRupiahPrint(saldo)}</span></div>
+        <div class="info-row"><span class="info-label">Total Anggota</span><span>: ${anggota.length} orang</span></div>
+        <div class="info-row"><span class="info-label">Total Donatur</span><span>: ${donatur.length} orang</span></div>
+        <div class="info-row"><span class="info-label">Total Transaksi</span><span>: ${transaksi.length} kali</span></div>
+    </div>
+
+    <div class="summary-section">
+        <div class="summary-header">RINGKASAN TRANSAKSI</div>
+        <div class="summary-content">
+            <div class="summary-item"><span>Total Pemasukan</span><span class="positive">${formatRupiahPrint(totalMasuk)}</span></div>
+            <div class="summary-item"><span>Total Pengeluaran</span><span class="negative">${formatRupiahPrint(totalKeluar)}</span></div>
+            <div class="summary-item"><span style="margin-left:20px;">- SETOR</span><span>${formatRupiahPrint(totalSetor)}</span></div>
+            <div class="summary-item"><span style="margin-left:20px;">- DONASI UANG</span><span class="positive">${formatRupiahPrint(totalDonasiUang)}</span></div>
+            <div class="summary-item"><span style="margin-left:20px;">- PINJAM</span><span class="neutral">${formatRupiahPrint(totalPinjam)}</span></div>
+            <div class="summary-item"><span style="margin-left:20px;">- PENGELUARAN</span><span class="negative">${formatRupiahPrint(totalPengeluaran)}</span></div>
+            <div class="summary-item total"><span>SALDO AKHIR</span><span style="color:#1a237e;">${formatRupiahPrint(saldo)}</span></div>
+        </div>
+    </div>
+
+    <h3 style="margin:20px 0 10px; background:#1a237e; color:white; padding:8px 12px;">DAFTAR TRANSAKSI</h3>
+    <table>
+        <thead>
+            <tr>
+                <th width="5%">No</th>
+                <th width="12%">Tanggal</th>
+                <th width="10%">Jenis</th>
+                <th width="10%">ID Anggota</th>
+                <th width="20%">Nama</th>
+                <th width="15%">Nominal/Barang</th>
+                <th width="28%">Keterangan</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${transaksi.length === 0 ? 
+                `<tr><td colspan="7" style="text-align: center;">Belum ada transaksi</td></tr>` :
+                transaksi.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).slice(0, 200).map((t, i) => {
+                    const nominalDisplay = t.jenis === 'DONASI_BARANG' ? t.nama_barang || '-' : formatRupiahPrint(t.nominal);
+                    const displayJenis = t.jenis === 'DONASI_UANG' ? 'DONASI' : (t.jenis === 'DONASI_BARANG' ? 'DONASI BARANG' : t.jenis);
+                    const nominalClass = (t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG') ? 'positive' : (t.jenis === 'DONASI_BARANG' ? 'neutral' : 'negative');
+                    return `
+                        <tr>
+                            <td class="text-center">${i+1}</td>
+                            <td class="text-center">${formatTanggalPrint(t.tanggal)}</td>
+                            <td class="text-center">${displayJenis}</td>
+                            <td class="text-center">${t.id_anggota || '-'}</td>
+                            <td>${t.nama || '-'}</td>
+                            <td class="text-right ${nominalClass}">${nominalDisplay}</td>
+                            <td>${t.keterangan || '-'}</td>
+                        </tr>
+                    `;
+                }).join('')
+            }
+        </tbody>
+        <tfoot>
+            <tr style="background:#f5f5f5;"><td colspan="5" class="text-right">TOTAL PEMASUKAN:</td><td class="text-right positive">${formatRupiahPrint(totalMasuk)}</td><td></td></tr>
+            <tr style="background:#f5f5f5;"><td colspan="5" class="text-right">TOTAL PENGELUARAN:</td><td class="text-right negative">${formatRupiahPrint(totalKeluar)}</td><td></td></tr>
+            <tr style="background:#e3f2fd;"><td colspan="5" class="text-right">SALDO AKHIR:</td><td class="text-right" style="color:#1a237e;">${formatRupiahPrint(saldo)}</td><td></td></tr>
+        </tfoot>
+    </table>
+    ${transaksi.length > 200 ? '<div class="text-center" style="margin-top:10px;">*Menampilkan 200 transaksi terbaru dari total ' + transaksi.length + ' transaksi</div>' : ''}
+
+    <div class="page-break"></div>
+
+    <div class="anggota-section">
+        <h3>📋 DAFTAR ANGGOTA</h3>
+        <table>
+            <thead>
+                <tr><th width="5%">No</th><th width="15%">ID</th><th width="30%">Nama</th><th width="20%">No HP</th><th width="20%">Alamat</th><th width="10%">Status</th></tr>
+            </thead>
+            <tbody>
+                ${anggota.length === 0 ? 
+                    `<tr><td colspan="6" style="text-align: center;">Belum ada anggota</td></tr>` :
+                    anggota.map((a, i) => `
+                        <tr>
+                            <td class="text-center">${i+1}</td>
+                            <td class="text-center">${a.id || '-'}</td>
+                            <td>${a.nama || '-'}</td>
+                            <td>${a.no_hp || '-'}</td>
+                            <td>${a.alamat || '-'}</td>
+                            <td class="text-center">${a.status || 'AKTIF'}</td>
+                        </tr>
+                    `).join('')
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="donatur-section">
+        <h3>🤝 DAFTAR DONATUR</h3>
+        <table>
+            <thead>
+                <tr><th width="5%">No</th><th width="30%">Nama</th><th width="25%">Alamat</th><th width="20%">No HP</th><th width="20%">Total Donasi Uang</th></tr>
+            </thead>
+            <tbody>
+                ${donatur.length === 0 ? 
+                    `<tr><td colspan="5" style="text-align: center;">Belum ada donatur</td></tr>` :
+                    donatur.map((d, i) => `
+                        <tr>
+                            <td class="text-center">${i+1}</td>
+                            <td>${d.nama || '-'}</td>
+                            <td>${d.alamat || '-'}</td>
+                            <td>${d.no_hp || '-'}</td>
+                            <td class="text-right">${formatRupiahPrint(d.total_donasi_uang || 0)}</td>
+                        </tr>
+                    `).join('')
+                }
+            </tbody>
+        </table>
+    </div>
+
+    ${donasiBarang.length > 0 ? `
+    <div class="donatur-section">
+        <h3>📦 DAFTAR DONASI BARANG</h3>
+        <table>
+            <thead>
+                <tr><th width="5%">No</th><th width="15%">Tanggal</th><th width="25%">Donatur</th><th width="30%">Nama Barang</th><th width="25%">Keterangan</th></tr>
+            </thead>
+            <tbody>
+                ${donasiBarang.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).map((d, i) => `
+                    <tr>
+                        <td class="text-center">${i+1}</td>
+                        <td class="text-center">${formatTanggalPrint(d.tanggal)}</td>
+                        <td>${d.nama || '-'}</td>
+                        <td>${d.nama_barang || '-'}</td>
+                        <td>${d.keterangan || '-'}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    </div>
+    ` : ''}
+
+    <div class="footer">
+        <div class="signature">
+            ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}<br>
+            Mengetahui,<br><br><br>
+            <div class="signature-line">Bendahara</div>
+        </div>
+    </div>
+</body>
+</html>`);
             printWindow.document.close();
             printWindow.print();
         };
@@ -1170,10 +1480,6 @@
                     <div class="grid-2">
                         <div class="stat-card"><div>👥 Total Anggota</div><div class="stat-value">${anggota.length}</div></div>
                         <div class="stat-card"><div>🤝 Total Donatur</div><div class="stat-value">${donatur.length}</div></div>
-                    </div>
-                    <div class="grid-2">
-                        <button class="btn secondary" onclick="showModalTransaksi()">💰 Setor/Pinjam</button>
-                        <button class="btn warning" onclick="showModalDonasi()">🤝 Donasi</button>
                     </div>
                 </div>
                 <div class="card">
@@ -1247,7 +1553,7 @@
         function attachEvents() {
             document.getElementById('refreshBtn')?.addEventListener('click', async () => { await render(); showToast('Data dimuat ulang'); });
             document.getElementById('syncBtn')?.addEventListener('click', async () => { await syncToServer(); });
-            document.getElementById('printBtn')?.addEventListener('click', async () => { if (state.tab === 'laporan') cetakLaporanLengkap(); else { state.tab = 'laporan'; await render(); setTimeout(() => cetakLaporanLengkap(), 500); } });
+            document.getElementById('printBtn')?.addEventListener('click', async () => { cetakLaporanLengkap(); });
             document.getElementById('cariAnggota')?.addEventListener('input', (e) => { state.search = e.target.value; render(); });
         }
 
