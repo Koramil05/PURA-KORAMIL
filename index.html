@@ -208,6 +208,8 @@
         .badge.pinjam { background: rgba(255,152,0,0.3); color: #ffb74d; }
         .badge.donasi_uang { background: rgba(76,175,80,0.3); color: #81c784; }
         .badge.donasi_barang { background: rgba(33,150,243,0.3); color: #64b5f6; }
+        .badge.sudah-setor { background: rgba(76,175,80,0.3); color: #81c784; }
+        .badge.belum-setor { background: rgba(255,152,0,0.3); color: #ffb74d; }
         
         .month-group {
             margin-bottom: 24px;
@@ -215,13 +217,14 @@
             padding-left: 16px;
         }
         .month-header {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
             margin-bottom: 12px;
             color: #ff9800;
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: space-between;
+            flex-wrap: wrap;
         }
         .month-total { font-size: 12px; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 20px; }
         
@@ -327,6 +330,7 @@
         .text-center { text-align: center; }
         .positive { color: #4caf50; }
         .negative { color: #ef5350; }
+        .neutral { color: #ff9800; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .empty-state { text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.5); }
         .empty-state i { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
@@ -408,6 +412,9 @@
         }
         .install-prompt:hover { transform: scale(1.05); background: #f57c00; }
         @keyframes bounce { 0% { transform: scale(0.9); opacity: 0; } 80% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
+        
+        details summary { cursor: pointer; color: #90a4ae; }
+        details summary:hover { color: #ff9800; }
         
         @media print {
             .header, .nav, .header-actions, .btn, .signal-indicator, .icon-btn, .modal, .install-prompt { display: none !important; }
@@ -655,10 +662,13 @@
                 const bulanTahun = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
                 const namaBulan = date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
                 if (!groups[bulanTahun]) {
-                    groups[bulanTahun] = { nama: namaBulan, transaksi: [], totalSetor: 0, totalPengeluaran: 0, totalPinjam: 0, totalDonasi: 0 };
+                    groups[bulanTahun] = { nama: namaBulan, transaksi: [], totalSetor: 0, totalPengeluaran: 0, totalPinjam: 0, totalDonasi: 0, setorList: [] };
                 }
                 groups[bulanTahun].transaksi.push(t);
-                if (t.jenis === 'SETOR') groups[bulanTahun].totalSetor += t.nominal;
+                if (t.jenis === 'SETOR') {
+                    groups[bulanTahun].totalSetor += t.nominal;
+                    groups[bulanTahun].setorList.push(t);
+                }
                 else if (t.jenis === 'PENGELUARAN') groups[bulanTahun].totalPengeluaran += t.nominal;
                 else if (t.jenis === 'PINJAM') groups[bulanTahun].totalPinjam += t.nominal;
                 else if (t.jenis === 'DONASI_UANG') groups[bulanTahun].totalDonasi += t.nominal;
@@ -761,6 +771,7 @@
                             <option ${isEdit && editData.jenis === 'PENGELUARAN' ? 'selected' : ''} value="PENGELUARAN">🛒 PENGELUARAN (Kurang Saldo)</option>
                             <option ${isEdit && editData.jenis === 'DONASI_UANG' ? 'selected' : ''} value="DONASI_UANG">🤝 DONASI UANG (Tambah Saldo)</option>
                             <option ${isEdit && editData.jenis === 'DONASI_BARANG' ? 'selected' : ''} value="DONASI_BARANG">📦 DONASI BARANG</option>
+                            <option ${isEdit && editData.jenis === 'DONASI_JASA' ? 'selected' : ''} value="DONASI_JASA">🛠️ DONASI JASA</option>
                         </select>
                         <label>Tanggal</label>
                         <input type="date" id="modalTglTransaksi" value="${isEdit ? formatTanggalInput(editData.tanggal) : new Date().toISOString().split('T')[0]}">
@@ -784,6 +795,8 @@
                 const jenis = jenisSelect.value;
                 if (jenis === 'DONASI_BARANG') {
                     dynamicField.innerHTML = `<label><i class="fas fa-box"></i> Nama Barang</label><input type="text" id="modalNamaBarang" placeholder="Masukkan nama barang" value="${isEdit ? (editData.nama_barang || '') : ''}">`;
+                } else if (jenis === 'DONASI_JASA') {
+                    dynamicField.innerHTML = `<label><i class="fas fa-tools"></i> Nama Jasa</label><input type="text" id="modalNamaJasa" placeholder="Masukkan nama jasa" value="${isEdit ? (editData.nama_jasa || '') : ''}">`;
                 } else {
                     dynamicField.innerHTML = `<label><i class="fas fa-money-bill-wave"></i> Nominal (Rp)</label><input type="text" id="modalNominalTransaksi" placeholder="0" value="${isEdit ? (editData.nominal ? editData.nominal : '') : ''}" style="font-size:24px;text-align:center">`;
                     const nominalInput = document.getElementById('modalNominalTransaksi');
@@ -803,10 +816,15 @@
                     const id_anggota = document.getElementById('modalPilihAnggota').value;
                     const nama = document.getElementById('modalPilihAnggota').selectedOptions[0]?.dataset?.nama || '';
                     const keterangan = document.getElementById('modalKeteranganTransaksi').value;
-                    let nominal = 0, nama_barang = '';
+                    let nominal = 0, nama_barang = '', nama_jasa = '';
+                    
                     if (jenis === 'DONASI_BARANG') {
                         nama_barang = document.getElementById('modalNamaBarang').value;
                         if (!nama_barang) { showToast('Nama barang harus diisi', true); enableButton(btn); return; }
+                        nominal = 0;
+                    } else if (jenis === 'DONASI_JASA') {
+                        nama_jasa = document.getElementById('modalNamaJasa').value;
+                        if (!nama_jasa) { showToast('Nama jasa harus diisi', true); enableButton(btn); return; }
                         nominal = 0;
                     } else {
                         nominal = parseInt(document.getElementById('modalNominalTransaksi').value.replace(/\D/g, '')) || 0;
@@ -815,19 +833,19 @@
                         if ((jenis === 'PINJAM' || jenis === 'PENGELUARAN') && nominal > saldo) { showToast('Saldo tidak mencukupi!', true); enableButton(btn); return; }
                     }
                     if (isEdit) {
-                        const updatedTransaksi = { ...editData, jenis, tanggal, id_anggota, nama: nama || editData.nama, nominal, nama_barang, keterangan };
+                        const updatedTransaksi = { ...editData, jenis, tanggal, id_anggota, nama: nama || editData.nama, nominal, nama_barang, nama_jasa, keterangan };
                         await putToStore(STORES.TRANSAKSI, updatedTransaksi);
-                        if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'updateTransaksi', token: TOKEN, id: editData.id, jenis, tanggal, id_anggota, nama: nama || editData.nama, nominal, nama_barang, keterangan }) }); } catch(e) {} }
+                        if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'updateTransaksi', token: TOKEN, id: editData.id, jenis, tanggal, id_anggota, nama: nama || editData.nama, nominal, nama_barang, nama_jasa, keterangan }) }); } catch(e) {} }
                         showToast('Transaksi berhasil diupdate');
                     } else {
                         const newId = await generateId('TRX', STORES.TRANSAKSI);
-                        const newTransaksi = { id: newId, tanggal, jenis, id_anggota, nama: nama || (id_anggota ? (await getAllFromStore(STORES.ANGGOTA)).find(a => a.id === id_anggota)?.nama : '') || 'Umum', nominal, nama_barang, keterangan, created_at: new Date().toISOString() };
+                        const newTransaksi = { id: newId, tanggal, jenis, id_anggota, nama: nama || (id_anggota ? (await getAllFromStore(STORES.ANGGOTA)).find(a => a.id === id_anggota)?.nama : '') || 'Umum', nominal, nama_barang, nama_jasa, keterangan, created_at: new Date().toISOString() };
                         await addToStore(STORES.TRANSAKSI, newTransaksi);
                         if (jenis === 'DONASI_UANG' && newTransaksi.nama) {
                             const donatur = await getFromStore(STORES.DONATUR, newTransaksi.nama);
                             if (donatur) await putToStore(STORES.DONATUR, { ...donatur, total_donasi_uang: (donatur.total_donasi_uang || 0) + nominal });
                         }
-                        if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'addTransaksi', token: TOKEN, jenis, tanggal, id_anggota, nama: newTransaksi.nama, nominal, nama_barang, keterangan }) }); } catch(e) {} }
+                        if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'addTransaksi', token: TOKEN, jenis, tanggal, id_anggota, nama: newTransaksi.nama, nominal, nama_barang, nama_jasa, keterangan }) }); } catch(e) {} }
                         showToast('Transaksi berhasil!');
                     }
                     modal.remove();
@@ -932,9 +950,10 @@
                         <select id="modalPilihDonatur"><option value="">Pilih Donatur</option>${donatur.map(d => `<option value="${d.nama}" data-alamat="${d.alamat || ''}" data-hp="${d.no_hp || ''}">${d.nama}</option>`).join('')}<option value="NEW">+ Tambah Donatur Baru</option></select>
                         <div id="donaturInfo" style="background:rgba(255,255,255,0.05);border-radius:12px;padding:12px;margin-bottom:16px;display:none"><div><i class="fas fa-map-marker-alt"></i> <span id="donaturAlamat"></span></div><div><i class="fas fa-phone"></i> <span id="donaturHp"></span></div></div>
                         <label><i class="fas fa-calendar"></i> Tanggal</label><input type="date" id="modalTglDonasi" value="${new Date().toISOString().split('T')[0]}">
-                        <div class="radio-group"><label><input type="radio" name="jenisDonasi" value="UANG" checked> <i class="fas fa-money-bill-wave"></i> Uang</label><label><input type="radio" name="jenisDonasi" value="BARANG"> <i class="fas fa-box"></i> Barang</label></div>
+                        <div class="radio-group"><label><input type="radio" name="jenisDonasi" value="UANG" checked> <i class="fas fa-money-bill-wave"></i> Uang</label><label><input type="radio" name="jenisDonasi" value="BARANG"> <i class="fas fa-box"></i> Barang</label><label><input type="radio" name="jenisDonasi" value="JASA"> <i class="fas fa-tools"></i> Jasa</label></div>
                         <div id="donasiUangField"><label><i class="fas fa-money-bill-wave"></i> Nominal (Rp)</label><input type="text" id="modalNominalDonasi" placeholder="0" style="font-size:24px;text-align:center"></div>
                         <div id="donasiBarangField" style="display:none"><label><i class="fas fa-box"></i> Nama Barang</label><input type="text" id="modalNamaBarangDonasi" placeholder="Masukkan nama barang"></div>
+                        <div id="donasiJasaField" style="display:none"><label><i class="fas fa-tools"></i> Nama Jasa</label><input type="text" id="modalNamaJasaDonasi" placeholder="Masukkan nama jasa (contoh: Servis AC, Perbaikan)"></div>
                         <label><i class="fas fa-pen"></i> Keterangan</label><textarea id="modalKetDonasi" rows="3"></textarea>
                     </div>
                     <div class="modal-footer"><button class="btn secondary" onclick="this.closest('.modal').remove()">Batal</button><button class="btn" id="modalSimpanDonasi" style="background:#ff9800">Simpan Donasi</button></div>
@@ -943,10 +962,13 @@
             document.body.appendChild(modal);
             const radioUang = document.querySelector('input[value="UANG"]');
             const radioBarang = document.querySelector('input[value="BARANG"]');
+            const radioJasa = document.querySelector('input[value="JASA"]');
             const uangField = document.getElementById('donasiUangField');
             const barangField = document.getElementById('donasiBarangField');
-            radioUang.onchange = () => { uangField.style.display = 'block'; barangField.style.display = 'none'; document.getElementById('modalNominalDonasi').value = ''; if(document.getElementById('modalNamaBarangDonasi')) document.getElementById('modalNamaBarangDonasi').value = ''; };
-            radioBarang.onchange = () => { uangField.style.display = 'none'; barangField.style.display = 'block'; document.getElementById('modalNominalDonasi').value = ''; if(document.getElementById('modalNamaBarangDonasi')) document.getElementById('modalNamaBarangDonasi').value = ''; };
+            const jasaField = document.getElementById('donasiJasaField');
+            radioUang.onchange = () => { uangField.style.display = 'block'; barangField.style.display = 'none'; jasaField.style.display = 'none'; };
+            radioBarang.onchange = () => { uangField.style.display = 'none'; barangField.style.display = 'block'; jasaField.style.display = 'none'; };
+            radioJasa.onchange = () => { uangField.style.display = 'none'; barangField.style.display = 'none'; jasaField.style.display = 'block'; };
             const nominalInput = document.getElementById('modalNominalDonasi');
             if (nominalInput) nominalInput.addEventListener('input', (e) => { let val = e.target.value.replace(/\D/g, ''); e.target.value = val ? new Intl.NumberFormat('id-ID').format(val) : ''; });
             const donaturSelect = document.getElementById('modalPilihDonatur');
@@ -974,23 +996,26 @@
                     const jenisDonasi = document.querySelector('input[name="jenisDonasi"]:checked').value;
                     const tanggal = document.getElementById('modalTglDonasi').value;
                     const keterangan = document.getElementById('modalKetDonasi').value;
-                    let nominal = 0, nama_barang = '';
+                    let nominal = 0, nama_barang = '', nama_jasa = '';
                     if (jenisDonasi === 'UANG') {
                         nominal = parseInt(document.getElementById('modalNominalDonasi').value.replace(/\D/g, '')) || 0;
                         if (!nominal) { showToast('Nominal harus diisi', true); enableButton(btn); return; }
-                    } else {
+                    } else if (jenisDonasi === 'BARANG') {
                         nama_barang = document.getElementById('modalNamaBarangDonasi').value;
                         if (!nama_barang) { showToast('Nama barang harus diisi', true); enableButton(btn); return; }
+                    } else {
+                        nama_jasa = document.getElementById('modalNamaJasaDonasi').value;
+                        if (!nama_jasa) { showToast('Nama jasa harus diisi', true); enableButton(btn); return; }
                     }
                     const newId = await generateId('TRX', STORES.TRANSAKSI);
-                    const newTransaksi = { id: newId, tanggal, jenis: jenisDonasi === 'UANG' ? 'DONASI_UANG' : 'DONASI_BARANG', id_anggota: '', nama: donatur, nominal, nama_barang, keterangan, created_at: new Date().toISOString() };
+                    const newTransaksi = { id: newId, tanggal, jenis: jenisDonasi === 'UANG' ? 'DONASI_UANG' : (jenisDonasi === 'BARANG' ? 'DONASI_BARANG' : 'DONASI_JASA'), id_anggota: '', nama: donatur, nominal, nama_barang, nama_jasa, keterangan, created_at: new Date().toISOString() };
                     await addToStore(STORES.TRANSAKSI, newTransaksi);
                     if (jenisDonasi === 'UANG') {
                         const donaturData = await getFromStore(STORES.DONATUR, donatur);
                         if (donaturData) await putToStore(STORES.DONATUR, { ...donaturData, total_donasi_uang: (donaturData.total_donasi_uang || 0) + nominal });
                     }
-                    if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'addTransaksi', token: TOKEN, jenis: jenisDonasi === 'UANG' ? 'DONASI_UANG' : 'DONASI_BARANG', tanggal, id_anggota: '', nama: donatur, nominal, nama_barang, keterangan }) }); } catch(e) {} }
-                    showToast(jenisDonasi === 'UANG' ? 'Donasi uang berhasil!' : 'Donasi barang berhasil!');
+                    if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'addTransaksi', token: TOKEN, jenis: jenisDonasi === 'UANG' ? 'DONASI_UANG' : (jenisDonasi === 'BARANG' ? 'DONASI_BARANG' : 'DONASI_JASA'), tanggal, id_anggota: '', nama: donatur, nominal, nama_barang, nama_jasa, keterangan }) }); } catch(e) {} }
+                    showToast(jenisDonasi === 'UANG' ? 'Donasi uang berhasil!' : (jenisDonasi === 'BARANG' ? 'Donasi barang berhasil!' : 'Donasi jasa berhasil!'));
                     modal.remove();
                     await render();
                 } catch (error) { console.error(error); showToast('Terjadi kesalahan', true); } finally { enableButton(btn); }
@@ -1030,17 +1055,20 @@
             const transaksi = (await getAllFromStore(STORES.TRANSAKSI)).filter(t => t.nama === nama);
             const totalUang = transaksi.filter(t => t.jenis === 'DONASI_UANG').reduce((s,t) => s + t.nominal, 0);
             const donasiBarang = transaksi.filter(t => t.jenis === 'DONASI_BARANG');
+            const donasiJasa = transaksi.filter(t => t.jenis === 'DONASI_JASA');
+            const groupedByDate = {};
+            transaksi.forEach(t => { const tanggal = formatTanggal(t.tanggal); if (!groupedByDate[tanggal]) groupedByDate[tanggal] = []; groupedByDate[tanggal].push(t); });
             const modal = document.createElement('div');
             modal.className = 'modal';
             modal.innerHTML = `
                 <div class="modal-content">
-                    <div class="modal-header"><h3><i class="fas fa-hand-holding-heart"></i> ${donatur.nama}</h3><button onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i></button></div>
+                    <div class="modal-header"><h3><i class="fas fa-hand-holding-heart"></i> ${donatur.nama}</h3><button onclick="this.closest('.modal').remove()">&times;</button></div>
                     <div class="modal-body">
-                        <div class="donatur-detail"><div class="donatur-info"><div><i class="fas fa-map-marker-alt"></i> ${donatur.alamat || '-'}</div><div><i class="fas fa-phone"></i> ${donatur.no_hp || '-'}</div><div><i class="fas fa-money-bill-wave"></i> <strong class="positive">Total Donasi Uang: ${formatRupiah(totalUang)}</strong></div></div></div>
-                        ${donasiBarang.length > 0 ? `<div style="margin-top:12px"><strong><i class="fas fa-box"></i> Donasi Barang:</strong><br>${donasiBarang.map(b => `<span class="badge donasi_barang">${b.nama_barang}</span> `).join('')}</div>` : ''}
-                        <h4 style="margin-top:16px"><i class="fas fa-history"></i> Riwayat Donasi</h4>
-                        <div class="donasi-list">${transaksi.length === 0 ? '<div class="text-dim text-center">Belum ada donasi</div>' : transaksi.sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal)).map(t=>`<div class="donasi-item"><div class="flex-between"><div><span class="badge ${t.jenis === 'DONASI_UANG' ? 'donasi_uang' : 'donasi_barang'}">${t.jenis === 'DONASI_UANG' ? '💰 Uang' : '📦 Barang'}</span> <span class="text-dim">${formatTanggal(t.tanggal)}</span></div><span>${t.jenis === 'DONASI_UANG' ? formatRupiah(t.nominal) : t.nama_barang}</span></div><div class="text-dim">${t.keterangan || '-'}</div></div>`).join('')}</div>
+                        <div class="donatur-detail"><div class="donatur-info"><div><i class="fas fa-map-marker-alt"></i> ${donatur.alamat || '-'}</div><div><i class="fas fa-phone"></i> ${donatur.no_hp || '-'}</div><div><i class="fas fa-money-bill-wave"></i> <strong>Total Uang: ${formatRupiah(totalUang)}</strong></div><div><i class="fas fa-box"></i> Barang: ${donasiBarang.length} item</div><div><i class="fas fa-tools"></i> Jasa: ${donasiJasa.length} item</div></div></div>
+                        <h4><i class="fas fa-history"></i> Riwayat Donasi</h4>
+                        <div class="donasi-list">${Object.keys(groupedByDate).sort().reverse().map(tanggal => `<div style="margin-bottom:12px;background:rgba(255,255,255,0.05);border-radius:12px;padding:8px;"><div class="flex-between"><strong>${tanggal}</strong><span>${groupedByDate[tanggal].length} donasi</span></div>${groupedByDate[tanggal].map(t => `<div class="donasi-item"><div><span class="badge">${t.jenis === 'DONASI_UANG' ? '💰 Uang' : (t.jenis === 'DONASI_BARANG' ? '📦 Barang' : '🛠️ Jasa')}</span> <span class="text-dim">${t.tanggal}</span></div><div>${t.jenis === 'DONASI_UANG' ? formatRupiah(t.nominal) : (t.jenis === 'DONASI_BARANG' ? t.nama_barang : t.nama_jasa)}</div><div class="text-dim">${t.keterangan || '-'}</div></div>`).join('')}</div>`).join('')}${transaksi.length === 0 ? '<div class="text-dim text-center">Belum ada donasi</div>' : ''}</div>
                     </div>
+                    <div class="modal-footer"><button class="modal-btn modal-cancel" onclick="this.closest('.modal').remove()">Tutup</button></div>
                 </div>
             `;
             document.body.appendChild(modal);
@@ -1054,8 +1082,44 @@
             const totalPinjam = transaksi.filter(t => t.jenis === 'PINJAM').reduce((s,t) => s + t.nominal, 0);
             const modal = document.createElement('div');
             modal.className = 'modal';
-            modal.innerHTML = `<div class="modal-content"><div class="modal-header"><h3><i class="fas fa-user"></i> ${anggota.nama}</h3><button onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i></button></div><div class="modal-body"><div class="grid-2" style="margin-bottom:16px"><div><i class="fas fa-id-card"></i> <strong>ID:</strong><br>${anggota.id}</div><div><i class="fas fa-phone"></i> <strong>No HP:</strong><br>${anggota.no_hp || '-'}</div><div><i class="fas fa-map-marker-alt"></i> <strong>Alamat:</strong><br>${anggota.alamat || '-'}</div><div><i class="fas fa-toggle-on"></i> <strong>Status:</strong><br><span class="badge">${anggota.status || 'AKTIF'}</span></div></div><hr><div class="grid-2"><div class="stat-card"><div>Total Setor</div><div class="positive">${formatRupiah(totalSetor)}</div></div><div class="stat-card"><div>Total Pinjam</div><div class="negative">${formatRupiah(totalPinjam)}</div></div></div><div class="stat-card" style="background:#283593"><div>Saldo Akhir</div><div class="${totalSetor-totalPinjam>=0?'positive':'negative'}">${formatRupiah(totalSetor-totalPinjam)}</div></div><h4>📋 Riwayat Transaksi</h4>${transaksi.length===0?'<div class="text-dim text-center">Belum ada transaksi</div>':transaksi.sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal)).slice(0,10).map(t=>`<div class="flex-between" style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.1)"><div><span class="badge">${t.jenis}</span><div class="text-dim">${formatTanggal(t.tanggal)}</div><div class="text-dim">${t.keterangan||''}</div></div><span>${formatRupiah(t.nominal)}</span></div>`).join('')}</div></div>`;
+            modal.innerHTML = `<div class="modal-content"><div class="modal-header"><h3><i class="fas fa-user"></i> ${anggota.nama}</h3><button onclick="this.closest('.modal').remove()">&times;</button></div><div class="modal-body"><div class="grid-2" style="margin-bottom:16px"><div><strong>ID:</strong><br>${anggota.id}</div><div><strong>No HP:</strong><br>${anggota.no_hp || '-'}</div><div><strong>Alamat:</strong><br>${anggota.alamat || '-'}</div><div><strong>Status:</strong><br><span class="badge">${anggota.status || 'AKTIF'}</span></div></div><hr><div class="grid-2"><div class="stat-card"><div>Total Setor</div><div class="positive">${formatRupiah(totalSetor)}</div></div><div class="stat-card"><div>Total Pinjam</div><div class="negative">${formatRupiah(totalPinjam)}</div></div></div><div class="stat-card" style="background:#283593"><div>Saldo Akhir</div><div class="${totalSetor-totalPinjam>=0?'positive':'negative'}">${formatRupiah(totalSetor-totalPinjam)}</div></div><h4>📋 Riwayat Transaksi</h4>${transaksi.length===0?'<div class="text-dim text-center">Belum ada transaksi</div>':transaksi.sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal)).slice(0,10).map(t=>`<div class="flex-between" style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.1)"><div><span class="badge">${t.jenis}</span><div class="text-dim">${formatTanggal(t.tanggal)}</div><div class="text-dim">${t.keterangan||''}</div></div><span>${formatRupiah(t.nominal)}</span></div>`).join('')}</div></div>`;
             document.body.appendChild(modal);
+        };
+        
+        // ==================== FUNGSI QUICK SETOR ====================
+        window.showModalTransaksiSetor = async function(idAnggota, namaAnggota, bulanTahun) {
+            const [tahun, bulan] = bulanTahun.split('-');
+            const tanggalDefault = `${tahun}-${bulan}-15`;
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header"><h3><i class="fas fa-money-bill-wave"></i> Catat Setor - ${namaAnggota}</h3><button onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i></button></div>
+                    <div class="modal-body"><label>Tanggal Setor</label><input type="date" id="modalTglSetor" value="${tanggalDefault}"><label>Nominal Setor (Rp)</label><input type="text" id="modalNominalSetor" placeholder="0" style="font-size:24px;text-align:center"><label>Keterangan</label><textarea id="modalKeteranganSetor" rows="2" placeholder="Setor bulanan ${bulanTahun.replace('-', ' ')}"></textarea></div>
+                    <div class="modal-footer"><button class="btn secondary" onclick="this.closest('.modal').remove()">Batal</button><button class="btn" id="modalSimpanSetor">Simpan Setor</button></div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            const nominalInput = document.getElementById('modalNominalSetor');
+            nominalInput.addEventListener('input', (e) => { let val = e.target.value.replace(/\D/g, ''); e.target.value = val ? new Intl.NumberFormat('id-ID').format(val) : ''; });
+            document.getElementById('modalSimpanSetor').onclick = async () => {
+                const btn = document.getElementById('modalSimpanSetor');
+                if (btn.disabled) return;
+                disableButton(btn, 'Menyimpan...');
+                try {
+                    const nominal = parseInt(document.getElementById('modalNominalSetor').value.replace(/\D/g, '')) || 0;
+                    if (!nominal) { showToast('Nominal harus diisi', true); enableButton(btn); return; }
+                    const tanggal = document.getElementById('modalTglSetor').value;
+                    const keterangan = document.getElementById('modalKeteranganSetor').value;
+                    const newId = await generateId('TRX', STORES.TRANSAKSI);
+                    const newTransaksi = { id: newId, tanggal, jenis: 'SETOR', id_anggota: idAnggota, nama: namaAnggota, nominal, nama_barang: '', nama_jasa: '', keterangan: keterangan || `Setor bulan ${bulanTahun.replace('-', ' ')}`, created_at: new Date().toISOString() };
+                    await addToStore(STORES.TRANSAKSI, newTransaksi);
+                    if (isOnline) { try { await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'addTransaksi', token: TOKEN, jenis: 'SETOR', tanggal, id_anggota: idAnggota, nama: namaAnggota, nominal, nama_barang: '', nama_jasa: '', keterangan: keterangan || `Setor bulan ${bulanTahun.replace('-', ' ')}` }) }); } catch(e) {} }
+                    showToast(`Setor ${formatRupiah(nominal)} untuk ${namaAnggota} berhasil!`);
+                    modal.remove();
+                    await render();
+                } catch (error) { console.error(error); showToast('Terjadi kesalahan', true); } finally { enableButton(btn); }
+            };
         };
         
         // ==================== CETAK LAPORAN ====================
@@ -1066,9 +1130,8 @@
             const saldo = await hitungSaldo();
             const totalMasuk = transaksi.filter(t => t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG').reduce((s,t) => s + t.nominal, 0);
             const totalKeluar = transaksi.filter(t => t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN').reduce((s,t) => s + t.nominal, 0);
-            const donasiBarang = transaksi.filter(t => t.jenis === 'DONASI_BARANG');
             const printWindow = window.open('', '_blank');
-            printWindow.document.write(`<!DOCTYPE html><html><head><title>Laporan Keuangan</title><meta charset="UTF-8"><style>body{font-family:'Times New Roman',serif;padding:30px}.header{text-align:center;border-bottom:2px solid #1a237e;padding-bottom:20px;margin-bottom:30px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:30px}.summary-card{background:#f5f5f5;padding:15px;border-radius:8px;text-align:center;border-left:4px solid #4caf50}.summary-card .value{font-size:20px;font-weight:bold;color:#1a237e}table{width:100%;border-collapse:collapse;margin:20px 0}th{background:#1a237e;color:white;padding:10px;text-align:left}td{padding:8px;border-bottom:1px solid #ddd}.text-right{text-align:right}.positive{color:#2e7d32}.negative{color:#c62828}.footer{margin-top:40px;text-align:center}.badge{display:inline-block;padding:2px 6px;border-radius:12px;font-size:10px;background:#e8f5e8;color:#2e7d32}</style></head><body><div class="header"><h1>📊 LAPORAN KEUANGAN</h1><p>Aplikasi Kas | Dicetak: ${new Date().toLocaleDateString('id-ID')}</p></div><div class="summary"><div class="summary-card"><h3>💰 Saldo Kas</h3><div class="value">${formatRupiah(saldo)}</div></div><div class="summary-card"><h3>💚 Total Pemasukan</h3><div class="value positive">${formatRupiah(totalMasuk)}</div></div><div class="summary-card"><h3>❤️ Total Pengeluaran</h3><div class="value negative">${formatRupiah(totalKeluar)}</div></div><div class="summary-card"><h3>👥 Anggota</h3><div class="value">${anggota.length}</div><div>Aktif: ${anggota.filter(a=>a.status==='AKTIF').length}</div></div></div><h2>📋 DAFTAR TRANSAKSI</h2>${transaksi.length===0?'<p>Belum ada transaksi</p>':`<table><thead><tr><th>No</th><th>Tanggal</th><th>Jenis</th><th>Nama</th><th class="text-right">Nominal/Barang</th><th>Keterangan</th></tr></thead><tbody>${transaksi.sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal)).map((t,i)=>`<tr><td class="text-center">${i+1}</td><td class="text-center">${formatTanggal(t.tanggal)}</td><td class="text-center"><span class="badge">${t.jenis==='DONASI_UANG'?'DONASI UANG':(t.jenis==='DONASI_BARANG'?'DONASI BARANG':t.jenis)}</span></td><td>${t.nama||t.id_anggota||'-'}</td><td class="text-right">${t.jenis==='DONASI_BARANG'?t.nama_barang:formatRupiah(t.nominal)}</td><td>${t.keterangan||'-'}</td></tr>`).join('')}</tbody></table>`}<div class="footer"><p>Dicetak dari Aplikasi Kas - Manajemen Keuangan</p></div></body></html>`);
+            printWindow.document.write(`<!DOCTYPE html><html><head><title>Laporan Keuangan</title><meta charset="UTF-8"><style>body{font-family:'Times New Roman',serif;padding:30px}.header{text-align:center;border-bottom:2px solid #1a237e;padding-bottom:20px;margin-bottom:30px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:30px}.summary-card{background:#f5f5f5;padding:15px;border-radius:8px;text-align:center;border-left:4px solid #4caf50}.summary-card .value{font-size:20px;font-weight:bold;color:#1a237e}table{width:100%;border-collapse:collapse;margin:20px 0}th{background:#1a237e;color:white;padding:10px;text-align:left}td{padding:8px;border-bottom:1px solid #ddd}.text-right{text-align:right}.positive{color:#2e7d32}.negative{color:#c62828}.footer{margin-top:40px;text-align:center}.badge{display:inline-block;padding:2px 6px;border-radius:12px;font-size:10px;background:#e8f5e8;color:#2e7d32}</style></head><body><div class="header"><h1>📊 LAPORAN KEUANGAN</h1><p>Aplikasi Kas | Dicetak: ${new Date().toLocaleDateString('id-ID')}</p></div><div class="summary"><div class="summary-card"><h3>💰 Saldo Kas</h3><div class="value">${formatRupiah(saldo)}</div></div><div class="summary-card"><h3>💚 Total Pemasukan</h3><div class="value positive">${formatRupiah(totalMasuk)}</div></div><div class="summary-card"><h3>❤️ Total Pengeluaran</h3><div class="value negative">${formatRupiah(totalKeluar)}</div></div><div class="summary-card"><h3>👥 Anggota</h3><div class="value">${anggota.length}</div><div>Aktif: ${anggota.filter(a=>a.status==='AKTIF').length}</div></div></div><h2>📋 DAFTAR TRANSAKSI</h2>${transaksi.length===0?'<p>Belum ada transaksi</p>':`<table><thead><tr><th>No</th><th>Tanggal</th><th>Jenis</th><th>Nama</th><th class="text-right">Nominal/Barang</th><th>Keterangan</th></tr></thead><tbody>${transaksi.sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal)).map((t,i)=>`<tr><td class="text-center">${i+1}</td><td class="text-center">${formatTanggal(t.tanggal)}</td><td class="text-center"><span class="badge">${t.jenis==='DONASI_UANG'?'DONASI UANG':(t.jenis==='DONASI_BARANG'?'DONASI BARANG':(t.jenis==='DONASI_JASA'?'DONASI JASA':t.jenis))}</span></td><td>${t.nama||t.id_anggota||'-'}</td><td class="text-right">${t.jenis==='DONASI_BARANG'?t.nama_barang:(t.jenis==='DONASI_JASA'?t.nama_jasa:formatRupiah(t.nominal))}</td><td>${t.keterangan||'-'}</td></tr>`).join('')}</tbody></table>`}<div class="footer"><p>Dicetak dari Aplikasi Kas - Manajemen Keuangan</p></div></body></html>`);
             printWindow.document.close();
             printWindow.print();
         };
@@ -1085,39 +1148,29 @@
             const totalKeluar = transaksi.filter(t => t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN').reduce((s,t) => s + t.nominal, 0);
             const totalDonasiUang = transaksi.filter(t => t.jenis === 'DONASI_UANG').reduce((s,t) => s + t.nominal, 0);
             const totalDonasiBarang = transaksi.filter(t => t.jenis === 'DONASI_BARANG').length;
-            
-            // Urutkan transaksi dari yang terbaru
-            const sortedTransaksi = [...transaksi].sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
-            
+            const totalDonasiJasa = transaksi.filter(t => t.jenis === 'DONASI_JASA').length;
             return `
                 <div class="card">
                     <div class="info-card"><div>💰 Saldo Kas</div><div class="info-value">${formatRupiah(saldo)}</div></div>
                     <div class="grid-2"><div class="stat-card"><div>💚 Total Pemasukan</div><div class="stat-value positive">${formatRupiah(totalMasuk)}</div></div><div class="stat-card"><div>❤️ Total Pengeluaran</div><div class="stat-value negative">${formatRupiah(totalKeluar)}</div></div></div>
-                    <div class="grid-2"><div class="stat-card"><div>🤝 Donasi Uang</div><div class="positive">${formatRupiah(totalDonasiUang)}</div></div><div class="stat-card"><div>📦 Donasi Barang</div><div class="stat-value">${totalDonasiBarang} item</div></div></div>
+                    <div class="grid-2"><div class="stat-card"><div>🤝 Donasi Uang</div><div class="positive">${formatRupiah(totalDonasiUang)}</div></div><div class="stat-card"><div>📦 Donasi Barang</div><div class="stat-value">${totalDonasiBarang} item</div></div><div class="stat-card"><div>🛠️ Donasi Jasa</div><div class="stat-value">${totalDonasiJasa} item</div></div></div>
                     <div class="grid-2"><div class="stat-card"><div>👥 Total Anggota</div><div class="stat-value">${anggota.length}</div></div><div class="stat-card"><div>🤝 Total Donatur</div><div class="stat-value">${donatur.length}</div></div></div>
-                    <!-- TOMBOL SETOR/PINJAM DAN DONASI TELAH DIHAPUS -->
                 </div>
                 <div class="card">
                     <h3>📋 Transaksi Terbaru</h3>
-                    ${sortedTransaksi.length === 0 ? '<div class="empty-state"><i class="fas fa-receipt"></i><div>Belum ada transaksi</div></div>' : sortedTransaksi.slice(0,15).map(t => {
+                    ${transaksi.length === 0 ? '<div class="empty-state"><i class="fas fa-receipt"></i><div>Belum ada transaksi</div></div>' : transaksi.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).slice(0,15).map(t => {
                         let displayName = t.nama || '-';
-                        let displayDetail = '';
-                        if ((t.jenis === 'DONASI_UANG' || t.jenis === 'DONASI_BARANG') && t.nama) {
-                            displayName = t.nama;
-                        } else if (t.id_anggota) {
-                            const anggotaData = anggota.find(a => a.id === t.id_anggota);
-                            if (anggotaData) displayName = anggotaData.nama;
-                        }
-                        if (t.jenis === 'DONASI_BARANG' && t.nama_barang) {
-                            displayDetail = `<div class="text-dim"><i class="fas fa-box"></i> ${t.nama_barang}</div>`;
-                        }
-                        let tampilanNilai = t.jenis === 'DONASI_BARANG' ? `<span class="donasi-barang"><i class="fas fa-box"></i> ${t.nama_barang}</span>` : `<span class="${t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG' ? 'positive' : 'negative'}">${formatRupiah(t.nominal)}</span>`;
+                        if (t.id_anggota) { const anggotaData = anggota.find(a => a.id === t.id_anggota); if (anggotaData) displayName = anggotaData.nama; }
+                        let tampilanNilai = '';
+                        if (t.jenis === 'DONASI_BARANG') tampilanNilai = `<span class="donasi-barang"><i class="fas fa-box"></i> ${t.nama_barang}</span>`;
+                        else if (t.jenis === 'DONASI_JASA') tampilanNilai = `<span class="donasi-barang"><i class="fas fa-tools"></i> ${t.nama_jasa}</span>`;
+                        else tampilanNilai = `<span class="${t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG' ? 'positive' : 'negative'}">${formatRupiah(t.nominal)}</span>`;
                         let displayJenis = t.jenis;
                         if (t.jenis === 'DONASI_UANG') displayJenis = 'DONASI UANG';
                         if (t.jenis === 'DONASI_BARANG') displayJenis = 'DONASI BARANG';
-                        return `<div class="transaction-item"><div style="flex:1"><span class="badge ${t.jenis === 'PENGELUARAN' ? 'pengeluaran' : (t.jenis === 'PINJAM' ? 'pinjam' : (t.jenis === 'DONASI_UANG' ? 'donasi_uang' : (t.jenis === 'DONASI_BARANG' ? 'donasi_barang' : '')))}">${displayJenis}</span><div class="text-dim" style="font-size:11px">${formatTanggal(t.tanggal)}</div><div><b>${displayName}</b> <span class="text-dim">${t.keterangan ? '- ' + t.keterangan : ''}</span></div>${displayDetail}</div><div class="action-buttons">${tampilanNilai}<button class="icon-btn edit" onclick="event.stopPropagation(); showModalTransaksi(${JSON.stringify(t).replace(/"/g, '&quot;')})"><i class="fas fa-edit"></i></button><button class="icon-btn delete" onclick="event.stopPropagation(); deleteTransaksi('${t.id}')"><i class="fas fa-trash"></i></button></div></div>`;
+                        if (t.jenis === 'DONASI_JASA') displayJenis = 'DONASI JASA';
+                        return `<div class="transaction-item"><div style="flex:1"><span class="badge">${displayJenis}</span><div class="text-dim" style="font-size:11px">${formatTanggal(t.tanggal)}</div><div><b>${displayName}</b> <span class="text-dim">${t.keterangan ? '- ' + t.keterangan : ''}</span></div></div><div class="action-buttons">${tampilanNilai}<button class="icon-btn edit" onclick="event.stopPropagation(); showModalTransaksi(${JSON.stringify(t).replace(/"/g, '&quot;')})"><i class="fas fa-edit"></i></button><button class="icon-btn delete" onclick="event.stopPropagation(); deleteTransaksi('${t.id}')"><i class="fas fa-trash"></i></button></div></div>`;
                     }).join('')}
-                    ${sortedTransaksi.length > 15 ? '<div class="text-dim text-center" style="padding: 10px;">Menampilkan 15 transaksi terbaru</div>' : ''}
                 </div>
             `;
         }
@@ -1126,18 +1179,18 @@
             const saldo = await hitungSaldo();
             const transaksi = await getAllFromStore(STORES.TRANSAKSI);
             const anggota = await getAllFromStore(STORES.ANGGOTA);
-            const sortedTransaksi = [...transaksi].sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
-            return `<div class="card"><h3>📝 Transaksi</h3><div class="info-card" style="background:#283593"><div>💰 Saldo Saat Ini</div><div class="info-value">${formatRupiah(saldo)}</div></div><div class="grid-2"><button class="btn warning" onclick="showModalTransaksi()"><i class="fas fa-plus-circle"></i> Transaksi Baru</button><button class="btn secondary" onclick="showModalDonasi()" style="background:#ff9800"><i class="fas fa-hand-holding-heart"></i> Donasi Baru</button></div></div><div class="card"><h3>📋 Riwayat Transaksi</h3><div id="riwayatTransaksi">${sortedTransaksi.length === 0 ? '<div class="empty-state"><i class="fas fa-receipt"></i><div>Belum ada transaksi</div></div>' : sortedTransaksi.map(t => {
+            return `<div class="card"><h3>📝 Transaksi</h3><div class="info-card" style="background:#283593"><div>💰 Saldo Saat Ini</div><div class="info-value">${formatRupiah(saldo)}</div></div><div class="grid-2"><button class="btn warning" onclick="showModalTransaksi()"><i class="fas fa-plus-circle"></i> Transaksi Baru</button><button class="btn secondary" onclick="showModalDonasi()" style="background:#ff9800"><i class="fas fa-hand-holding-heart"></i> Donasi Baru</button></div></div><div class="card"><h3>📋 Riwayat Transaksi</h3><div id="riwayatTransaksi">${transaksi.length === 0 ? '<div class="empty-state"><i class="fas fa-receipt"></i><div>Belum ada transaksi</div></div>' : transaksi.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).map(t => {
                 let displayName = t.nama || '-';
-                let displayDetail = '';
-                if ((t.jenis === 'DONASI_UANG' || t.jenis === 'DONASI_BARANG') && t.nama) displayName = t.nama;
-                else if (t.id_anggota) { const anggotaData = anggota.find(a => a.id === t.id_anggota); if (anggotaData) displayName = anggotaData.nama; }
-                if (t.jenis === 'DONASI_BARANG' && t.nama_barang) displayDetail = `<div class="text-dim"><i class="fas fa-box"></i> ${t.nama_barang}</div>`;
-                let tampilanNilai = t.jenis === 'DONASI_BARANG' ? `<span class="donasi-barang"><i class="fas fa-box"></i> ${t.nama_barang}</span>` : `<span class="${t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG' ? 'positive' : 'negative'}">${formatRupiah(t.nominal)}</span>`;
+                if (t.id_anggota) { const anggotaData = anggota.find(a => a.id === t.id_anggota); if (anggotaData) displayName = anggotaData.nama; }
+                let tampilanNilai = '';
+                if (t.jenis === 'DONASI_BARANG') tampilanNilai = `<span class="donasi-barang"><i class="fas fa-box"></i> ${t.nama_barang}</span>`;
+                else if (t.jenis === 'DONASI_JASA') tampilanNilai = `<span class="donasi-barang"><i class="fas fa-tools"></i> ${t.nama_jasa}</span>`;
+                else tampilanNilai = `<span class="${t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG' ? 'positive' : 'negative'}">${formatRupiah(t.nominal)}</span>`;
                 let displayJenis = t.jenis;
                 if (t.jenis === 'DONASI_UANG') displayJenis = 'DONASI UANG';
                 if (t.jenis === 'DONASI_BARANG') displayJenis = 'DONASI BARANG';
-                return `<div class="transaction-item"><div style="flex:1"><span class="badge">${displayJenis}</span><div class="text-dim" style="font-size:11px">${formatTanggal(t.tanggal)}</div><div><b>${displayName}</b> <span class="text-dim">${t.keterangan ? '- ' + t.keterangan : ''}</span></div>${displayDetail}</div><div class="action-buttons">${tampilanNilai}<button class="icon-btn edit" onclick="showModalTransaksi(${JSON.stringify(t).replace(/"/g, '&quot;')})"><i class="fas fa-edit"></i></button><button class="icon-btn delete" onclick="deleteTransaksi('${t.id}')"><i class="fas fa-trash"></i></button></div></div>`;
+                if (t.jenis === 'DONASI_JASA') displayJenis = 'DONASI JASA';
+                return `<div class="transaction-item"><div style="flex:1"><span class="badge">${displayJenis}</span><div class="text-dim" style="font-size:11px">${formatTanggal(t.tanggal)}</div><div><b>${displayName}</b> <span class="text-dim">${t.keterangan ? '- ' + t.keterangan : ''}</span></div></div><div class="action-buttons">${tampilanNilai}<button class="icon-btn edit" onclick="showModalTransaksi(${JSON.stringify(t).replace(/"/g, '&quot;')})"><i class="fas fa-edit"></i></button><button class="icon-btn delete" onclick="deleteTransaksi('${t.id}')"><i class="fas fa-trash"></i></button></div></div>`;
             }).join('')}</div></div>`;
         }
         
@@ -1148,7 +1201,7 @@
             const anggotaBelumSetor = getAnggotaBelumSetor(anggota, transaksi, bulanIni);
             const belumSetorIds = new Set(anggotaBelumSetor.map(a => a.id));
             if (state.search) anggota = anggota.filter(a => a.nama.toLowerCase().includes(state.search.toLowerCase()) || a.id.includes(state.search));
-            return `<div class="card"><div class="flex-between"><h3>👥 Anggota</h3><button class="btn secondary" style="width:auto;padding:8px 16px" onclick="showModalAnggota()">+ Tambah</button></div><input type="text" id="cariAnggota" placeholder="Cari ID atau nama..." value="${state.search}"><div>${anggota.length===0?'<div class="empty-state"><i class="fas fa-users"></i><div>Belum ada anggota</div></div>':anggota.map(a=>`<div class="account-item"><div class="account-avatar">${a.nama.charAt(0)}</div><div style="flex:1" onclick="detailAnggota('${a.id}')"><div><b>${a.nama}</b> ${belumSetorIds.has(a.id) ? '<span class="badge belum-setor">Belum Setor</span>' : '<span class="badge sudah-setor">Sudah Setor</span>'}</div><div class="text-dim">ID: ${a.id} | ${a.no_hp||'-'}</div><div class="text-dim"><i class="fas fa-map-marker-alt"></i> ${a.alamat||'-'}</div></div><div class="action-buttons"><span class="badge ${a.status==='NONAKTIF'?'nonaktif':''}">${a.status||'AKTIF'}</span><button class="icon-btn edit" onclick="event.stopPropagation(); showModalAnggota(${JSON.stringify(a).replace(/"/g,'&quot;')})"><i class="fas fa-edit"></i></button><button class="icon-btn delete" onclick="event.stopPropagation(); deleteAnggota('${a.id}','${a.nama}')"><i class="fas fa-trash"></i></button></div></div>`).join('')}</div></div>`;
+            return `<div class="card"><div class="flex-between"><h3>👥 Anggota</h3><button class="btn secondary" style="width:auto;padding:8px 16px" onclick="showModalAnggota()">+ Tambah</button></div><input type="text" id="cariAnggota" placeholder="Cari ID atau nama..." value="${state.search}">${anggotaBelumSetor.length > 0 ? `<div style="background:rgba(255,152,0,0.2);border-radius:12px;padding:10px;margin:12px 0;"><i class="fas fa-exclamation-triangle"></i> <strong>${anggotaBelumSetor.length} anggota belum setor bulan ini</strong></div>` : ''}<div>${anggota.length===0?'<div class="empty-state"><i class="fas fa-users"></i><div>Belum ada anggota</div></div>':anggota.map(a=>`<div class="account-item"><div class="account-avatar">${a.nama.charAt(0)}</div><div style="flex:1" onclick="detailAnggota('${a.id}')"><div><b>${a.nama}</b> ${belumSetorIds.has(a.id) ? '<span class="badge belum-setor">Belum Setor</span>' : '<span class="badge sudah-setor">Sudah Setor</span>'}</div><div class="text-dim">ID: ${a.id} | ${a.no_hp||'-'}</div><div class="text-dim"><i class="fas fa-map-marker-alt"></i> ${a.alamat||'-'}</div></div><div class="action-buttons"><span class="badge ${a.status==='NONAKTIF'?'nonaktif':''}">${a.status||'AKTIF'}</span><button class="icon-btn edit" onclick="event.stopPropagation(); showModalAnggota(${JSON.stringify(a).replace(/"/g,'&quot;')})"><i class="fas fa-edit"></i></button><button class="icon-btn delete" onclick="event.stopPropagation(); deleteAnggota('${a.id}','${a.nama}')"><i class="fas fa-trash"></i></button></div></div>`).join('')}</div></div>`;
         }
         
         async function renderDonatur() {
@@ -1157,9 +1210,10 @@
             const donaturWithDonasi = donatur.map(d => {
                 const donasiUang = transaksi.filter(t => t.jenis === 'DONASI_UANG' && t.nama === d.nama).reduce((s,t) => s + t.nominal, 0);
                 const donasiBarang = transaksi.filter(t => t.jenis === 'DONASI_BARANG' && t.nama === d.nama);
-                return { ...d, donasiUang, donasiBarang };
+                const donasiJasa = transaksi.filter(t => t.jenis === 'DONASI_JASA' && t.nama === d.nama);
+                return { ...d, donasiUang, donasiBarang, donasiJasa };
             });
-            return `<div class="card"><div class="flex-between"><h3>🤝 Donatur</h3><button class="btn secondary" style="width:auto;padding:8px 16px" onclick="showModalDonatur()">+ Tambah</button></div><button class="btn warning" onclick="showModalDonasi()" style="margin-top:12px;background:#ff9800"><i class="fas fa-hand-holding-heart"></i> Catat Donasi</button></div><div class="card"><h3>📋 Daftar Donatur</h3>${donaturWithDonasi.length===0?'<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><div>Belum ada donatur</div></div>':donaturWithDonasi.map(d=>`<div class="donatur-item" onclick="detailDonatur('${d.nama}')"><div class="account-avatar" style="background:#2196f3">${d.nama.charAt(0)}</div><div style="flex:1"><div><b>${d.nama}</b></div><div class="text-dim"><i class="fas fa-map-marker-alt"></i> ${d.alamat||'-'} | <i class="fas fa-phone"></i> ${d.no_hp||'-'}</div><div>${d.donasiUang>0?`<span class="positive"><i class="fas fa-money-bill-wave"></i> ${formatRupiah(d.donasiUang)}</span>`:''}${d.donasiBarang.length>0?`<span class="donasi-barang"><i class="fas fa-box"></i> ${d.donasiBarang.map(b=>b.nama_barang).join(', ')}</span>`:''}${d.donasiUang===0&&d.donasiBarang.length===0?'<span class="text-dim">Belum ada donasi</span>':''}</div></div><div class="action-buttons"><button class="icon-btn edit" onclick="event.stopPropagation(); showModalDonatur(${JSON.stringify(d).replace(/"/g,'&quot;')})"><i class="fas fa-edit"></i></button><button class="icon-btn delete" onclick="event.stopPropagation(); deleteDonatur('${d.nama}')"><i class="fas fa-trash"></i></button></div></div>`).join('')}</div>`;
+            return `<div class="card"><div class="flex-between"><h3>🤝 Donatur</h3><button class="btn secondary" style="width:auto;padding:8px 16px" onclick="showModalDonatur()">+ Tambah</button></div><button class="btn warning" onclick="showModalDonasi()" style="margin-top:12px;background:#ff9800"><i class="fas fa-hand-holding-heart"></i> Catat Donasi</button></div><div class="card"><h3>📋 Daftar Donatur</h3>${donaturWithDonasi.length===0?'<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><div>Belum ada donatur</div></div>':donaturWithDonasi.map(d=>`<div class="donatur-item" onclick="detailDonatur('${d.nama}')"><div class="account-avatar" style="background:#2196f3">${d.nama.charAt(0)}</div><div style="flex:1"><div><b>${d.nama}</b></div><div class="text-dim"><i class="fas fa-map-marker-alt"></i> ${d.alamat||'-'} | <i class="fas fa-phone"></i> ${d.no_hp||'-'}</div><div>${d.donasiUang>0?`💰 ${formatRupiah(d.donasiUang)}` : ''} ${d.donasiBarang.length>0?`📦 ${d.donasiBarang.length} item` : ''} ${d.donasiJasa.length>0?`🛠️ ${d.donasiJasa.length} item` : ''} ${d.donasiUang===0&&d.donasiBarang.length===0&&d.donasiJasa.length===0?'Belum ada donasi':''}</div></div><div class="action-buttons"><button class="icon-btn edit" onclick="event.stopPropagation(); showModalDonatur(${JSON.stringify(d).replace(/"/g,'&quot;')})"><i class="fas fa-edit"></i></button><button class="icon-btn delete" onclick="event.stopPropagation(); deleteDonatur('${d.nama}')"><i class="fas fa-trash"></i></button></div></div>`).join('')}</div>`;
         }
         
         async function renderLaporan() {
@@ -1171,30 +1225,77 @@
             const totalKeluar = transaksi.filter(t => t.jenis === 'PINJAM' || t.jenis === 'PENGELUARAN').reduce((s,t) => s + t.nominal, 0);
             const totalDonasiUang = transaksi.filter(t => t.jenis === 'DONASI_UANG').reduce((s,t) => s + t.nominal, 0);
             const donasiBarang = transaksi.filter(t => t.jenis === 'DONASI_BARANG');
-            return `<div class="card"><div class="flex-between"><h3>📊 Laporan Keuangan</h3><button class="btn secondary" onclick="cetakLaporanLengkap()"><i class="fas fa-print"></i> Cetak Laporan</button></div><div><h4>📈 Ringkasan Global</h4><div class="grid-2"><div class="stat-card"><div>💰 Saldo Kas</div><div class="positive">${formatRupiah(saldo)}</div></div><div class="stat-card"><div>💚 Total Pemasukan</div><div class="positive">${formatRupiah(totalMasuk)}</div></div><div class="stat-card"><div>❤️ Total Pengeluaran</div><div class="negative">${formatRupiah(totalKeluar)}</div></div><div class="stat-card"><div>📊 Selisih</div><div>${formatRupiah(totalMasuk-totalKeluar)}</div></div></div></div><div><h4>🤝 Ringkasan Donasi</h4><div class="grid-2"><div class="stat-card"><div>💰 Donasi Uang</div><div class="positive">${formatRupiah(totalDonasiUang)}</div></div><div class="stat-card"><div>📦 Donasi Barang</div><div class="stat-value">${donasiBarang.length} item</div></div></div>${donasiBarang.length>0?`<div><h5>Daftar Donasi Barang:</h5>${donasiBarang.map(d=>`<div class="text-dim"><i class="fas fa-box"></i> ${d.nama_barang} - ${d.nama} (${formatTanggal(d.tanggal)})</div>`).join('')}</div>`:''}</div><div><h4>👥 Statistik</h4><div class="grid-2"><div class="stat-card"><div>👥 Anggota</div><div class="stat-value">${anggota.length}</div><div>Aktif: ${anggota.filter(a=>a.status==='AKTIF').length}</div></div><div class="stat-card"><div>🤝 Donatur</div><div class="stat-value">${donatur.length}</div></div><div class="stat-card"><div>📋 Transaksi</div><div class="stat-value">${transaksi.length}</div></div><div class="stat-card"><div>📅 Transaksi Bulan Ini</div><div class="stat-value">${transaksi.filter(t=>t.tanggal?.startsWith(new Date().toISOString().slice(0,7))).length}</div></div></div></div></div>`;
+            const donasiJasa = transaksi.filter(t => t.jenis === 'DONASI_JASA');
+            return `<div class="card"><div class="flex-between"><h3>📊 Laporan Keuangan</h3><button class="btn secondary" onclick="cetakLaporanLengkap()"><i class="fas fa-print"></i> Cetak Laporan</button></div><div><h4>📈 Ringkasan Global</h4><div class="grid-2"><div class="stat-card"><div>💰 Saldo Kas</div><div class="positive">${formatRupiah(saldo)}</div></div><div class="stat-card"><div>💚 Total Pemasukan</div><div class="positive">${formatRupiah(totalMasuk)}</div></div><div class="stat-card"><div>❤️ Total Pengeluaran</div><div class="negative">${formatRupiah(totalKeluar)}</div></div><div class="stat-card"><div>📊 Selisih</div><div>${formatRupiah(totalMasuk-totalKeluar)}</div></div></div></div><div><h4>🤝 Ringkasan Donasi</h4><div class="grid-2"><div class="stat-card"><div>💰 Donasi Uang</div><div class="positive">${formatRupiah(totalDonasiUang)}</div></div><div class="stat-card"><div>📦 Donasi Barang</div><div class="stat-value">${donasiBarang.length} item</div></div><div class="stat-card"><div>🛠️ Donasi Jasa</div><div class="stat-value">${donasiJasa.length} item</div></div></div>${donasiBarang.length>0?`<div><h5>Donasi Barang:</h5>${donasiBarang.map(d=>`<div class="text-dim"><i class="fas fa-box"></i> ${d.nama_barang} - ${d.nama} (${formatTanggal(d.tanggal)})</div>`).join('')}</div>`:''}${donasiJasa.length>0?`<div><h5>Donasi Jasa:</h5>${donasiJasa.map(d=>`<div class="text-dim"><i class="fas fa-tools"></i> ${d.nama_jasa} - ${d.nama} (${formatTanggal(d.tanggal)})</div>`).join('')}</div>`:''}</div><div><h4>👥 Statistik</h4><div class="grid-2"><div class="stat-card"><div>👥 Anggota</div><div class="stat-value">${anggota.length}</div><div>Aktif: ${anggota.filter(a=>a.status==='AKTIF').length}</div></div><div class="stat-card"><div>🤝 Donatur</div><div class="stat-value">${donatur.length}</div></div><div class="stat-card"><div>📋 Transaksi</div><div class="stat-value">${transaksi.length}</div></div><div class="stat-card"><div>📅 Transaksi Bulan Ini</div><div class="stat-value">${transaksi.filter(t=>t.tanggal?.startsWith(new Date().toISOString().slice(0,7))).length}</div></div></div></div></div>`;
         }
         
         async function renderRekapBulanan() {
             const anggota = await getAllFromStore(STORES.ANGGOTA);
             const transaksi = await getAllFromStore(STORES.TRANSAKSI);
-            const groups = groupTransaksiPerBulan(transaksi);
-            const sortedMonths = Object.keys(groups).sort().reverse();
-            let html = `<div class="card"><h3><i class="fas fa-calendar-alt"></i> Rekap Transaksi Per Bulan</h3><div class="info-card" style="background:#283593; margin-bottom:20px;"><div class="info-label">Total Anggota Aktif</div><div class="info-value">${anggota.filter(a => a.status !== 'NONAKTIF').length}</div></div>`;
-            for (const bulanKey of sortedMonths) {
-                const group = groups[bulanKey];
-                const anggotaBelumSetor = getAnggotaBelumSetor(anggota, transaksi, bulanKey);
-                html += `<div class="month-group"><div class="month-header"><i class="fas fa-calendar"></i> ${group.nama}<span class="month-total">${group.transaksi.length} transaksi</span></div><div class="grid-2" style="margin-bottom:12px;"><div class="stat-card"><div>💰 SETOR</div><div class="positive">${formatRupiah(group.totalSetor)}</div></div><div class="stat-card"><div>📤 PINJAM</div><div class="neutral">${formatRupiah(group.totalPinjam)}</div></div><div class="stat-card"><div>🛒 PENGELUARAN</div><div class="negative">${formatRupiah(group.totalPengeluaran)}</div></div><div class="stat-card"><div>🤝 DONASI</div><div class="positive">${formatRupiah(group.totalDonasi)}</div></div></div>`;
-                if (anggotaBelumSetor.length > 0) {
-                    html += `<div style="background:rgba(255,152,0,0.1);border-radius:12px;padding:12px;margin-bottom:12px;"><div class="flex-between" style="margin-bottom:8px;"><span><i class="fas fa-exclamation-triangle" style="color:#ff9800;"></i> <strong>Anggota Belum Setor</strong></span><span class="badge belum-setor">${anggotaBelumSetor.length} anggota</span></div><div style="display:flex;flex-wrap:wrap;gap:8px;">${anggotaBelumSetor.map(a => `<span class="badge belum-setor" style="cursor:pointer;" onclick="detailAnggota('${a.id}')"><i class="fas fa-user"></i> ${a.nama}</span>`).join('')}</div></div>`;
-                } else {
-                    html += `<div style="background:rgba(76,175,80,0.1);border-radius:12px;padding:12px;margin-bottom:12px;"><div class="flex-between"><span><i class="fas fa-check-circle" style="color:#4caf50;"></i> <strong>Semua Anggota Sudah Setor</strong></span><span class="badge sudah-setor">✓ Lengkap</span></div></div>`;
-                }
-                html += `<div style="max-height:300px;overflow-y:auto;">${group.transaksi.sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal)).map(t => `<div class="transaction-item" style="padding:8px;"><div style="flex:1"><span class="badge">${t.jenis}</span><span class="text-dim" style="font-size:11px; margin-left:8px;">${formatTanggal(t.tanggal)}</span><div style="font-size:12px; margin-top:2px;"><b>${t.nama || t.id_anggota || '-'}</b> ${t.keterangan ? '- ' + t.keterangan : ''}</div>${t.nama_barang ? `<div class="text-dim"><i class="fas fa-box"></i> ${t.nama_barang}</div>` : ''}</div><div class="${t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG' ? 'positive' : 'negative'}">${formatRupiah(t.nominal)}</div></div>`).join('')}</div></div>`;
-            }
+            const anggotaAktif = anggota.filter(a => a.status === 'AKTIF');
+            const bulanan = {};
+            transaksi.forEach(t => {
+                if (!t.tanggal) return;
+                const date = new Date(t.tanggal);
+                const bulanTahun = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                const namaBulan = date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+                if (!bulanan[bulanTahun]) bulanan[bulanTahun] = { nama: namaBulan, transaksi: [], totalSetor: 0, totalDonasiUang: 0, totalPinjam: 0, totalPengeluaran: 0, setorList: [] };
+                bulanan[bulanTahun].transaksi.push(t);
+                if (t.jenis === 'SETOR') { bulanan[bulanTahun].totalSetor += t.nominal; bulanan[bulanTahun].setorList.push(t); }
+                else if (t.jenis === 'DONASI_UANG') bulanan[bulanTahun].totalDonasiUang += t.nominal;
+                else if (t.jenis === 'PINJAM') bulanan[bulanTahun].totalPinjam += t.nominal;
+                else if (t.jenis === 'PENGELUARAN') bulanan[bulanTahun].totalPengeluaran += t.nominal;
+            });
+            Object.keys(bulanan).forEach(bulanKey => {
+                const bulan = bulanan[bulanKey];
+                const anggotaSudahSetor = new Set(bulan.setorList.map(s => s.id_anggota).filter(id => id));
+                bulan.anggotaBelumSetor = anggotaAktif.filter(a => !anggotaSudahSetor.has(a.id));
+                bulan.persentase = anggotaAktif.length > 0 ? Math.round((anggotaSudahSetor.size / anggotaAktif.length) * 100) : 0;
+            });
+            const sortedMonths = Object.keys(bulanan).sort().reverse();
+            let html = `<div class="card"><div class="flex-between"><h3><i class="fas fa-calendar-alt"></i> Rekap Keuangan Per Bulan</h3><button class="btn secondary" style="width:auto;padding:8px 16px;" onclick="cetakRekapBulanan()"><i class="fas fa-print"></i> Cetak Rekap</button></div><div class="info-card" style="background:#283593;"><div class="info-label">Total Anggota Aktif</div><div class="info-value">${anggotaAktif.length}</div></div>`;
             if (sortedMonths.length === 0) html += `<div class="empty-state"><i class="fas fa-calendar"></i><div>Belum ada transaksi</div></div>`;
+            else for (const bulanKey of sortedMonths) {
+                const bulan = bulanan[bulanKey];
+                html += `<div class="month-group"><div class="month-header"><div><i class="fas fa-calendar"></i> ${bulan.nama}<span class="month-total">${bulan.transaksi.length} transaksi</span></div><div><span class="badge ${bulan.persentase === 100 ? 'sudah-setor' : 'belum-setor'}"><i class="fas ${bulan.persentase === 100 ? 'fa-check-circle' : 'fa-chart-line'}"></i> ${bulan.persentase}% Setor</span></div></div><div class="grid-2"><div class="stat-card"><div>💰 SETOR</div><div class="positive">${formatRupiah(bulan.totalSetor)}</div><div>${bulan.setorList.length} transaksi</div></div><div class="stat-card"><div>🤝 DONASI UANG</div><div class="positive">${formatRupiah(bulan.totalDonasiUang)}</div></div><div class="stat-card"><div>📤 PINJAM</div><div class="neutral">${formatRupiah(bulan.totalPinjam)}</div></div><div class="stat-card"><div>🛒 PENGELUARAN</div><div class="negative">${formatRupiah(bulan.totalPengeluaran)}</div></div></div><div style="background:rgba(0,0,0,0.3);border-radius:12px;padding:12px;"><div class="flex-between"><span><i class="fas fa-users"></i> Status Setoran</span><span class="badge sudah-setor">Sudah: ${bulan.setorList.length}</span><span class="badge belum-setor">Belum: ${bulan.anggotaBelumSetor.length}</span></div><div style="background:rgba(255,255,255,0.1);border-radius:10px;height:8px;margin:8px 0;overflow:hidden;"><div style="width:${bulan.persentase}%;height:100%;background:${bulan.persentase===100?'#4caf50':'#ff9800'};border-radius:10px;"></div></div>`;
+                if (bulan.setorList.length > 0) html += `<details><summary style="cursor:pointer;color:#81c784;"><i class="fas fa-check-circle"></i> Sudah Setor (${bulan.setorList.length})</summary><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">${bulan.setorList.map(s => { const anggotaData = anggota.find(a => a.id === s.id_anggota); return `<span class="badge sudah-setor" onclick="detailAnggota('${s.id_anggota}')"><i class="fas fa-user"></i> ${anggotaData ? anggotaData.nama : s.nama || s.id_anggota} <span class="text-dim">${formatRupiah(s.nominal)}</span></span>`; }).join('')}</div></details>`;
+                if (bulan.anggotaBelumSetor.length > 0) html += `<details open><summary style="cursor:pointer;color:#ffb74d;"><i class="fas fa-exclamation-triangle"></i> Belum Setor (${bulan.anggotaBelumSetor.length})</summary><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">${bulan.anggotaBelumSetor.map(a => `<span class="badge belum-setor" style="cursor:pointer;" onclick="showModalTransaksiSetor('${a.id}','${a.nama}','${bulanKey}')"><i class="fas fa-user"></i> ${a.nama} <i class="fas fa-plus-circle" style="margin-left:4px;font-size:10px;"></i></span>`).join('')}</div></details>`;
+                else html += `<div style="background:rgba(76,175,80,0.2);border-radius:12px;padding:12px;text-align:center;"><i class="fas fa-trophy"></i> Semua anggota sudah setor! <span class="badge sudah-setor">✓ Lengkap</span></div>`;
+                html += `<details><summary style="cursor:pointer;color:#90a4ae;"><i class="fas fa-list"></i> Detail Transaksi (${bulan.transaksi.length})</summary><div style="max-height:400px;overflow-y:auto;margin-top:8px;">${bulan.transaksi.sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal)).map(t => { let displayName = t.nama || '-'; if (t.id_anggota) { const anggotaData = anggota.find(a => a.id === t.id_anggota); if (anggotaData) displayName = anggotaData.nama; } let tampilanNilai = ''; if (t.jenis === 'DONASI_BARANG') tampilanNilai = `<span class="donasi-barang"><i class="fas fa-box"></i> ${t.nama_barang}</span>`; else if (t.jenis === 'DONASI_JASA') tampilanNilai = `<span class="donasi-barang"><i class="fas fa-tools"></i> ${t.nama_jasa}</span>`; else tampilanNilai = `<span class="${t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG' ? 'positive' : 'negative'}">${formatRupiah(t.nominal)}</span>`; return `<div class="transaction-item" style="padding:8px;"><div style="flex:1"><span class="badge">${t.jenis === 'DONASI_UANG' ? 'DONASI UANG' : (t.jenis === 'DONASI_BARANG' ? 'DONASI BARANG' : (t.jenis === 'DONASI_JASA' ? 'DONASI JASA' : t.jenis))}</span><span class="text-dim" style="font-size:11px;margin-left:8px;">${formatTanggal(t.tanggal)}</span><div style="font-size:12px;"><b>${displayName}</b> <span class="text-dim">${t.keterangan ? '- ' + t.keterangan : ''}</span></div></div><div>${tampilanNilai}</div></div>`; }).join('')}</div></details></div>`;
+            }
             html += `</div>`;
             return html;
         }
+        
+        window.cetakRekapBulanan = async function() {
+            const anggota = await getAllFromStore(STORES.ANGGOTA);
+            const transaksi = await getAllFromStore(STORES.TRANSAKSI);
+            const anggotaAktif = anggota.filter(a => a.status === 'AKTIF');
+            const bulanan = {};
+            transaksi.forEach(t => {
+                if (!t.tanggal) return;
+                const date = new Date(t.tanggal);
+                const bulanTahun = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                const namaBulan = date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+                if (!bulanan[bulanTahun]) bulanan[bulanTahun] = { nama: namaBulan, transaksi: [], totalSetor: 0, totalDonasiUang: 0, totalPinjam: 0, totalPengeluaran: 0, setorList: [] };
+                bulanan[bulanTahun].transaksi.push(t);
+                if (t.jenis === 'SETOR') { bulanan[bulanTahun].totalSetor += t.nominal; bulanan[bulanTahun].setorList.push(t); }
+                else if (t.jenis === 'DONASI_UANG') bulanan[bulanTahun].totalDonasiUang += t.nominal;
+                else if (t.jenis === 'PINJAM') bulanan[bulanTahun].totalPinjam += t.nominal;
+                else if (t.jenis === 'PENGELUARAN') bulanan[bulanTahun].totalPengeluaran += t.nominal;
+            });
+            Object.keys(bulanan).forEach(bulanKey => {
+                const bulan = bulanan[bulanKey];
+                const anggotaSudahSetor = new Set(bulan.setorList.map(s => s.id_anggota).filter(id => id));
+                bulan.anggotaBelumSetor = anggotaAktif.filter(a => !anggotaSudahSetor.has(a.id));
+                bulan.persentase = anggotaAktif.length > 0 ? Math.round((anggotaSudahSetor.size / anggotaAktif.length) * 100) : 0;
+            });
+            const sortedMonths = Object.keys(bulanan).sort().reverse();
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`<!DOCTYPE html><html><head><title>Rekap Bulanan Kas</title><meta charset="UTF-8"><style>body{font-family:'Times New Roman',serif;padding:20px}.header{text-align:center;border-bottom:2px solid #1a237e;padding-bottom:15px;margin-bottom:20px}.month-section{margin-bottom:30px;page-break-inside:avoid;border:1px solid #ddd;padding:15px;border-radius:8px}.month-title{background:#1a237e;color:white;padding:8px12px;margin:-15px -15px 15px -15px;border-radius:8px 8px 0 0}.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:15px}.summary-card{background:#f5f5f5;padding:10px;text-align:center;border-radius:8px}.status-list{margin:15px0;padding:10px;background:#f9f9f9;border-radius:8px}.status-badge{display:inline-block;padding:4px8px;border-radius:20px;font-size:11px;margin:2px}.sudah{background:#c8e6c9;color:#2e7d32}.belum{background:#ffe0b2;color:#f57c00}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background:#f5f5f5}.text-right{text-align:right}.positive{color:#2e7d32}.negative{color:#c62828}</style></head><body><div class="header"><h1>REKAP KEUANGAN PER BULAN</h1><p>Aplikasi Kas | Dicetak: ${new Date().toLocaleDateString('id-ID')}</p></div>${sortedMonths.map(bulanKey => { const bulan = bulanan[bulanKey]; return `<div class="month-section"><div class="month-title">📅 ${bulan.nama}</div><div class="summary-grid"><div class="summary-card"><strong>💰 SETOR</strong><br>${formatRupiah(bulan.totalSetor)}</div><div class="summary-card"><strong>🤝 DONASI</strong><br>${formatRupiah(bulan.totalDonasiUang)}</div><div class="summary-card"><strong>📤 PINJAM</strong><br>${formatRupiah(bulan.totalPinjam)}</div><div class="summary-card"><strong>🛒 PENGELUARAN</strong><br>${formatRupiah(bulan.totalPengeluaran)}</div></div><div class="status-list"><strong>Status Setoran (${bulan.persentase}%):</strong><br><span class="status-badge sudah">✓ Sudah: ${bulan.setorList.length}</span><span class="status-badge belum">⚠️ Belum: ${bulan.anggotaBelumSetor.length}</span>${bulan.anggotaBelumSetor.length > 0 ? `<div style="margin-top:8px;"><strong>Anggota Belum Setor:</strong><br>${bulan.anggotaBelumSetor.map(a => `<span class="status-badge belum">${a.nama}</span>`).join(' ')}</div>` : '<div style="margin-top:8px;color:#2e7d32;">✓ Semua anggota sudah setor!</div>'}</div><details><summary style="cursor:pointer;">📋 Detail Transaksi (${bulan.transaksi.length})</summary><table><thead><tr><th>Tanggal</th><th>Jenis</th><th>Nama</th><th class="text-right">Nominal</th><th>Keterangan</th></tr></thead><tbody>${bulan.transaksi.sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal)).map(t => `<tr><td>${formatTanggal(t.tanggal)}</td><td>${t.jenis === 'DONASI_UANG' ? 'DONASI' : (t.jenis === 'DONASI_BARANG' ? 'DONASI BARANG' : (t.jenis === 'DONASI_JASA' ? 'DONASI JASA' : t.jenis))}</td><td>${t.nama || t.id_anggota || '-'}</td><td class="text-right ${t.jenis === 'SETOR' || t.jenis === 'DONASI_UANG' ? 'positive' : 'negative'}">${t.jenis === 'DONASI_BARANG' ? t.nama_barang : (t.jenis === 'DONASI_JASA' ? t.nama_jasa : formatRupiah(t.nominal))}</td><td>${t.keterangan || '-'}</td></tr>`).join('')}</tbody></table></details></div>`; }).join('')}<div class="footer"><p>Dicetak dari Aplikasi Kas</p></div></body></html>`);
+            printWindow.document.close();
+            printWindow.print();
+        };
         
         async function render() {
             const content = document.getElementById('content');
