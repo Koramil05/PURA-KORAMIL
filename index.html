@@ -806,7 +806,7 @@
             modal.innerHTML = `
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h3><i class="fas ${isEdit ? 'fa-edit' : 'fa-plus-circle'}"></i> ${isEdit ? 'Edit Transaksi' : 'Transaksi-Baru'}</h3>
+                        <h3><i class="fas ${isEdit ? 'fa-edit' : 'fa-plus-circle'}"></i> ${isEdit ? 'Edit Transaksi' : 'Transaksi Baru'}</h3>
                         <button onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i></button>
                     </div>
                     <div class="modal-body">
@@ -1446,7 +1446,7 @@
             const saldo = await hitungSaldo();
             const transaksi = await getAllFromStore(STORES.TRANSAKSI);
             const anggota = await getAllFromStore(STORES.ANGGOTA);
-            return `<div class="card"><h3>📝 Transaksi</h3><div class="info-card" style="background:#283593"><div>💰 Saldo Saat Ini</div><div class="info-value">${formatRupiah(saldo)}</div></div><div class="grid-2"><button class="btn warning" onclick="showModalTransaksi()"><i class="fas fa-plus-circle"></i> Transaksi Baru</button><button class="btn secondary" onclick="showModalDonasi()" style="background:#ff9800"><i class="fas fa-hand-holding-heart"></i> Donasi Baru</button><button class="btn info" onclick="showModalPinjaman()"><i class="fas fa-hand-holding-usd"></i> Pinjaman Baru</button></div></div><div class="card"><h3>📋 Riwayat Transaksi</h3><div id="riwayatTransaksi">${transaksi.length === 0 ? '<div class="empty-state"><i class="fas fa-receipt"></i><div>Belum ada transaksi</div></div>' : transaksi.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).map(t => {
+            return `<div class="card"><h3>📝 Transaksi</h3><div class="info-card" style="background:#283593"><div>💰 Saldo Saat Ini</div><div class="info-value">${formatRupiah(saldo)}</div></div><div class="grid-2"><button class="btn warning" onclick="showModalTransaksi()"><i class="fas fa-plus-circle"></i> Transaksi anggota koramil Baru</button><button class="btn secondary" onclick="showModalDonasi()" style="background:#ff9800"><i class="fas fa-hand-holding-heart"></i> Donasi Baru</button><button class="btn info" onclick="showModalPinjaman()"><i class="fas fa-hand-holding-usd"></i> Pinjaman Baru</button></div></div><div class="card"><h3>📋 Riwayat Transaksi</h3><div id="riwayatTransaksi">${transaksi.length === 0 ? '<div class="empty-state"><i class="fas fa-receipt"></i><div>Belum ada transaksi</div></div>' : transaksi.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).map(t => {
                 let displayName = t.nama || '-';
                 if (t.id_anggota) { const anggotaData = anggota.find(a => a.id === t.id_anggota); if (anggotaData) displayName = anggotaData.nama; }
                 let tampilanNilai = '';
